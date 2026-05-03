@@ -1,0 +1,22 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff (uv)
+        entry: uv run ruff check .
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: ruff-format
+        name: ruff format (uv)
+        entry: uv run ruff format .
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: pylint
+        name: pylint (uv)
+        entry: uv run pylint
+        language: system
+        types: [python]
