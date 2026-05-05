@@ -2,7 +2,9 @@
 
 import argparse
 import json
-import string
+
+from cli.constants import STOP_WORDS
+from cli.utils import tokenize_text
 
 
 def display_five_best_results(
@@ -10,7 +12,7 @@ def display_five_best_results(
     data_path: str = "data/movies.json",
 ) -> None:
     """Print the first five movies whose title shares a token with the search query
-    (case-insensitive, punctuation-insensitive).
+    (case-insensitive, punctuation-insensitive, stop-words excluded).
 
     Args:
         search_query (str): The query string to match against movie titles.
@@ -25,7 +27,7 @@ def display_five_best_results(
             break
 
         title = movie.get("title", "")
-        query_tokens = tokenize_text(search_query)
+        query_tokens = set(tokenize_text(search_query)) - set(STOP_WORDS)
         title_tokens = tokenize_text(title)
 
         for q_token in query_tokens:
@@ -38,34 +40,6 @@ def display_five_best_results(
             else:
                 continue
             break
-
-
-def remove_all_punctuations(text: str) -> str:
-    """Remove all punctuations.
-
-    Args:
-        text (str): The input string to process.
-
-    Returns:
-        str: The input string with all punctuation characters removed.
-    """
-
-    trans_table = str.maketrans("", "", string.punctuation)
-    return text.translate(trans_table)
-
-
-def tokenize_text(text: str) -> list[str]:
-    """Lowercase, strip punctuation, and split text into tokens.
-
-    Args:
-        text (str): The input string to tokenize.
-
-    Returns:
-        list[str]: Non-empty tokens after removing punctuation and lowercasing.
-    """
-    formatted_text = remove_all_punctuations(text).lower()
-    tokens = formatted_text.split(" ")
-    return list(filter(None, tokens))
 
 
 def main() -> None:
