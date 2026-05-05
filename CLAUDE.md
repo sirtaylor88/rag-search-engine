@@ -42,6 +42,7 @@ The project is in early development. Current structure:
 - `cli/constants.py` — Project-wide constants; loads `STOP_WORDS` from `data/stopwords.txt` at import time.
 - `data/movies.json` — Movie dataset (~25 MB) with fields: `id`, `title`, `description`, and more. Used as the corpus for search.
 - `data/stopwords.txt` — Plain-text list of stop words (one per line) excluded from query tokens.
+- `examples/movies.json` — 20-movie sample of `data/movies.json` for quick testing without the full dataset.
 - `tests/` — Pytest test suite mirroring the `cli/` package structure.
 
 The planned architecture is a RAG pipeline: keyword retrieval (BM25) as the first stage, followed by embedding-based semantic retrieval or re-ranking, with an LLM generating the final answer.

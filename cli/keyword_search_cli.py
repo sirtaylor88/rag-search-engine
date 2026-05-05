@@ -49,13 +49,19 @@ def main() -> None:
 
     search_parser = subparsers.add_parser("search", help="Search movies using BM25")
     search_parser.add_argument("query", type=str, help="Search query")
+    search_parser.add_argument(
+        "--data-path",
+        type=str,
+        default="data/movies.json",
+        help="Path to the movies JSON file (default: data/movies.json)",
+    )
 
     args = parser.parse_args()
 
     match args.command:
         case "search":
             print("Searching for:", args.query)
-            display_five_best_results(args.query)
+            display_five_best_results(args.query, data_path=args.data_path)
 
         case _:
             parser.print_help()
