@@ -8,7 +8,11 @@ from pathlib import Path
 import pytest
 from pytest import CaptureFixture
 
-from cli.keyword_search_cli import display_five_best_results, remove_all_punctuations
+from cli.keyword_search_cli import (
+    display_five_best_results,
+    remove_all_punctuations,
+    tokenize_text,
+)
 
 
 @pytest.fixture()
@@ -86,3 +90,17 @@ def test_result_lines_are_numbered(
 def test_remove_all_punctuations(text: str, expected: str) -> None:
     """Punctuation characters should be stripped; non-punctuation left intact."""
     assert remove_all_punctuations(text) == expected
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Hello, World!", ["hello", "world"]),
+        ("Batman & Robin", ["batman", "robin"]),
+        ("  extra  spaces  ", ["extra", "spaces"]),
+        ("", []),
+    ],
+)
+def test_tokenize_text(text: str, expected: list[str]) -> None:
+    """Text should be lowercased, punctuation stripped, and split into tokens."""
+    assert tokenize_text(text) == expected

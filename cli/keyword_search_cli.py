@@ -9,8 +9,8 @@ def display_five_best_results(
     search_query: str,
     data_path: str = "data/movies.json",
 ) -> None:
-    """Print the first five movies whose title contains the search query
-    (case-insensitive).
+    """Print the first five movies whose title shares a token with the search query
+    (case-insensitive, punctuation-insensitive).
 
     Args:
         search_query (str): The query string to match against movie titles.
@@ -25,9 +25,19 @@ def display_five_best_results(
             break
 
         title = movie.get("title", "")
-        if search_query.lower() in remove_all_punctuations(title).lower():
-            count += 1
-            print(f"{count}. {title}")
+        query_tokens = tokenize_text(search_query)
+        title_tokens = tokenize_text(title)
+
+        for q_token in query_tokens:
+            for t_token in title_tokens:
+                if q_token in t_token:
+                    count += 1
+                    print(f"{count}. {title}")
+
+                    break
+            else:
+                continue
+            break
 
 
 def remove_all_punctuations(text: str) -> str:
@@ -42,6 +52,20 @@ def remove_all_punctuations(text: str) -> str:
 
     trans_table = str.maketrans("", "", string.punctuation)
     return text.translate(trans_table)
+
+
+def tokenize_text(text: str) -> list[str]:
+    """Lowercase, strip punctuation, and split text into tokens.
+
+    Args:
+        text (str): The input string to tokenize.
+
+    Returns:
+        list[str]: Non-empty tokens after removing punctuation and lowercasing.
+    """
+    formatted_text = remove_all_punctuations(text).lower()
+    tokens = formatted_text.split(" ")
+    return list(filter(None, tokens))
 
 
 def main() -> None:
