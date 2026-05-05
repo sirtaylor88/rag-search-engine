@@ -22,18 +22,26 @@ uv run pre-commit install  # set up git hooks
 uv run ruff check .
 uv run ruff format .
 uv run pylint <file_or_dir>
+uv run mypy .
+
+# Test
+uv run pytest
 
 # Run the keyword search CLI
 uv run python cli/keyword_search_cli.py search "<query>"
 ```
 
-Pre-commit hooks run `ruff check`, `ruff format`, and `pylint` automatically on each commit.
+Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, and `mypy` automatically on each commit.
 
 ## Architecture
 
 The project is in early development. Current structure:
 
-- `cli/keyword_search_cli.py` — CLI entry point using `argparse` with a `search` subcommand. Intended to run BM25 keyword search against `data/movies.json`.
+- `cli/keyword_search_cli.py` — CLI entry point using `argparse` with a `search` subcommand. Runs stemmed token search against `data/movies.json`.
+- `cli/utils.py` — Text processing helpers: `remove_all_punctuations`, `tokenize_text`, `get_stemmed_tokens` (Porter stemmer via NLTK), and `get_stop_words`.
+- `cli/constants.py` — Project-wide constants; loads `STOP_WORDS` from `data/stopwords.txt` at import time.
 - `data/movies.json` — Movie dataset (~25 MB) with fields: `id`, `title`, `description`, and more. Used as the corpus for search.
+- `data/stopwords.txt` — Plain-text list of stop words (one per line) excluded from query tokens.
+- `tests/` — Pytest test suite mirroring the `cli/` package structure.
 
 The planned architecture is a RAG pipeline: keyword retrieval (BM25) as the first stage, followed by embedding-based semantic retrieval or re-ranking, with an LLM generating the final answer.

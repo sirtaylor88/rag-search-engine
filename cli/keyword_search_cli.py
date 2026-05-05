@@ -4,14 +4,14 @@ import argparse
 import json
 
 from cli.constants import STOP_WORDS
-from cli.utils import tokenize_text
+from cli.utils import get_stemmed_tokens
 
 
 def display_five_best_results(
     search_query: str,
     data_path: str = "data/movies.json",
 ) -> None:
-    """Print the first five movies whose title shares a token with the search query
+    """Print the first five movies whose title shares a stemmed token with the query
     (case-insensitive, punctuation-insensitive, stop-words excluded).
 
     Args:
@@ -27,8 +27,8 @@ def display_five_best_results(
             break
 
         title = movie.get("title", "")
-        query_tokens = set(tokenize_text(search_query)) - set(STOP_WORDS)
-        title_tokens = tokenize_text(title)
+        query_tokens = get_stemmed_tokens(search_query) - set(STOP_WORDS)
+        title_tokens = get_stemmed_tokens(title)
 
         for q_token in query_tokens:
             for t_token in title_tokens:

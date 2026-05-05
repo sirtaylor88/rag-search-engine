@@ -2,6 +2,10 @@
 
 import string
 
+from nltk.stem import PorterStemmer
+
+stemmer = PorterStemmer()
+
 
 def remove_all_punctuations(text: str) -> str:
     """Remove all punctuations.
@@ -29,6 +33,18 @@ def tokenize_text(text: str) -> list[str]:
     formatted_text = remove_all_punctuations(text).lower()
     tokens = formatted_text.split(" ")
     return list(filter(None, tokens))
+
+
+def get_stemmed_tokens(text: str) -> set[str]:
+    """Tokenize text and reduce each token to its Porter stem.
+
+    Args:
+        text (str): The input string to process.
+
+    Returns:
+        set[str]: Unique stemmed tokens derived from the input.
+    """
+    return {stemmer.stem(token) for token in tokenize_text(text)}
 
 
 def get_stop_words(data_path: str = "data/stopwords.txt") -> list[str]:

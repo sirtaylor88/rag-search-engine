@@ -4,7 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from cli.utils import get_stop_words, remove_all_punctuations, tokenize_text
+from cli.utils import (
+    get_stemmed_tokens,
+    get_stop_words,
+    remove_all_punctuations,
+    tokenize_text,
+)
 
 
 @pytest.mark.parametrize(
@@ -33,6 +38,19 @@ def test_remove_all_punctuations(text: str, expected: str) -> None:
 def test_tokenize_text(text: str, expected: list[str]) -> None:
     """Text should be lowercased, punctuation stripped, and split into tokens."""
     assert tokenize_text(text) == expected
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("running", {"run"}),
+        ("Batman & Robin", {"batman", "robin"}),
+        ("", set()),
+    ],
+)
+def test_get_stemmed_tokens(text: str, expected: set[str]) -> None:
+    """Tokens should be reduced to their Porter stems and returned as a set."""
+    assert get_stemmed_tokens(text) == expected
 
 
 @pytest.mark.parametrize(
