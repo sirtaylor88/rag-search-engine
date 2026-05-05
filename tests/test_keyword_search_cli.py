@@ -1,4 +1,4 @@
-"""Tests for cli.keyword_search_cli.display_five_best_results."""
+"""Tests for cli.keyword_search_cli."""
 
 # pylint: disable=redefined-outer-name
 
@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pytest import CaptureFixture
 
-from cli.keyword_search_cli import display_five_best_results
+from cli.keyword_search_cli import display_five_best_results, remove_all_punctuations
 
 
 @pytest.fixture()
@@ -36,26 +36,15 @@ def movie_data(tmp_path: Path) -> str:
     return str(path)
 
 
-def test_returns_matching_results(movie_data: str, capsys: CaptureFixture[str]) -> None:
-    """Only matching movie titles should appear in the output."""
-    display_five_best_results("batman", data_path=movie_data)
+@pytest.mark.parametrize("query", ["batman", "BATMAN"])
+def test_returns_matching_results(
+    movie_data: str, capsys: CaptureFixture[str], query: str
+) -> None:
+    """Only matching titles should appear, capped at five, case-insensitively."""
+    display_five_best_results(query, data_path=movie_data)
     output = capsys.readouterr().out.splitlines()
     assert len(output) == 5
     assert all("batman" in line.lower() for line in output)
-
-
-def test_case_insensitive(movie_data: str, capsys: CaptureFixture[str]) -> None:
-    """Search query should match titles regardless of letter case."""
-    display_five_best_results("BATMAN", data_path=movie_data)
-    output = capsys.readouterr().out.splitlines()
-    assert len(output) == 5
-
-
-def test_caps_at_five_results(movie_data: str, capsys: CaptureFixture[str]) -> None:
-    """Output should never exceed five results even when more matches exist."""
-    display_five_best_results("batman", data_path=movie_data)
-    output = capsys.readouterr().out.splitlines()
-    assert len(output) == 5
 
 
 def test_no_matches_prints_nothing(
@@ -83,3 +72,17 @@ def test_result_lines_are_numbered(
     output = capsys.readouterr().out.splitlines()
     for i, line in enumerate(output, start=1):
         assert line.startswith(f"{i}.")
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Hello, World!", "Hello World"),
+        ("Hello World", "Hello World"),
+        ("", ""),
+        ("!@#$%^&*()", ""),
+    ],
+)
+def test_remove_all_punctuations(text: str, expected: str) -> None:
+    """Punctuation characters should be stripped; non-punctuation left intact."""
+    assert remove_all_punctuations(text) == expected
