@@ -390,6 +390,12 @@ wheels = [
 ]
 
 [[package]]
+name = "progressbar"
+version = "2.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a3/a6/b8e451f6cff1c99b4747a2f7235aa904d2d49e8e1464e0b798272aa84358/progressbar-2.5.tar.gz", hash = "sha256:5d81cb529da2e223b53962afd6c8ca0f05c6670e40309a7219eacc36af9b6c63", size = 10046, upload-time = "2018-06-29T02:32:00.222Z" }
+
+[[package]]
 name = "pygments"
 version = "2.20.0"
 source = { registry = "https://pypi.org/simple" }
@@ -511,6 +517,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "nltk" },
+    { name = "progressbar" },
 ]
 
 [package.dev-dependencies]
@@ -524,7 +531,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "nltk", specifier = "==3.9.1" }]
+requires-dist = [
+    { name = "nltk", specifier = "==3.9.1" },
+    { name = "progressbar", specifier = ">=2.5" },
+]
 
 [package.metadata.requires-dev]
 dev = [

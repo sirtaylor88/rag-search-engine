@@ -13,10 +13,15 @@ readme = "README.md"
 requires-python = ">=3.12.9"
 dependencies = [
     "nltk==3.9.1",
+    "progressbar>=2.5",
 ]
 
 [[tool.mypy.overrides]]
 module = "nltk.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "progressbar.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -1,10 +1,32 @@
 """Utility functions for text processing."""
 
 import string
+from typing import Any
+import json
+import logging
 
 from nltk.stem import PorterStemmer
 
 stemmer = PorterStemmer()
+logger = logging.getLogger(__name__)
+
+
+def get_movies(data_path: str = "data/movies.json") -> list[dict[str, Any]]:
+    """Load and return the list of movies from a JSON file.
+
+    Args:
+        data_path (str): Path to the JSON file containing movie data.
+
+    Returns:
+        list[dict[str, Any]]: List of movie dicts from the 'movies' key.
+    """
+    try:
+        with open(data_path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except OSError:
+        logger.error("Failed to read %s", data_path)
+
+    return data["movies"]
 
 
 def remove_all_punctuations(text: str) -> str:

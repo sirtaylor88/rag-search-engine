@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Echo Workspace Folder",
+      "type": "python",
+      "request": "launch",
+      "module": "subprocess",
+      "console": "integratedTerminal",
+      "args": [
+        "-c",
+        "import os; print(os.getcwd())"
+      ]
+    }
+  ]
+}
