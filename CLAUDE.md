@@ -27,6 +27,9 @@ uv run mypy .
 # Test
 uv run pytest
 
+# Build the inverted index (run once before searching)
+uv run python cli/keyword_search_cli.py build
+
 # Run the keyword search CLI
 uv run python cli/keyword_search_cli.py search "<query>"
 ```
@@ -37,9 +40,11 @@ Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, and `mypy` automatic
 
 The project is in early development. Current structure:
 
-- `cli/keyword_search_cli.py` — CLI entry point using `argparse` with a `search` subcommand. Runs stemmed token search against `data/movies.json`.
-- `cli/utils.py` — Text processing helpers: `remove_all_punctuations`, `tokenize_text`, `get_stemmed_tokens` (Porter stemmer via NLTK), and `get_stop_words`.
+- `cli/keyword_search_cli.py` — CLI entry point using `argparse` with `search` and `build` subcommands. Runs stemmed token search against a movie dataset.
+- `cli/inverted_index.py` — `InvertedIndex` class: builds a token→doc-ID index from a movie list, supports `get_documents(term)`, and persists to `cache/` via pickle.
+- `cli/utils.py` — Text processing helpers: `get_movies`, `remove_all_punctuations`, `tokenize_text`, `get_stemmed_tokens` (Porter stemmer via NLTK), and `get_stop_words`.
 - `cli/constants.py` — Project-wide constants; loads `STOP_WORDS` from `data/stopwords.txt` at import time.
+- `cache/` — Pickle files (`index.pkl`, `docmap.pkl`) written by the `build` command. Excluded from git.
 - `data/movies.json` — Movie dataset (~25 MB) with fields: `id`, `title`, `description`, and more. Used as the corpus for search.
 - `data/stopwords.txt` — Plain-text list of stop words (one per line) excluded from query tokens.
 - `examples/movies.json` — 20-movie sample of `data/movies.json` for quick testing without the full dataset.

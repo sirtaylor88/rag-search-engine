@@ -13,12 +13,27 @@ uv run pre-commit install
 
 ## Usage
 
+### Build the inverted index
+
+Before searching, build and cache the index from the movie dataset:
+
+```bash
+uv run python cli/keyword_search_cli.py build
+```
+
+To use the sample dataset instead:
+
+```bash
+uv run python cli/keyword_search_cli.py build --data-path examples/movies.json
+```
+
+### Search
+
 ```bash
 uv run python cli/keyword_search_cli.py search "<query>"
 ```
 
-By default the CLI reads from `data/movies.json`. To use the sample dataset in
-`examples/` instead, pass the `--data-path` option:
+Pass `--data-path` to use a different dataset:
 
 ```bash
 uv run python cli/keyword_search_cli.py search "<query>" \
