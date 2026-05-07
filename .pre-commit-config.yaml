@@ -34,3 +34,10 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
+
+      - id: pytest-cov
+        name: pytest coverage (uv)
+        entry: uv run pytest --cov=cli --cov-report=term-missing --cov-fail-under=100
+        language: system
+        types: [python]
+        pass_filenames: false

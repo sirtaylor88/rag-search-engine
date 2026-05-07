@@ -53,6 +53,19 @@ def test_build_indexes_description_text() -> None:
     assert 1 in idx.get_documents("crusad")  # Porter stem of "crusader"
 
 
+def test_load(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """load() should restore the index and docmap saved by save()."""
+    monkeypatch.chdir(tmp_path)
+    idx = InvertedIndex()
+    idx.build(_make_movies("Batman Begins"))
+    idx.save()
+
+    new_idx = InvertedIndex()
+    new_idx.load()
+    assert new_idx.index == idx.index
+    assert new_idx.docmap == idx.docmap
+
+
 def test_save(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """save() should write pickle files that round-trip back to the original index."""
     monkeypatch.chdir(tmp_path)

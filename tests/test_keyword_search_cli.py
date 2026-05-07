@@ -87,3 +87,48 @@ def test_search_missing_cache_prints_error_and_exits(
 
     assert exc_info.value.code == 1
     assert capsys.readouterr().out == "Cannot load movies data.\n"
+
+
+def test_early_break_when_five_docs_reached(capsys: CaptureFixture[str]) -> None:
+    """The query loop should stop early once five doc IDs have been collected."""
+    movies = [
+        {"id": i, "title": "Batman", "description": "Superman"} for i in range(1, 7)
+    ]
+    idx = InvertedIndex()
+    idx.build(movies)
+    display_five_best_results("batman superman", idx)
+    assert len(capsys.readouterr().out.splitlines()) == 5
+
+
+def test_search_command_outputs_results(capsys: CaptureFixture[str]) -> None:
+    """The search command should print a header and call display_five_best_results."""
+    with (
+        patch("sys.argv", ["cli", "search", "batman"]),
+        patch("cli.keyword_search_cli.InvertedIndex.load"),
+        patch("cli.keyword_search_cli.display_five_best_results") as mock_display,
+    ):
+        main()
+    assert "Searching for: batman" in capsys.readouterr().out
+    mock_display.assert_called_once()
+
+
+def test_build_command_builds_and_saves_index(capsys: CaptureFixture[str]) -> None:
+    """The build command should build and save the index and print status messages."""
+    movies = [{"id": 1, "title": "Test", "description": ""}]
+    with (
+        patch("sys.argv", ["cli", "build"]),
+        patch("cli.keyword_search_cli.get_movies", return_value=movies),
+        patch("cli.keyword_search_cli.InvertedIndex.build"),
+        patch("cli.keyword_search_cli.InvertedIndex.save"),
+    ):
+        main()
+    out = capsys.readouterr().out
+    assert "Building inverted index" in out
+    assert "has been built" in out
+
+
+def test_no_command_prints_help(capsys: CaptureFixture[str]) -> None:
+    """Running without a subcommand should print the help message."""
+    with patch("sys.argv", ["cli"]):
+        main()
+    assert capsys.readouterr().out != ""
