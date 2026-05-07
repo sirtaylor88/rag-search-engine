@@ -1,7 +1,7 @@
 """CLI for keyword-based movie search using BM25."""
 
 import argparse
-from typing import Any
+import sys
 
 from cli.constants import STOP_WORDS
 from cli.utils import get_movies, get_stemmed_tokens
@@ -10,35 +10,26 @@ from cli.inverted_index import InvertedIndex
 
 def display_five_best_results(
     search_query: str,
-    movies: list[dict[str, Any]],
+    inverted_index: InvertedIndex,
 ) -> None:
     """Print the first five movies whose title shares a stemmed token with the query
     (case-insensitive, punctuation-insensitive, stop-words excluded).
 
     Args:
         search_query (str): The query string to match against movie titles.
-        movies (list[dict[str, Any]]): The movies dataset.
+        inverted_index (InvertedIndex): The pre-built inverted index to search.
     """
 
-    count = 0
-    for movie in movies:
-        if count == 5:
+    query_tokens = get_stemmed_tokens(search_query) - set(STOP_WORDS)
+    doc_ids: set[int] = set()
+    for query_token in query_tokens:
+        if len(doc_ids) >= 5:
             break
+        doc_ids.update(inverted_index.get_documents(query_token))
 
-        title = movie.get("title", "")
-        query_tokens = get_stemmed_tokens(search_query) - set(STOP_WORDS)
-        title_tokens = get_stemmed_tokens(title)
-
-        for q_token in query_tokens:
-            for t_token in title_tokens:
-                if q_token in t_token:
-                    count += 1
-                    print(f"{count}. {title}")
-
-                    break
-            else:
-                continue
-            break
+    for doc_id in sorted(doc_ids)[:5]:
+        title = inverted_index.docmap[doc_id]["title"]
+        print(f"{doc_id}. {title}")
 
 
 def main() -> None:
@@ -66,26 +57,29 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+    inverted_index = InvertedIndex()
 
     match args.command:
         case "search":
+            try:
+                inverted_index.load()
+            except OSError:
+                print("Cannot load movies data.")
+                sys.exit(1)
+
             print("Searching for:", args.query)
 
-            movies = get_movies(data_path=args.data_path)
-            display_five_best_results(args.query, movies)
+            display_five_best_results(args.query, inverted_index)
 
         case "build":
             movies = get_movies(data_path=args.data_path)
 
             print("Building inverted index for", len(movies), "movies...")
-            inverted_index = InvertedIndex()
+
             inverted_index.build(movies)
             inverted_index.save()
 
             print("Inverted index has been built !")
-
-            docs = inverted_index.get_documents("merida")
-            print(f"First document for token 'merida' = {docs[0]}")
 
         case _:
             parser.print_help()

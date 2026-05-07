@@ -1,7 +1,7 @@
 """Inverted index for fast token-based document lookup."""
 
 import os
-import pickle
+import pickle  # nosec B403
 from collections import defaultdict
 from typing import Any, DefaultDict
 
@@ -68,3 +68,11 @@ class InvertedIndex:
 
         with open("cache/docmap.pkl", "wb") as fh:
             pickle.dump(self.docmap, fh)
+
+    def load(self) -> None:
+        """Load the index and document map from cache/index.pkl and cache/docmap.pkl."""
+        with open("cache/index.pkl", "rb") as fh:
+            self.index = pickle.load(fh)  # nosec B301
+
+        with open("cache/docmap.pkl", "rb") as fh:
+            self.docmap = pickle.load(fh)  # nosec B301

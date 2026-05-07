@@ -29,6 +29,7 @@ pythonpath = ["."]
 
 [dependency-groups]
 dev = [
+    "bandit>=1.9.4",
     "mypy>=1.20.2",
     "pre-commit>=4.6.0",
     "pylint>=4.0.5",
