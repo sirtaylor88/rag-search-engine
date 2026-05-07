@@ -130,8 +130,8 @@ def test_build_command_builds_and_saves_index(capsys: CaptureFixture[str]) -> No
     with (
         patch("sys.argv", ["cli", "build"]),
         patch("cli.commands.build_command.get_movies", return_value=movies),
-        patch("cli.commands.build_command.InvertedIndex.build"),
-        patch("cli.commands.build_command.InvertedIndex.save"),
+        patch("cli.inverted_index.InvertedIndex.build"),
+        patch("cli.inverted_index.InvertedIndex.save"),
     ):
         main()
     out = capsys.readouterr().out

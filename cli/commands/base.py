@@ -1,46 +1,34 @@
-"""Abstract base command and CLI parser registration."""
+"""Abstract base command."""
 
 from abc import ABC, abstractmethod
 
 from argparse import ArgumentParser
 from typing import Any
 
+from cli.inverted_index import InvertedIndex
 
-class Command(ABC):  # pylint: disable=too-few-public-methods
+
+class BaseCommand(ABC):
     """Abstract base class for CLI commands."""
 
-    @staticmethod
+    def __init__(self, parser: ArgumentParser, inverted_index: InvertedIndex) -> None:
+        """Register command arguments and store the shared index.
+
+        Args:
+            parser (ArgumentParser): The subparser for this command.
+            inverted_index (InvertedIndex): The shared index instance.
+        """
+        self.inverted_index = inverted_index
+        self.add_arguments(parser)
+
     @abstractmethod
-    def run(*args: Any, **kwargs: Any) -> None:
-        """Run the command."""
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        """Register the command's CLI arguments with its subparser.
 
+        Args:
+            parser (ArgumentParser): The subparser for this command.
+        """
 
-def register_commands() -> ArgumentParser:
-    """Build and return the top-level argument parser with all subcommands registered.
-
-    Returns:
-        ArgumentParser: Parser with 'search' and 'build' subcommands.
-    """
-    parser = ArgumentParser(description="Keyword Search CLI")
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
-    # * Search command
-    search_parser = subparsers.add_parser("search", help="Search movies using BM25")
-    search_parser.add_argument("query", type=str, help="Search query")
-    search_parser.add_argument(
-        "--data-path",
-        type=str,
-        default="data/movies.json",
-        help="Path to the movies JSON file (default: data/movies.json)",
-    )
-
-    # * Build command
-    build_parser = subparsers.add_parser("build", help="Build inverted index")
-    build_parser.add_argument(
-        "--data-path",
-        type=str,
-        default="data/movies.json",
-        help="Path to the movies JSON file (default: data/movies.json)",
-    )
-
-    return parser
+    @abstractmethod
+    def run(self, *args: Any) -> None:
+        """Execute the command with the given parsed argument values."""

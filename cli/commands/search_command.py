@@ -1,13 +1,12 @@
 """Search command: queries the inverted index and prints the top results."""
 
-from argparse import Namespace
+from argparse import ArgumentParser
 import sys
 from typing import override
 
-
 from cli.utils import get_stemmed_tokens
 from cli.inverted_index import InvertedIndex
-from cli.commands.base import Command
+from cli.commands.base import BaseCommand
 from cli.constants import STOP_WORDS
 
 
@@ -24,7 +23,6 @@ def display_best_results(
         inverted_index (InvertedIndex): The pre-built inverted index to search.
         nb_of_results (int): Maximum number of results to display. Defaults to 5.
     """
-
     query_tokens = set(get_stemmed_tokens(search_query)) - set(STOP_WORDS)
     doc_ids: set[int] = set()
     for query_token in query_tokens:
@@ -37,26 +35,30 @@ def display_best_results(
         print(f"{doc_id}. {title}")
 
 
-class SearchCommand(Command):  # pylint: disable=too-few-public-methods
+class SearchCommand(BaseCommand):
     """Command that loads the cached index and prints the top matching movies."""
 
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        """Register the query positional argument with the search subparser.
+
+        Args:
+            parser (ArgumentParser): The search subparser.
+        """
+        parser.add_argument("query", type=str, help="Search query")
+
     @override
-    @staticmethod
-    def run(args: Namespace, inverted_index: InvertedIndex) -> None:  # pylint: disable=arguments-differ
+    def run(self, search_query: str) -> None:  # pylint: disable=arguments-differ
         """Load the index from cache and display the best matching results for the query.
 
         Args:
-            args (Namespace): Parsed CLI arguments; uses args.query.
-            inverted_index (InvertedIndex): Index instance to load cache into.
+            search_query (str): The search query string.
         """
         try:
-            inverted_index.load()
+            self.inverted_index.load()
         except OSError:
             print("Cannot load movies data.")
             sys.exit(1)
 
-        search_query = args.query
-
         print("Searching for:", search_query)
 
-        display_best_results(search_query, inverted_index)
+        display_best_results(search_query, self.inverted_index)

@@ -1,24 +1,34 @@
 """CLI for keyword-based movie search using BM25."""
 
+from argparse import ArgumentParser
+
 from cli.inverted_index import InvertedIndex
-from cli.commands import SearchCommand, BuildCommand
-from cli.commands import register_commands
+from cli.commands import BuildCommand, SearchCommand
 
 
 def main() -> None:
     """Parse CLI arguments and dispatch to the appropriate search command."""
+    parser = ArgumentParser(description="Keyword Search CLI")
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    parser = register_commands()
-    args = parser.parse_args()
     inverted_index = InvertedIndex()
+
+    search_cmd = SearchCommand(
+        subparsers.add_parser("search", help="Search movies using BM25"),
+        inverted_index,
+    )
+    build_cmd = BuildCommand(
+        subparsers.add_parser("build", help="Build inverted index"),
+        inverted_index,
+    )
+
+    args = parser.parse_args()
 
     match args.command:
         case "search":
-            SearchCommand.run(args, inverted_index)
-
+            search_cmd.run(args.query)
         case "build":
-            BuildCommand.run(args, inverted_index)
-
+            build_cmd.run(args.data_path)
         case _:
             parser.print_help()
 
