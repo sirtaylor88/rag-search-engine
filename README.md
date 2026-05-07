@@ -52,10 +52,13 @@ Searching for: the dark knight
 ## Development
 
 ```bash
-uv run pytest          # run tests
-uv run mypy .          # type check
-uv run ruff check .    # lint
-uv run ruff format .   # format
+uv run pytest                                                    # run tests
+uv run pytest --cov=cli --cov-report=term-missing               # run tests with coverage report
+uv run mypy .                                                    # type check
+uv run ruff check .                                              # lint
+uv run ruff format .                                             # format
+uv run pylint <file_or_dir>                                      # lint with pylint
+uv run bandit -r cli/                                            # security scan
 ```
 
-Pre-commit hooks run all of the above automatically on each commit.
+Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, `mypy`, `bandit`, and `pytest` (with 100% coverage enforcement) automatically on each commit.
