@@ -1,35 +1,15 @@
 """Tests for cli.utils."""
 
-import json
-import logging
 from pathlib import Path
 
 import pytest
 
 from cli.utils import (
-    get_movies,
     get_stemmed_tokens,
     get_stop_words,
     remove_all_punctuations,
     tokenize_text,
 )
-
-
-def test_get_movies(tmp_path: Path) -> None:
-    """get_movies should return the list of movies from a JSON file."""
-    movies = [{"id": 1, "title": "Test Movie", "description": ""}]
-    path = tmp_path / "movies.json"
-    path.write_text(json.dumps({"movies": movies}), encoding="utf-8")
-    assert get_movies(str(path)) == movies
-
-
-def test_get_movies_missing_file_logs_error(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
-) -> None:
-    """get_movies should log an error when the file cannot be opened."""
-    with pytest.raises(Exception), caplog.at_level(logging.ERROR, logger="cli.utils"):
-        get_movies(str(tmp_path / "nonexistent.json"))
-    assert "Failed to read" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -63,13 +43,13 @@ def test_tokenize_text(text: str, expected: list[str]) -> None:
 @pytest.mark.parametrize(
     ("text", "expected"),
     [
-        ("running", {"run"}),
-        ("Batman & Robin", {"batman", "robin"}),
-        ("", set()),
+        ("running", ["run"]),
+        ("Batman & Robin", ["batman", "robin"]),
+        ("", []),
     ],
 )
-def test_get_stemmed_tokens(text: str, expected: set[str]) -> None:
-    """Tokens should be reduced to their Porter stems and returned as a set."""
+def test_get_stemmed_tokens(text: str, expected: list[str]) -> None:
+    """Tokens should be reduced to their Porter stems and returned as a list in input order."""
     assert get_stemmed_tokens(text) == expected
 
 

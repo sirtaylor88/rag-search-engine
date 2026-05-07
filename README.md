@@ -1,6 +1,6 @@
 # RAG Search Engine
 
-A search engine built with Retrieval Augmented Generation (RAG). The current focus is keyword search over a movie dataset using stemmed token matching, with RAG-based semantic search planned as the next phase.
+A search engine built with Retrieval Augmented Generation (RAG). The current focus is keyword search over a movie dataset using an inverted index with term-frequency tracking, with BM25 scoring and RAG-based semantic search planned as the next phase.
 
 ## Setup
 

@@ -44,11 +44,15 @@ Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, `mypy`, `bandit`, an
 
 The project is in early development. Current structure:
 
-- `cli/keyword_search_cli.py` — CLI entry point using `argparse` with `search` and `build` subcommands. Runs stemmed token search against a movie dataset.
-- `cli/inverted_index.py` — `InvertedIndex` class: builds a token→doc-ID index from a movie list, supports `get_documents(term)`, and persists to/loads from `cache/` via pickle.
-- `cli/utils.py` — Text processing helpers: `get_movies`, `remove_all_punctuations`, `tokenize_text`, `get_stemmed_tokens` (Porter stemmer via NLTK), and `get_stop_words`.
-- `cli/constants.py` — Project-wide constants; loads `STOP_WORDS` from `data/stopwords.txt` at import time.
-- `cache/` — Pickle files (`index.pkl`, `docmap.pkl`) written by the `build` command. Excluded from git.
+- `cli/keyword_search_cli.py` — CLI entry point: parses args via `register_commands()` and dispatches to `SearchCommand` or `BuildCommand`.
+- `cli/commands/` — Command classes and parser registration.
+  - `base.py` — `Command` abstract base class and `register_commands()` (builds the `argparse` parser with `search` and `build` subcommands).
+  - `build_command.py` — `get_movies()` (loads JSON) and `BuildCommand.run()` (builds and saves the index).
+  - `search_command.py` — `display_best_results()` and `SearchCommand.run()` (loads the cached index and prints matches).
+- `cli/inverted_index.py` — `InvertedIndex` class: builds a token→doc-ID index, tracks per-document term frequencies (`term_frequencies`), supports `get_documents(term)` and `get_tf(doc_id, term)`, and persists to/loads from `cache/` via pickle. `Document` is a `TypedDict` for movie records.
+- `cli/utils.py` — Text processing helpers: `remove_all_punctuations`, `tokenize_text`, `get_stemmed_tokens` (Porter stemmer via NLTK, returns an ordered list with duplicates), `get_stop_words`, and the shared `STEMMER` instance.
+- `cli/constants.py` — Project-wide constants: re-exports `STEMMER` from `cli.utils` and loads `STOP_WORDS` from `data/stopwords.txt` at import time.
+- `cache/` — Pickle files (`index.pkl`, `docmap.pkl`, `term_frequencies.pkl`) written by the `build` command. Excluded from git.
 - `data/movies.json` — Movie dataset (~25 MB) with fields: `id`, `title`, `description`, and more. Used as the corpus for search.
 - `data/stopwords.txt` — Plain-text list of stop words (one per line) excluded from query tokens.
 - `examples/movies.json` — 20-movie sample of `data/movies.json` for quick testing without the full dataset.

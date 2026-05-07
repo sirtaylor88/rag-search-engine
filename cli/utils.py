@@ -1,32 +1,12 @@
 """Utility functions for text processing."""
 
 import string
-from typing import Any
-import json
 import logging
 
 from nltk.stem import PorterStemmer
 
-stemmer = PorterStemmer()
+STEMMER = PorterStemmer()
 logger = logging.getLogger(__name__)
-
-
-def get_movies(data_path: str = "data/movies.json") -> list[dict[str, Any]]:
-    """Load and return the list of movies from a JSON file.
-
-    Args:
-        data_path (str): Path to the JSON file containing movie data.
-
-    Returns:
-        list[dict[str, Any]]: List of movie dicts from the 'movies' key.
-    """
-    try:
-        with open(data_path, encoding="utf-8") as fh:
-            data = json.load(fh)
-    except OSError:
-        logger.error("Failed to read %s", data_path)
-
-    return data["movies"]
 
 
 def remove_all_punctuations(text: str) -> str:
@@ -57,16 +37,16 @@ def tokenize_text(text: str) -> list[str]:
     return list(filter(None, tokens))
 
 
-def get_stemmed_tokens(text: str) -> set[str]:
+def get_stemmed_tokens(text: str) -> list[str]:
     """Tokenize text and reduce each token to its Porter stem.
 
     Args:
         text (str): The input string to process.
 
     Returns:
-        set[str]: Unique stemmed tokens derived from the input.
+        list[str]: Stemmed tokens in input order; duplicates preserved.
     """
-    return {stemmer.stem(token) for token in tokenize_text(text)}
+    return [STEMMER.stem(token) for token in tokenize_text(text)]
 
 
 def get_stop_words(data_path: str = "data/stopwords.txt") -> list[str]:

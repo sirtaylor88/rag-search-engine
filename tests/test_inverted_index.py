@@ -4,17 +4,16 @@
 
 import pickle
 from pathlib import Path
-from typing import Any
 
 import pytest
 
-from cli.inverted_index import InvertedIndex
+from cli.inverted_index import Document, InvertedIndex
 
 
-def _make_movies(*titles: str) -> list[dict[str, Any]]:
+def _make_movies(*titles: str) -> list[Document]:
     """Build a minimal movie list with sequential IDs and empty descriptions."""
     return [
-        {"id": i, "title": title, "description": ""}
+        Document(id=i, title=title, description="")
         for i, title in enumerate(titles, start=1)
     ]
 
@@ -47,14 +46,14 @@ def test_build_populates_docmap(small_index: InvertedIndex) -> None:
 
 def test_build_indexes_description_text() -> None:
     """build() should index tokens from both title and description fields."""
-    movies = [{"id": 1, "title": "", "description": "A caped crusader"}]
+    movies = [Document(id=1, title="", description="A caped crusader")]
     idx = InvertedIndex()
     idx.build(movies)
     assert 1 in idx.get_documents("crusad")  # Porter stem of "crusader"
 
 
 def test_load(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """load() should restore the index and docmap saved by save()."""
+    """load() should restore the index, docmap, and term_frequencies saved by save()."""
     monkeypatch.chdir(tmp_path)
     idx = InvertedIndex()
     idx.build(_make_movies("Batman Begins"))
@@ -64,6 +63,7 @@ def test_load(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     new_idx.load()
     assert new_idx.index == idx.index
     assert new_idx.docmap == idx.docmap
+    assert new_idx.term_frequencies == idx.term_frequencies
 
 
 def test_save(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -74,5 +74,22 @@ def test_save(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     idx.save()
     assert (tmp_path / "cache" / "index.pkl").exists()
     assert (tmp_path / "cache" / "docmap.pkl").exists()
+    assert (tmp_path / "cache" / "term_frequencies.pkl").exists()
     with open(tmp_path / "cache" / "index.pkl", "rb") as fh:
         assert pickle.load(fh) == idx.index
+
+
+def test_get_tf_returns_frequency(small_index: InvertedIndex) -> None:
+    """get_tf should return the number of times the term's stem appears in the document."""
+    assert small_index.get_tf(1, "batman") == 1
+
+
+def test_get_tf_returns_zero_for_missing_term(small_index: InvertedIndex) -> None:
+    """get_tf should return 0 when the term is not present in the document."""
+    assert small_index.get_tf(1, "inception") == 0
+
+
+def test_get_tf_raises_for_multi_word_term(small_index: InvertedIndex) -> None:
+    """get_tf should raise ValueError when the term contains more than one word."""
+    with pytest.raises(ValueError, match="unique"):
+        small_index.get_tf(1, "batman begins")
