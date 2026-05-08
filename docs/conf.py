@@ -27,7 +27,9 @@ autodoc_typehints = "description"
 autodoc_member_order = "bysource"
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
-suppress_warnings = ["sphinx_autodoc_typehints.forward_reference"]
+suppress_warnings = [
+    "sphinx_autodoc_typehints.forward_reference",
+]
 autodoc_default_options = {
     "exclude-members": "model_config,model_fields",
 }
