@@ -20,10 +20,12 @@ from cli.utils import (
         ("Hello World", "Hello World"),
         ("", ""),
         ("!@#$%^&*()", ""),
+        ("‘it’s a “test”", "its a test"),
+        ("en–dash and em—dash", "endash and emdash"),
     ],
 )
 def test_remove_all_punctuations(text: str, expected: str) -> None:
-    """Punctuation characters should be stripped; non-punctuation left intact."""
+    """ASCII and Unicode punctuation should be stripped; other chars left intact."""
     assert remove_all_punctuations(text) == expected
 
 
@@ -52,6 +54,14 @@ def test_tokenize_text(text: str, expected: list[str]) -> None:
 def test_get_stemmed_tokens(text: str, expected: list[str]) -> None:
     """Tokens should be reduced to their Porter stems in input order."""
     assert get_stemmed_tokens(text) == expected
+
+
+def test_get_stemmed_tokens_filters_stop_words(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Stop words should be excluded from the stemmed output."""
+    monkeypatch.setattr("cli.utils.STOP_WORDS", ["the", "a"])
+    assert get_stemmed_tokens("the batman") == ["batman"]
 
 
 def test_get_term_token_returns_stem() -> None:

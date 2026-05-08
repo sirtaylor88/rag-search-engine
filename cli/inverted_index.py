@@ -8,7 +8,6 @@ from typing import Counter, TypedDict
 
 import progressbar
 
-from cli.constants import BM25_K1
 from cli.utils import get_stemmed_tokens, get_term_token
 
 
@@ -104,13 +103,13 @@ class InvertedIndex:
 
         return math.log((self.total_doc_count - df + 0.5) / (df + 0.5) + 1)
 
-    def get_bm25_tf(self, doc_id: int, term: str, k1: float = BM25_K1) -> float:
+    def get_bm25_tf(self, doc_id: int, term: str, k1: float) -> float:
         """Compute saturated Okapi BM25 TF for a single-token term in a document.
 
         Args:
             doc_id (int): The document's unique identifier.
             term (str): A single-word term whose stem is looked up.
-            k1 (float): BM25 saturation parameter. Defaults to BM25_K1.
+            k1 (float): BM25 saturation parameter.
 
         Returns:
             float: (tf * (k1 + 1)) / (tf + k1) where tf is the raw term frequency.

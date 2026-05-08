@@ -5,7 +5,6 @@ from typing import override
 from cli.utils import get_stemmed_tokens
 from cli.inverted_index import InvertedIndex
 from cli.commands.base import TermCommand, TermRequest
-from cli.constants import STOP_WORDS
 
 
 def display_best_results(
@@ -21,7 +20,7 @@ def display_best_results(
         inverted_index (InvertedIndex): The pre-built inverted index to search.
         nb_of_results (int): Maximum number of results to display. Defaults to 5.
     """
-    query_tokens = set(get_stemmed_tokens(search_query)) - set(STOP_WORDS)
+    query_tokens = set(get_stemmed_tokens(search_query))
     doc_ids: set[int] = set()
     for query_token in query_tokens:
         if len(doc_ids) >= nb_of_results:

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from cli.constants import BM25_K1
 from cli.inverted_index import Document, InvertedIndex
 
 
@@ -122,12 +123,11 @@ def test_get_bm25_idf_higher_for_rare_term(small_index: InvertedIndex) -> None:
 
 def test_get_bm25_tf_returns_saturated_value(small_index: InvertedIndex) -> None:
     """get_bm25_tf should return (tf*(k1+1))/(tf+k1) for a known term."""
-    k1 = 1.5
     raw_tf = small_index.get_tf(1, "batman")
-    expected = (raw_tf * (k1 + 1)) / (raw_tf + k1)
-    assert small_index.get_bm25_tf(1, "batman", k1=k1) == pytest.approx(expected)
+    expected = (raw_tf * (BM25_K1 + 1)) / (raw_tf + BM25_K1)
+    assert small_index.get_bm25_tf(1, "batman", k1=BM25_K1) == pytest.approx(expected)
 
 
 def test_get_bm25_tf_zero_for_missing_term(small_index: InvertedIndex) -> None:
     """get_bm25_tf should return 0.0 when the term is absent from the document."""
-    assert small_index.get_bm25_tf(1, "inception") == pytest.approx(0.0)
+    assert small_index.get_bm25_tf(1, "inception", k1=BM25_K1) == pytest.approx(0.0)
