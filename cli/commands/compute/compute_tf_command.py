@@ -3,11 +3,13 @@
 from argparse import ArgumentParser
 from typing import override
 
-from cli.commands.base import BaseCommand, TermWithDocIDRequest
+from cli.commands.base import TermCommand, TermWithDocIDRequest
 
 
-class FindTFCommand(BaseCommand[TermWithDocIDRequest]):
+class ComputeTFCommand(TermCommand):
     """Command that loads the cached index and prints the term frequency for a doc."""
+
+    term_help = "Term to get term frequency for"
 
     def add_arguments(self, parser: ArgumentParser) -> None:
         """Register doc_id and term positional arguments with the tf subparser.
@@ -16,7 +18,7 @@ class FindTFCommand(BaseCommand[TermWithDocIDRequest]):
             parser (ArgumentParser): The tf subparser.
         """
         parser.add_argument("doc_id", type=int, help="Document ID")
-        parser.add_argument("term", type=str, help="The term")
+        super().add_arguments(parser)
 
     @override
     def run(self, request: TermWithDocIDRequest) -> None:

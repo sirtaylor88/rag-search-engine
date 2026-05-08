@@ -1,23 +1,14 @@
 """IDF command: computes inverse document frequency for a term."""
 
-from argparse import ArgumentParser
 from typing import override
 
-from cli.commands.base import BaseCommand, TermRequest
+from cli.commands.base import TermCommand, TermRequest
 
 
-class ComputeIDFCommand(BaseCommand[TermRequest]):
+class ComputeIDFCommand(TermCommand):
     """Command that loads the cached index and prints the IDF for a term."""
 
     term_help = "Term to get IDF score for"
-
-    def add_arguments(self, parser: ArgumentParser) -> None:
-        """Register term positional argument with the idf subparser.
-
-        Args:
-            parser (ArgumentParser): The idf subparser.
-        """
-        parser.add_argument("term", type=str, help=self.term_help)
 
     @override
     def run(self, request: TermRequest) -> None:

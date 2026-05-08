@@ -8,6 +8,7 @@ from typing import Counter, TypedDict
 
 import progressbar
 
+from cli.constants import BM25_K1
 from cli.utils import get_stemmed_tokens, get_term_token
 
 
@@ -102,6 +103,21 @@ class InvertedIndex:
         df = self.get_df(term)
 
         return math.log((self.total_doc_count - df + 0.5) / (df + 0.5) + 1)
+
+    def get_bm25_tf(self, doc_id: int, term: str, k1: float = BM25_K1) -> float:
+        """Compute saturated Okapi BM25 TF for a single-token term in a document.
+
+        Args:
+            doc_id (int): The document's unique identifier.
+            term (str): A single-word term whose stem is looked up.
+            k1 (float): BM25 saturation parameter. Defaults to BM25_K1.
+
+        Returns:
+            float: (tf * (k1 + 1)) / (tf + k1) where tf is the raw term frequency.
+        """
+        raw_tf = self.get_tf(doc_id, term)
+
+        return (raw_tf * (k1 + 1)) / (raw_tf + k1)
 
     def build(self, movies: list[Document]) -> None:
         """Build the index and document map from a list of movie dicts.

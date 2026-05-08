@@ -5,13 +5,18 @@ from argparse import ArgumentParser
 from cli.inverted_index import InvertedIndex
 from cli.commands import (
     BuildCommand,
+    ComputeBM25IDFCommand,
+    ComputeBM25TFCommand,
     ComputeIDFCommand,
     ComputeTFIDFCommand,
-    FindTFCommand,
+    ComputeTFCommand,
     SearchCommand,
-    ComputeBM25IDFCommand,
 )
-from cli.commands.base import TermRequest, TermWithDocIDRequest
+from cli.commands.base import (
+    ExtendedTermWithDocIDRequest,
+    TermRequest,
+    TermWithDocIDRequest,
+)
 
 
 def main() -> None:
@@ -29,7 +34,7 @@ def main() -> None:
         subparsers.add_parser("build", help="Build inverted index"),
         inverted_index,
     )
-    tf_cmd = FindTFCommand(
+    tf_cmd = ComputeTFCommand(
         subparsers.add_parser(
             "tf",
             help="Get term frequency of a document",
@@ -57,12 +62,19 @@ def main() -> None:
         ),
         inverted_index,
     )
+    bm25_tf_cmd = ComputeBM25TFCommand(
+        subparsers.add_parser(
+            "bm25tf",
+            help="Get BM25 TF score for a given document ID and term",
+        ),
+        inverted_index,
+    )
 
     args = parser.parse_args()
 
     match args.command:
         case "search":
-            search_cmd.run(TermRequest(term=args.query))
+            search_cmd.run(TermRequest(term=args.term))
         case "build":
             build_cmd.run(TermRequest(term=args.term))
         case "tf":
@@ -73,6 +85,12 @@ def main() -> None:
             tf_idf_cmd.run(TermWithDocIDRequest(doc_id=args.doc_id, term=args.term))
         case "bm25idf":
             bm25_idf_cmd.run(TermRequest(term=args.term))
+        case "bm25tf":
+            bm25_tf_cmd.run(
+                ExtendedTermWithDocIDRequest(
+                    doc_id=args.doc_id, term=args.term, k1=args.k1
+                )
+            )
         case _:
             parser.print_help()
 

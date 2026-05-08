@@ -118,3 +118,16 @@ def test_get_bm25_idf_returns_value(small_index: InvertedIndex) -> None:
 def test_get_bm25_idf_higher_for_rare_term(small_index: InvertedIndex) -> None:
     """get_bm25_idf should be higher for a term that appears in fewer documents."""
     assert small_index.get_bm25_idf("inception") > small_index.get_bm25_idf("batman")
+
+
+def test_get_bm25_tf_returns_saturated_value(small_index: InvertedIndex) -> None:
+    """get_bm25_tf should return (tf*(k1+1))/(tf+k1) for a known term."""
+    k1 = 1.5
+    raw_tf = small_index.get_tf(1, "batman")
+    expected = (raw_tf * (k1 + 1)) / (raw_tf + k1)
+    assert small_index.get_bm25_tf(1, "batman", k1=k1) == pytest.approx(expected)
+
+
+def test_get_bm25_tf_zero_for_missing_term(small_index: InvertedIndex) -> None:
+    """get_bm25_tf should return 0.0 when the term is absent from the document."""
+    assert small_index.get_bm25_tf(1, "inception") == pytest.approx(0.0)

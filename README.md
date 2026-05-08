@@ -21,6 +21,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)**. The current
   - [Inverse document frequency](#inverse-document-frequency)
   - [TF-IDF score](#tf-idf-score)
   - [BM25 IDF score](#bm25-idf-score)
+  - [BM25 TF score](#bm25-tf-score)
 - [Development](#development)
 
 ---
@@ -133,6 +134,21 @@ uv run python cli/keyword_search_cli.py bm25idf <term>
 $ uv run python cli/keyword_search_cli.py bm25idf knight
 BM25 IDF score of 'knight': 3.37
 ```
+
+### BM25 TF score
+
+Compute the [Okapi BM25](https://en.wikipedia.org/wiki/Okapi_BM25) saturated term frequency for a term in a specific document:
+
+```bash
+uv run python cli/keyword_search_cli.py bm25tf <doc_id> <term> [k1]
+```
+
+```
+$ uv run python cli/keyword_search_cli.py bm25tf 1 knight
+BM25 TF score of 'knight' in document '1': 1.60
+```
+
+The optional `k1` parameter (default: `1.5`) controls term frequency saturation.
 
 ---
 

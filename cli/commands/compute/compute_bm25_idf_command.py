@@ -2,7 +2,7 @@
 
 from typing import override
 
-from cli.commands.compute_idf_command import ComputeIDFCommand
+from cli.commands.compute.compute_idf_command import ComputeIDFCommand
 from cli.commands.base import TermRequest
 
 

@@ -1,11 +1,10 @@
 """Search command: queries the inverted index and prints the top results."""
 
-from argparse import ArgumentParser
 from typing import override
 
 from cli.utils import get_stemmed_tokens
 from cli.inverted_index import InvertedIndex
-from cli.commands.base import BaseCommand, TermRequest
+from cli.commands.base import TermCommand, TermRequest
 from cli.constants import STOP_WORDS
 
 
@@ -34,16 +33,10 @@ def display_best_results(
         print(f"{doc_id}. {title}")
 
 
-class SearchCommand(BaseCommand[TermRequest]):
+class SearchCommand(TermCommand):
     """Command that loads the cached index and prints the top matching movies."""
 
-    def add_arguments(self, parser: ArgumentParser) -> None:
-        """Register the query positional argument with the search subparser.
-
-        Args:
-            parser (ArgumentParser): The search subparser.
-        """
-        parser.add_argument("query", type=str, help="Search query")
+    term_help = "Search query"
 
     @override
     def run(self, request: TermRequest) -> None:

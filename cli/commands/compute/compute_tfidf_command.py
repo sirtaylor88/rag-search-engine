@@ -2,11 +2,11 @@
 
 from typing import override
 
-from cli.commands.find_tf_command import FindTFCommand
+from cli.commands.compute.compute_tf_command import ComputeTFCommand
 from cli.commands.base import TermWithDocIDRequest
 
 
-class ComputeTFIDFCommand(FindTFCommand):
+class ComputeTFIDFCommand(ComputeTFCommand):
     """Command that loads the cached index and prints the TF-IDF for a term."""
 
     @override
