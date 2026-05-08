@@ -1,7 +1,5 @@
 """Semantic search: loads a SentenceTransformer model for text encoding."""
 
-# pylint: disable=too-few-public-methods
-
 from sentence_transformers import SentenceTransformer
 
 

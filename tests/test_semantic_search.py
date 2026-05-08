@@ -1,7 +1,5 @@
 """Tests for cli.core.semantic_search."""
 
-# pylint: disable=too-few-public-methods
-
 from unittest.mock import MagicMock, patch
 
 from pytest import CaptureFixture

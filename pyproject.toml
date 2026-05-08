@@ -29,6 +29,9 @@ ignore_missing_imports = true
 [tool.ruff]
 line-length = 88
 
+[tool.pylint.messages_control]
+disable = ["too-few-public-methods"]
+
 [tool.pylint.format]
 max-line-length = 88
 
