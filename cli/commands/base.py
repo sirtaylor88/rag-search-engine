@@ -15,26 +15,29 @@ RequestT = TypeVar("RequestT")
 
 
 class SearchRequest(BaseModel):
-    """Request carrying a query string and a limit."""
+    """Request carrying a non-empty search query and a positive result limit."""
 
     query: str = Field(min_length=1)
     limit: int = Field(default=5, ge=1)
 
 
 class TermRequest(BaseModel):
-    """Request carrying a single term."""
+    """Request carrying a single non-empty term."""
 
     term: str = Field(min_length=1)
 
 
 class TermWithDocIDRequest(TermRequest):
-    """Request carrying a term and a document ID."""
+    """Request carrying a non-empty term and a positive document ID."""
 
     doc_id: int = Field(ge=1)
 
 
 class BM25Request(TermWithDocIDRequest):
-    """Request carrying a term, a document ID, and BM25 k1 and b parameters."""
+    """Request carrying a term, a document ID, and BM25 tuning parameters.
+
+    k1 must be positive; b must be in [0, 1].
+    """
 
     k1: float = Field(default=BM25_K1, gt=0)
     b: float = Field(default=BM25_B, ge=0, le=1)
