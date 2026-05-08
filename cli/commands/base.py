@@ -46,15 +46,18 @@ class BM25Request(TermWithDocIDRequest):
 class BaseCommand(ABC, Generic[RequestT]):
     """Abstract base class for CLI commands."""
 
-    def __init__(self, parser: ArgumentParser, inverted_index: InvertedIndex) -> None:
-        """Register command arguments and store the shared index.
+    def __init__(self, parser: ArgumentParser) -> None:
+        """Register command arguments with the shared subparser.
 
         Args:
             parser (ArgumentParser): The subparser for this command.
-            inverted_index (InvertedIndex): The shared index instance.
         """
-        self.inverted_index = inverted_index
         self.add_arguments(parser)
+
+    @property
+    def inverted_index(self) -> InvertedIndex:
+        """Return the shared InvertedIndex singleton."""
+        return InvertedIndex()
 
     @abstractmethod
     def add_arguments(self, parser: ArgumentParser) -> None:

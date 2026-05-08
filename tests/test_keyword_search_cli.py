@@ -20,7 +20,7 @@ def test_search_command_outputs_results(capsys: CaptureFixture[str]) -> None:
     mock_idx.docmap = {1: {"title": "Batman"}}
     with (
         patch("sys.argv", ["cli", "search", "batman"]),
-        patch("cli.keyword_search_cli.InvertedIndex", return_value=mock_idx),
+        patch("cli.commands.base.InvertedIndex", return_value=mock_idx),
     ):
         main()
     out = capsys.readouterr().out
@@ -53,7 +53,7 @@ def test_bm25search_command_outputs_results(capsys: CaptureFixture[str]) -> None
     mock_idx.docmap = {1: {"title": "Batman"}}
     with (
         patch("sys.argv", ["cli", "bm25search", "batman"]),
-        patch("cli.keyword_search_cli.InvertedIndex", return_value=mock_idx),
+        patch("cli.commands.base.InvertedIndex", return_value=mock_idx),
     ):
         main()
     out = capsys.readouterr().out

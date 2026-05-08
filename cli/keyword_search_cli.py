@@ -2,7 +2,6 @@
 
 from argparse import ArgumentParser
 
-from cli.core.keyword_search import InvertedIndex
 from cli.commands import (
     BuildCommand,
     ComputeBM25IDFCommand,
@@ -26,12 +25,9 @@ def main() -> None:
     parser = ArgumentParser(description="Keyword Search CLI")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    inverted_index = InvertedIndex()
-
     # * Build
     build_cmd = BuildCommand(
         subparsers.add_parser("build", help="Build inverted index"),
-        inverted_index,
     )
 
     #  * Compute
@@ -40,47 +36,40 @@ def main() -> None:
             "tf",
             help="Get term frequency of a document",
         ),
-        inverted_index,
     )
     idf_cmd = ComputeIDFCommand(
         subparsers.add_parser(
             "idf",
             help="Get inverse document frequency for a given term",
         ),
-        inverted_index,
     )
     tf_idf_cmd = ComputeTFIDFCommand(
         subparsers.add_parser(
             "tfidf",
             help="Get TF-IDF score for a given term in a document",
         ),
-        inverted_index,
     )
     bm25_idf_cmd = ComputeBM25IDFCommand(
         subparsers.add_parser(
             "bm25idf",
             help="Get BM25 IDF score for a given term",
         ),
-        inverted_index,
     )
     bm25_tf_cmd = ComputeBM25TFCommand(
         subparsers.add_parser(
             "bm25tf",
             help="Get BM25 TF score for a given document ID and term",
         ),
-        inverted_index,
     )
 
     # * Search
     search_cmd = SearchCommand(
         subparsers.add_parser("search", help="Search movies using BM25"),
-        inverted_index,
     )
     bm25_search_cmd = BM25SearchCommand(
         subparsers.add_parser(
             "bm25search", help="Search movies using full BM25 scoring"
         ),
-        inverted_index,
     )
 
     args = parser.parse_args()

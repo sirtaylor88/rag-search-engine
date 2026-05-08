@@ -5,7 +5,6 @@
 import math
 import pickle
 from pathlib import Path
-
 import pytest
 
 from cli.constants import BM25_B, BM25_K1
@@ -18,6 +17,12 @@ def _make_movies(*titles: str) -> list[Document]:
         Document(id=i, title=title, description="")
         for i, title in enumerate(titles, start=1)
     ]
+
+
+@pytest.fixture(autouse=True)
+def _reset_singleton(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reset the InvertedIndex singleton before each test."""
+    monkeypatch.setattr(InvertedIndex, "_instance", None)
 
 
 @pytest.fixture()

@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 import pickle  # nosec B403
 from collections import defaultdict
-from typing import Counter, TypedDict
+from typing import ClassVar, Counter, TypedDict
 
 import progressbar
 
@@ -29,7 +29,17 @@ class Document(TypedDict):
 class InvertedIndex:
     """An inverted index, like a SQL database index, helps to accelerate text search."""
 
+    _instance: ClassVar["InvertedIndex | None"] = None
+
+    def __new__(cls) -> "InvertedIndex":
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self) -> None:
+        if hasattr(self, "index"):
+            return
+
         # * Map token to a set of document IDs.
         self.index: defaultdict[str, set[int]] = defaultdict(set)
 
