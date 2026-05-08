@@ -1,5 +1,7 @@
 """Abstract base command."""
 
+# pylint: disable=too-few-public-methods
+
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser
 import sys
@@ -11,39 +13,79 @@ from cli.constants import BM25_B, BM25_K1
 from cli.core.keyword_search import InvertedIndex
 
 
-RequestT = TypeVar("RequestT")
+T = TypeVar("T")
+PayloadT = TypeVar("PayloadT")
 
 
-class SearchRequest(BaseModel):
-    """Request carrying a non-empty search query and a positive result limit."""
+class EmptyPayload(BaseModel):
+    """Payload with no fields, used for commands that need no input data."""
+
+
+class SearchPayload(BaseModel):
+    """Payload for search commands: non-empty query string and positive result limit."""
 
     query: str = Field(min_length=1)
     limit: int = Field(default=5, ge=1)
 
 
-class TermRequest(BaseModel):
-    """Request carrying a single non-empty term."""
+class TermPayload(BaseModel):
+    """Payload carrying a single non-empty term string."""
 
     term: str = Field(min_length=1)
 
 
-class TermWithDocIDRequest(TermRequest):
-    """Request carrying a non-empty term and a positive document ID."""
+class TermWithDocIDPayload(TermPayload):
+    """Payload carrying a non-empty term and a positive document ID."""
 
     doc_id: int = Field(ge=1)
 
 
-class BM25Request(TermWithDocIDRequest):
-    """Request carrying a term, a document ID, and BM25 tuning parameters.
-
-    k1 must be positive; b must be in [0, 1].
-    """
+class BM25Payload(TermWithDocIDPayload):
+    """Payload for BM25 TF commands: term, document ID, and tuning parameters."""
 
     k1: float = Field(default=BM25_K1, gt=0)
     b: float = Field(default=BM25_B, ge=0, le=1)
 
 
-class BaseCommand(ABC, Generic[RequestT]):
+class Request(BaseModel, Generic[T]):
+    """Generic typed base for all CLI request models.
+
+    ``T`` is the primary data type carried by the request (e.g. ``str`` for
+    text-based requests). Concrete request models inherit from ``Request[T]``
+    with a bound type and add their own validated fields.
+    """
+
+    payload: T
+
+
+class SearchRequest(Request[SearchPayload]):
+    """Request carrying a non-empty search query and a positive result limit."""
+
+    payload: SearchPayload
+
+
+class TermRequest(Request[TermPayload]):
+    """Request carrying a single non-empty term."""
+
+    payload: TermPayload
+
+
+class TermWithDocIDRequest(Request[TermWithDocIDPayload]):
+    """Request carrying a non-empty term and a positive document ID."""
+
+    payload: TermWithDocIDPayload
+
+
+class BM25Request(Request[BM25Payload]):
+    """Request carrying a term, a document ID, and BM25 tuning parameters.
+
+    k1 must be positive; b must be in [0, 1].
+    """
+
+    payload: BM25Payload
+
+
+class BaseCommand(ABC, Generic[PayloadT]):
     """Abstract base class for CLI commands."""
 
     def __init__(self, parser: ArgumentParser) -> None:
@@ -68,7 +110,7 @@ class BaseCommand(ABC, Generic[RequestT]):
         """
 
     @abstractmethod
-    def run(self, request: RequestT) -> None:
+    def run(self, request: Request[PayloadT]) -> None:
         """Execute the command with the given parsed argument values."""
 
     def load_cache(self) -> None:

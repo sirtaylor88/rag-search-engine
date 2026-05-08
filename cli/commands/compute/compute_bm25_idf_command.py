@@ -3,7 +3,7 @@
 from typing import override
 
 from cli.commands.compute.compute_idf_command import ComputeIDFCommand
-from cli.commands.base import TermRequest
+from cli.commands.base import Request, TermPayload
 
 
 class ComputeBM25IDFCommand(ComputeIDFCommand):
@@ -12,14 +12,14 @@ class ComputeBM25IDFCommand(ComputeIDFCommand):
     term_help = "Term to get BM25 IDF score for"
 
     @override
-    def run(self, request: TermRequest) -> None:
+    def run(self, request: Request[TermPayload]) -> None:
         """Load the index from cache and print the BM25 IDF for the given term.
 
         Args:
-            request (TermRequest): Contains the term to compute BM25 IDF for.
+            request (Request[TermPayload]): Contains the term to compute BM25 IDF for.
         """
         self.load_cache()
 
-        bm25idf = self.inverted_index.get_bm25_idf(request.term)
+        bm25idf = self.inverted_index.get_bm25_idf(request.payload.term)
 
-        print(f"BM25 IDF score of '{request.term}': {bm25idf:.2f}")
+        print(f"BM25 IDF score of '{request.payload.term}': {bm25idf:.2f}")

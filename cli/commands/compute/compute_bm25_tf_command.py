@@ -3,7 +3,7 @@
 from argparse import ArgumentParser
 from typing import override
 
-from cli.commands.base import BM25Request
+from cli.commands.base import BM25Payload, Request
 from cli.commands.compute.compute_tf_command import ComputeTFCommand
 from cli.constants import BM25_B, BM25_K1
 
@@ -36,22 +36,22 @@ class ComputeBM25TFCommand(ComputeTFCommand):
         )
 
     @override
-    def run(self, request: BM25Request) -> None:  # type: ignore[override]
+    def run(self, request: Request[BM25Payload]) -> None:  # type: ignore[override]
         """Load the index from cache and print the BM25 TF score for a document.
 
         Args:
-            request (BM25Request): Contains the document ID,
+            request (Request[BM25Payload]): Contains the document ID,
                 term, and BM25 k1 and b parameters.
         """
         self.load_cache()
 
         bm25tf = self.inverted_index.get_bm25_tf(
-            request.doc_id,
-            request.term,
-            k1=request.k1,
-            b=request.b,
+            request.payload.doc_id,
+            request.payload.term,
+            k1=request.payload.k1,
+            b=request.payload.b,
         )
         print(
-            f"BM25 TF score of '{request.term}' in document "
-            f"'{request.doc_id}': {bm25tf:.2f}"
+            f"BM25 TF score of '{request.payload.term}' in document "
+            f"'{request.payload.doc_id}': {bm25tf:.2f}"
         )

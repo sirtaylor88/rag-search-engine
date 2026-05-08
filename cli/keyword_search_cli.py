@@ -13,9 +13,13 @@ from cli.commands import (
     BM25SearchCommand,
 )
 from cli.commands.base import (
+    BM25Payload,
     BM25Request,
+    SearchPayload,
     SearchRequest,
+    TermPayload,
     TermRequest,
+    TermWithDocIDPayload,
     TermWithDocIDRequest,
 )
 
@@ -76,23 +80,39 @@ def main() -> None:
 
     match args.command:
         case "build":
-            build_cmd.run(TermRequest(term=args.term))
+            build_cmd.run(TermRequest(payload=TermPayload(term=args.term)))
         case "idf":
-            idf_cmd.run(TermRequest(term=args.term))
+            idf_cmd.run(TermRequest(payload=TermPayload(term=args.term)))
         case "tf":
-            tf_cmd.run(TermWithDocIDRequest(doc_id=args.doc_id, term=args.term))
+            tf_cmd.run(
+                TermWithDocIDRequest(
+                    payload=TermWithDocIDPayload(doc_id=args.doc_id, term=args.term)
+                )
+            )
         case "tfidf":
-            tf_idf_cmd.run(TermWithDocIDRequest(doc_id=args.doc_id, term=args.term))
+            tf_idf_cmd.run(
+                TermWithDocIDRequest(
+                    payload=TermWithDocIDPayload(doc_id=args.doc_id, term=args.term)
+                )
+            )
         case "bm25idf":
-            bm25_idf_cmd.run(TermRequest(term=args.term))
+            bm25_idf_cmd.run(TermRequest(payload=TermPayload(term=args.term)))
         case "bm25tf":
             bm25_tf_cmd.run(
-                BM25Request(doc_id=args.doc_id, term=args.term, k1=args.k1, b=args.b)
+                BM25Request(
+                    payload=BM25Payload(
+                        doc_id=args.doc_id, term=args.term, k1=args.k1, b=args.b
+                    )
+                )
             )
         case "search":
-            search_cmd.run(SearchRequest(query=args.query, limit=args.limit))
+            search_cmd.run(
+                SearchRequest(payload=SearchPayload(query=args.query, limit=args.limit))
+            )
         case "bm25search":
-            bm25_search_cmd.run(SearchRequest(query=args.query, limit=args.limit))
+            bm25_search_cmd.run(
+                SearchRequest(payload=SearchPayload(query=args.query, limit=args.limit))
+            )
         case _:
             parser.print_help()
 

@@ -2,25 +2,27 @@
 
 from typing import override
 
-from cli.commands.base import BaseSearchCommand, SearchRequest
+from cli.commands.base import BaseSearchCommand, Request, SearchPayload
 
 
 class SearchCommand(BaseSearchCommand):
     """Command that loads the cached index and prints the top matching movies."""
 
     @override
-    def run(self, request: SearchRequest) -> None:
+    def run(self, request: Request[SearchPayload]) -> None:
         """Load the index from cache and display the best matching results.
 
         Args:
-            request (SearchRequest): Contains the search query string.
+            request (Request[SearchPayload]): Contains the search query string.
         """
 
         self.load_cache()
 
-        print("Searching for:", request.query)
+        print("Searching for:", request.payload.query)
 
-        results = self.inverted_index.search(request.query, request.limit)
+        results = self.inverted_index.search(
+            request.payload.query, request.payload.limit
+        )
 
         for doc_id in results:
             title = self.inverted_index.docmap[doc_id]["title"]

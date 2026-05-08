@@ -6,7 +6,7 @@ import sys
 from typing import override
 
 from cli.core.keyword_search import Document
-from cli.commands.base import BaseCommand, TermRequest
+from cli.commands.base import BaseCommand, Request, TermPayload
 
 
 def get_movies(data_path: str = "data/movies.json") -> list[Document]:
@@ -24,7 +24,7 @@ def get_movies(data_path: str = "data/movies.json") -> list[Document]:
     return data["movies"]
 
 
-class BuildCommand(BaseCommand[TermRequest]):
+class BuildCommand(BaseCommand[TermPayload]):
     """Command that builds and persists the inverted index from a movies JSON file."""
 
     def add_arguments(self, parser: ArgumentParser) -> None:
@@ -42,14 +42,14 @@ class BuildCommand(BaseCommand[TermRequest]):
         )
 
     @override
-    def run(self, request: TermRequest) -> None:
+    def run(self, request: Request[TermPayload]) -> None:
         """Load movies, build the inverted index, and save it to cache.
 
         Args:
-            request (TermRequest): Contains the path to the movies JSON file.
+            request (Request[TermPayload]): Contains the path to the movies JSON file.
         """
         try:
-            movies = get_movies(data_path=request.term)
+            movies = get_movies(data_path=request.payload.term)
         except OSError:
             print("Cannot build movies data.")
             sys.exit(1)

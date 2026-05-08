@@ -2,7 +2,7 @@
 
 from typing import override
 
-from cli.commands.base import TermCommand, TermRequest
+from cli.commands.base import Request, TermCommand, TermPayload
 
 
 class ComputeIDFCommand(TermCommand):
@@ -11,14 +11,14 @@ class ComputeIDFCommand(TermCommand):
     term_help = "Term to get IDF score for"
 
     @override
-    def run(self, request: TermRequest) -> None:
+    def run(self, request: Request[TermPayload]) -> None:
         """Load the index from cache and print the IDF for the given term.
 
         Args:
-            request (TermRequest): Contains the term to compute IDF for.
+            request (Request[TermPayload]): Contains the term to compute IDF for.
         """
         self.load_cache()
 
-        idf = self.inverted_index.get_idf(request.term)
+        idf = self.inverted_index.get_idf(request.payload.term)
 
-        print(f"Inverse document frequency of '{request.term}': {idf:.2f}")
+        print(f"Inverse document frequency of '{request.payload.term}': {idf:.2f}")

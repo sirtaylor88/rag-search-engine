@@ -3,7 +3,7 @@
 from argparse import ArgumentParser
 from typing import override
 
-from cli.commands.base import TermCommand, TermWithDocIDRequest
+from cli.commands.base import Request, TermCommand, TermWithDocIDPayload
 
 
 class ComputeTFCommand(TermCommand):
@@ -21,16 +21,17 @@ class ComputeTFCommand(TermCommand):
         super().add_arguments(parser)
 
     @override
-    def run(self, request: TermWithDocIDRequest) -> None:
+    def run(self, request: Request[TermWithDocIDPayload]) -> None:
         """Load the index from cache and print the term frequency for a document.
 
         Args:
-            request (TermWithDocIDRequest): Contains the document ID and term.
+            request (Request[TermWithDocIDPayload]): Contains the document ID and term.
         """
         self.load_cache()
 
-        tf = self.inverted_index.get_tf(request.doc_id, request.term)
+        tf = self.inverted_index.get_tf(request.payload.doc_id, request.payload.term)
         print(
-            f"The term frequency of ``{request.term}`` in document {request.doc_id} is",
+            f"The term frequency of ``{request.payload.term}`` "
+            f"in document {request.payload.doc_id} is",
             tf,
         )
