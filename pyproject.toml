@@ -15,6 +15,7 @@ dependencies = [
     "nltk==3.9.1",
     "progressbar>=2.5",
     "pydantic>=2.13.4",
+    "sentence-transformers>=5.4.1",
 ]
 
 [[tool.mypy.overrides]]

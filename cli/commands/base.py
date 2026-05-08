@@ -58,6 +58,12 @@ class Request(BaseModel, Generic[T]):
     payload: T
 
 
+class EmptyRequest(Request[EmptyPayload]):
+    """Request with no payload fields, for commands that require no input."""
+
+    payload: EmptyPayload
+
+
 class SearchRequest(Request[SearchPayload]):
     """Request carrying a non-empty search query and a positive result limit."""
 

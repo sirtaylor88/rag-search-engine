@@ -23,6 +23,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)**. The current
   - [TF-IDF score](#tf-idf-score)
   - [BM25 IDF score](#bm25-idf-score)
   - [BM25 TF score](#bm25-tf-score)
+  - [Verify semantic model](#verify-semantic-model)
 - [Documentation](#documentation)
 - [Development](#development)
 
@@ -168,6 +169,20 @@ BM25 TF score of 'knight' in document '1': 1.60
 ```
 
 The optional `k1` parameter (default: `1.5`) controls term frequency saturation. The optional `b` parameter (default: `0.75`) controls document length normalization.
+
+### Verify semantic model
+
+Load and verify the [sentence-transformers](https://www.sbert.net/) model (`all-MiniLM-L6-v2`). Downloads automatically on first use:
+
+```bash
+uv run python cli/semantic_search_cli.py verify
+```
+
+```
+$ uv run python cli/semantic_search_cli.py verify
+Model loaded: SentenceTransformer('all-MiniLM-L6-v2')
+Max sequence length: 256
+```
 
 ---
 

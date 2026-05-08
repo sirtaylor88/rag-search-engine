@@ -5,6 +5,7 @@
 
 base
 build
+verify
 search/index
 compute/index
 ```

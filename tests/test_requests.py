@@ -6,6 +6,8 @@ from pydantic import ValidationError
 from cli.commands.base import (
     BM25Payload,
     BM25Request,
+    EmptyPayload,
+    EmptyRequest,
     SearchPayload,
     SearchRequest,
     TermPayload,
@@ -139,3 +141,8 @@ class TestRequestConstruction:
         req = BM25Request(payload=BM25Payload(term="batman", doc_id=1))
         assert req.payload.k1 == BM25_K1
         assert req.payload.b == BM25_B
+
+    def test_empty_request(self) -> None:
+        """EmptyRequest should be constructable with an EmptyPayload."""
+        req = EmptyRequest(payload=EmptyPayload())
+        assert isinstance(req.payload, EmptyPayload)
