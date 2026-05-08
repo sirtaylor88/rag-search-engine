@@ -13,7 +13,7 @@ def test_verify_command_calls_verify_model(capsys: CaptureFixture[str]) -> None:
     mock_model.max_seq_length = 128
     with (
         patch("sys.argv", ["cli", "verify"]),
-        patch("cli.core.semantic_search.SentenceTransformer", return_value=mock_model),
+        patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
     ):
         main()
 
@@ -31,7 +31,7 @@ def test_embed_text_command_prints_embedding_info(capsys: CaptureFixture[str]) -
     mock_model.encode.return_value = [mock_embedding]
     with (
         patch("sys.argv", ["cli", "embed_text", "hello world"]),
-        patch("cli.core.semantic_search.SentenceTransformer", return_value=mock_model),
+        patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
     ):
         main()
 

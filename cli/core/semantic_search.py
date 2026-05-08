@@ -1,7 +1,12 @@
 """Semantic search: loads a SentenceTransformer model for text encoding."""
 
-from sentence_transformers import SentenceTransformer
-from torch import Tensor
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sentence_transformers import SentenceTransformer
+    from torch import Tensor
 
 
 def verify_model() -> None:
@@ -30,7 +35,9 @@ class SemanticSearch:
 
     def __init__(self) -> None:
         """Load the all-MiniLM-L6-v2 model (downloads automatically on first use)."""
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        from sentence_transformers import SentenceTransformer  # pylint: disable=import-outside-toplevel
+
+        self.model: SentenceTransformer = SentenceTransformer("all-MiniLM-L6-v2")
 
     def generate_embedding(self, text: str) -> Tensor:
         """Encode text into a dense embedding vector.

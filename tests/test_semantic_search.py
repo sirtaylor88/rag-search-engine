@@ -15,7 +15,7 @@ class TestSemanticSearch:
         """SemanticSearch should load the all-MiniLM-L6-v2 model on instantiation."""
         mock_model = MagicMock()
         with patch(
-            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            "sentence_transformers.SentenceTransformer", return_value=mock_model
         ) as mock_st:
             ss = SemanticSearch()
             mock_st.assert_called_once_with("all-MiniLM-L6-v2")
@@ -27,7 +27,7 @@ class TestSemanticSearch:
         mock_model = MagicMock()
         mock_model.encode.return_value = [mock_tensor]
         with patch(
-            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            "sentence_transformers.SentenceTransformer", return_value=mock_model
         ):
             ss = SemanticSearch()
             result = ss.generate_embedding("hello world")
@@ -39,7 +39,7 @@ class TestSemanticSearch:
         """generate_embedding should raise ValueError for whitespace-only text."""
         mock_model = MagicMock()
         with patch(
-            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            "sentence_transformers.SentenceTransformer", return_value=mock_model
         ):
             ss = SemanticSearch()
             with pytest.raises(ValueError, match="empty"):
@@ -56,7 +56,7 @@ class TestVerifyModel:
         mock_model = MagicMock()
         mock_model.max_seq_length = 128
         with patch(
-            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            "sentence_transformers.SentenceTransformer", return_value=mock_model
         ):
             verify_model()
 
@@ -76,7 +76,7 @@ class TestEmbedText:
         mock_model = MagicMock()
         mock_model.encode.return_value = [mock_embedding]
         with patch(
-            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            "sentence_transformers.SentenceTransformer", return_value=mock_model
         ):
             embed_text("hello")
 
