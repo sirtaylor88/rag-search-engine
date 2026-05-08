@@ -161,6 +161,12 @@ Build the HTML docs locally with [Sphinx](https://www.sphinx-doc.org/):
 uv run sphinx-build -b html docs docs/_build/html
 ```
 
+Or serve with live reload at <http://127.0.0.1:8000>:
+
+```bash
+uv run sphinx-autobuild docs docs/_build/html
+```
+
 ---
 
 ## Development

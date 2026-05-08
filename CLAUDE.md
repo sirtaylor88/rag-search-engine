@@ -58,9 +58,12 @@ Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, `mypy`, `bandit`, an
 ```bash
 # Build HTML documentation
 uv run sphinx-build -b html docs docs/_build/html
+
+# Serve docs locally with live reload (http://127.0.0.1:8000)
+uv run sphinx-autobuild docs docs/_build/html
 ```
 
-Dev dependencies: `bandit`, `furo`, `mypy`, `myst-parser`, `pre-commit`, `pylint`, `pytest`, `pytest-cov`, `ruff`, `sphinx`, `sphinx-autodoc-typehints`.
+Dev dependencies: `bandit`, `furo`, `mypy`, `myst-parser`, `pre-commit`, `pylint`, `pytest`, `pytest-cov`, `ruff`, `sphinx`, `sphinx-autobuild`, `sphinx-autodoc-typehints`.
 
 ## Architecture
 
