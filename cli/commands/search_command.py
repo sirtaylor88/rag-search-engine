@@ -5,7 +5,7 @@ from typing import override
 
 from cli.utils import get_stemmed_tokens
 from cli.inverted_index import InvertedIndex
-from cli.commands.base import BaseCommand
+from cli.commands.base import BaseCommand, TermRequest
 from cli.constants import STOP_WORDS
 
 
@@ -34,7 +34,7 @@ def display_best_results(
         print(f"{doc_id}. {title}")
 
 
-class SearchCommand(BaseCommand):
+class SearchCommand(BaseCommand[TermRequest]):
     """Command that loads the cached index and prints the top matching movies."""
 
     def add_arguments(self, parser: ArgumentParser) -> None:
@@ -46,15 +46,15 @@ class SearchCommand(BaseCommand):
         parser.add_argument("query", type=str, help="Search query")
 
     @override
-    def run(self, search_query: str) -> None:  # pylint: disable=arguments-differ
+    def run(self, request: TermRequest) -> None:
         """Load the index from cache and display the best matching results.
 
         Args:
-            search_query (str): The search query string.
+            request (TermRequest): Contains the search query string.
         """
 
         self.load_cache()
 
-        print("Searching for:", search_query)
+        print("Searching for:", request.term)
 
-        display_best_results(search_query, self.inverted_index)
+        display_best_results(request.term, self.inverted_index)

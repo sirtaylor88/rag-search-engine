@@ -1,15 +1,32 @@
 """Abstract base command."""
 
 from abc import ABC, abstractmethod
-
 from argparse import ArgumentParser
+from dataclasses import dataclass
 import sys
-from typing import Any
+from typing import Generic, TypeVar
 
 from cli.inverted_index import InvertedIndex
 
 
-class BaseCommand(ABC):
+RequestT = TypeVar("RequestT")
+
+
+@dataclass
+class TermRequest:
+    """Request carrying a single term."""
+
+    term: str
+
+
+@dataclass
+class TermWithDocIDRequest(TermRequest):
+    """Request carrying a term and a document ID."""
+
+    doc_id: int
+
+
+class BaseCommand(ABC, Generic[RequestT]):
     """Abstract base class for CLI commands."""
 
     def __init__(self, parser: ArgumentParser, inverted_index: InvertedIndex) -> None:
@@ -31,7 +48,7 @@ class BaseCommand(ABC):
         """
 
     @abstractmethod
-    def run(self, *args: Any) -> None:
+    def run(self, request: RequestT) -> None:
         """Execute the command with the given parsed argument values."""
 
     def load_cache(self) -> None:

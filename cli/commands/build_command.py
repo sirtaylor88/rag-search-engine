@@ -6,7 +6,7 @@ import sys
 from typing import override
 
 from cli.inverted_index import Document
-from cli.commands.base import BaseCommand
+from cli.commands.base import BaseCommand, TermRequest
 
 
 def get_movies(data_path: str = "data/movies.json") -> list[Document]:
@@ -24,7 +24,7 @@ def get_movies(data_path: str = "data/movies.json") -> list[Document]:
     return data["movies"]
 
 
-class BuildCommand(BaseCommand):
+class BuildCommand(BaseCommand[TermRequest]):
     """Command that builds and persists the inverted index from a movies JSON file."""
 
     def add_arguments(self, parser: ArgumentParser) -> None:
@@ -36,19 +36,20 @@ class BuildCommand(BaseCommand):
         parser.add_argument(
             "--data-path",
             type=str,
+            dest="term",
             default="data/movies.json",
             help="Path to the movies JSON file (default: data/movies.json)",
         )
 
     @override
-    def run(self, data_path: str) -> None:  # pylint: disable=arguments-differ
+    def run(self, request: TermRequest) -> None:
         """Load movies, build the inverted index, and save it to cache.
 
         Args:
-            data_path (str): Path to the movies JSON file.
+            request (TermRequest): Contains the path to the movies JSON file.
         """
         try:
-            movies = get_movies(data_path=data_path)
+            movies = get_movies(data_path=request.term)
         except OSError:
             print("Cannot build movies data.")
             sys.exit(1)

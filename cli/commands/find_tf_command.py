@@ -3,10 +3,10 @@
 from argparse import ArgumentParser
 from typing import override
 
-from cli.commands.base import BaseCommand
+from cli.commands.base import BaseCommand, TermWithDocIDRequest
 
 
-class FindTFCommand(BaseCommand):
+class FindTFCommand(BaseCommand[TermWithDocIDRequest]):
     """Command that loads the cached index and prints the term frequency for a doc."""
 
     def add_arguments(self, parser: ArgumentParser) -> None:
@@ -19,14 +19,16 @@ class FindTFCommand(BaseCommand):
         parser.add_argument("term", type=str, help="The term")
 
     @override
-    def run(self, doc_id: int, term: str) -> None:  # pylint: disable=arguments-differ
+    def run(self, request: TermWithDocIDRequest) -> None:
         """Load the index from cache and print the term frequency for a document.
 
         Args:
-            doc_id (int): The document ID to look up.
-            term (str): The term to look up.
+            request (TermWithDocIDRequest): Contains the document ID and term.
         """
         self.load_cache()
 
-        tf = self.inverted_index.get_tf(doc_id, term)
-        print(f"The term frequency of ``{term}`` in document with ID {doc_id} is", tf)
+        tf = self.inverted_index.get_tf(request.doc_id, request.term)
+        print(
+            f"The term frequency of ``{request.term}`` in document {request.doc_id} is",
+            tf,
+        )

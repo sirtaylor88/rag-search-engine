@@ -102,6 +102,21 @@ $ uv run python cli/keyword_search_cli.py tfidf 1 knight
 TF-IDF score of 'knight' in document '1': 6.91
 ```
 
+### BM25 IDF score
+
+Compute the Okapi BM25 inverse document frequency for a term:
+
+```bash
+uv run python cli/keyword_search_cli.py bm25idf <term>
+```
+
+Example:
+
+```
+$ uv run python cli/keyword_search_cli.py bm25idf knight
+BM25 IDF score of 'knight': 3.37
+```
+
 ## Development
 
 ```bash

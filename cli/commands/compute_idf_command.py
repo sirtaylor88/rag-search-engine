@@ -3,11 +3,13 @@
 from argparse import ArgumentParser
 from typing import override
 
-from cli.commands.base import BaseCommand
+from cli.commands.base import BaseCommand, TermRequest
 
 
-class ComputeIDFCommand(BaseCommand):
+class ComputeIDFCommand(BaseCommand[TermRequest]):
     """Command that loads the cached index and prints the IDF for a term."""
+
+    term_help = "Term to get IDF score for"
 
     def add_arguments(self, parser: ArgumentParser) -> None:
         """Register term positional argument with the idf subparser.
@@ -15,17 +17,17 @@ class ComputeIDFCommand(BaseCommand):
         Args:
             parser (ArgumentParser): The idf subparser.
         """
-        parser.add_argument("term", type=str, help="The term")
+        parser.add_argument("term", type=str, help=self.term_help)
 
     @override
-    def run(self, term: str) -> None:  # pylint: disable=arguments-differ
+    def run(self, request: TermRequest) -> None:
         """Load the index from cache and print the IDF for the given term.
 
         Args:
-            term (str): The term to compute IDF for.
+            request (TermRequest): Contains the term to compute IDF for.
         """
         self.load_cache()
 
-        idf = self.inverted_index.get_idf(term)
+        idf = self.inverted_index.get_idf(request.term)
 
-        print(f"Inverse document frequency of '{term}': {idf:.2f}")
+        print(f"Inverse document frequency of '{request.term}': {idf:.2f}")

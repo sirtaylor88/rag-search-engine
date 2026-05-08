@@ -105,3 +105,16 @@ def test_get_idf_returns_smoothed_value(small_index: InvertedIndex) -> None:
 def test_get_idf_higher_for_rare_term(small_index: InvertedIndex) -> None:
     """get_idf should be higher for a term that appears in fewer documents."""
     assert small_index.get_idf("inception") > small_index.get_idf("batman")
+
+
+def test_get_bm25_idf_returns_value(small_index: InvertedIndex) -> None:
+    """get_bm25_idf should return log((N-df+0.5)/(df+0.5)+1) for a known term."""
+    # small_index has 3 docs; "batman" appears in 2 of them
+    assert small_index.get_bm25_idf("batman") == pytest.approx(
+        math.log((3 - 2 + 0.5) / (2 + 0.5) + 1)
+    )
+
+
+def test_get_bm25_idf_higher_for_rare_term(small_index: InvertedIndex) -> None:
+    """get_bm25_idf should be higher for a term that appears in fewer documents."""
+    assert small_index.get_bm25_idf("inception") > small_index.get_bm25_idf("batman")

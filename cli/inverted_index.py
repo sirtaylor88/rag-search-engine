@@ -32,6 +32,11 @@ class InvertedIndex:
         # * Map document ID to a Counter with frequencies of its token.
         self.term_frequencies: dict[int, Counter] = defaultdict(Counter)
 
+    @property
+    def total_doc_count(self) -> int:
+        """Return the total number of indexed documents."""
+        return len(self.docmap)
+
     def __add_document(self, doc_id: int, text: str) -> None:
         """Index a document by stemming its text and mapping each token to the doc ID.
 
@@ -72,6 +77,12 @@ class InvertedIndex:
 
         return self.term_frequencies[doc_id].get(term_token[0], 0)
 
+    def get_df(self, term: str) -> int:
+        """Get document frequency with the term."""
+
+        term_token = get_term_token(term)
+        return len(self.index[term_token])
+
     def get_idf(self, term: str) -> float:
         """Compute smoothed IDF for a single-word term.
 
@@ -81,11 +92,16 @@ class InvertedIndex:
         Returns:
             float: log((N + 1) / (df + 1)) where N is total docs and df is match count.
         """
-        term_token = get_term_token(term)
-        total_doc_count = len(self.docmap)
-        term_match_doc_count = len(self.index[term_token])
 
-        return math.log((total_doc_count + 1) / (term_match_doc_count + 1))
+        df = self.get_df(term)
+
+        return math.log((self.total_doc_count + 1) / (df + 1))
+
+    def get_bm25_idf(self, term: str) -> float:
+        """Compute `Okapi BM25` IDF for a single-word term."""
+        df = self.get_df(term)
+
+        return math.log((self.total_doc_count - df + 0.5) / (df + 0.5) + 1)
 
     def build(self, movies: list[Document]) -> None:
         """Build the index and document map from a list of movie dicts.
