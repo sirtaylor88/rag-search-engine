@@ -97,7 +97,7 @@ The term frequency of ``knight`` in document 1 is 2
 
 ### Inverse document frequency
 
-Compute the smoothed IDF of a term across the full corpus:
+Compute the smoothed [inverse document frequency](https://en.wikipedia.org/wiki/Tf%E2%80%93idf#Inverse_document_frequency) of a term across the full corpus:
 
 ```bash
 uv run python cli/keyword_search_cli.py idf <term>
@@ -110,7 +110,7 @@ Inverse document frequency of 'knight': 3.45
 
 ### TF-IDF score
 
-Compute the TF-IDF score for a term in a specific document:
+Compute the [TF-IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) score for a term in a specific document:
 
 ```bash
 uv run python cli/keyword_search_cli.py tfidf <doc_id> <term>
