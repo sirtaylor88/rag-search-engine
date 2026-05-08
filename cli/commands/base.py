@@ -2,9 +2,10 @@
 
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser
-from dataclasses import dataclass
 import sys
 from typing import Generic, TypeVar
+
+from pydantic import BaseModel, Field
 
 from cli.constants import BM25_B, BM25_K1
 from cli.core.keyword_search import InvertedIndex
@@ -13,34 +14,30 @@ from cli.core.keyword_search import InvertedIndex
 RequestT = TypeVar("RequestT")
 
 
-@dataclass
-class SearchRequest:
+class SearchRequest(BaseModel):
     """Request carrying a query string and a limit."""
 
-    query: str
-    limit: int = 5
+    query: str = Field(min_length=1)
+    limit: int = Field(default=5, ge=1)
 
 
-@dataclass
-class TermRequest:
+class TermRequest(BaseModel):
     """Request carrying a single term."""
 
-    term: str
+    term: str = Field(min_length=1)
 
 
-@dataclass
 class TermWithDocIDRequest(TermRequest):
     """Request carrying a term and a document ID."""
 
-    doc_id: int
+    doc_id: int = Field(ge=1)
 
 
-@dataclass
 class BM25Request(TermWithDocIDRequest):
-    """Request carrying a term, a document ID, and a BM25 k1 parameter."""
+    """Request carrying a term, a document ID, and BM25 k1 and b parameters."""
 
-    k1: float = BM25_K1
-    b: float = BM25_B
+    k1: float = Field(default=BM25_K1, gt=0)
+    b: float = Field(default=BM25_B, ge=0, le=1)
 
 
 class BaseCommand(ABC, Generic[RequestT]):

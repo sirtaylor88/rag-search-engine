@@ -27,3 +27,4 @@ autodoc_typehints = "description"
 autodoc_member_order = "bysource"
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
+suppress_warnings = ["sphinx_autodoc_typehints.forward_reference"]
