@@ -13,7 +13,7 @@ from cli.commands import (
     SearchCommand,
 )
 from cli.commands.base import (
-    ExtendedTermWithDocIDRequest,
+    BM25Request,
     TermRequest,
     TermWithDocIDRequest,
 )
@@ -77,19 +77,17 @@ def main() -> None:
             search_cmd.run(TermRequest(term=args.term))
         case "build":
             build_cmd.run(TermRequest(term=args.term))
-        case "tf":
-            tf_cmd.run(TermWithDocIDRequest(doc_id=args.doc_id, term=args.term))
         case "idf":
             idf_cmd.run(TermRequest(term=args.term))
+        case "tf":
+            tf_cmd.run(TermWithDocIDRequest(doc_id=args.doc_id, term=args.term))
         case "tfidf":
             tf_idf_cmd.run(TermWithDocIDRequest(doc_id=args.doc_id, term=args.term))
         case "bm25idf":
             bm25_idf_cmd.run(TermRequest(term=args.term))
         case "bm25tf":
             bm25_tf_cmd.run(
-                ExtendedTermWithDocIDRequest(
-                    doc_id=args.doc_id, term=args.term, k1=args.k1
-                )
+                BM25Request(doc_id=args.doc_id, term=args.term, k1=args.k1, b=args.b)
             )
         case _:
             parser.print_help()

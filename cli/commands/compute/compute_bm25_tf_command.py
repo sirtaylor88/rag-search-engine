@@ -3,9 +3,9 @@
 from argparse import ArgumentParser
 from typing import override
 
-from cli.commands.base import ExtendedTermWithDocIDRequest
+from cli.commands.base import BM25Request
 from cli.commands.compute.compute_tf_command import ComputeTFCommand
-from cli.constants import BM25_K1
+from cli.constants import BM25_B, BM25_K1
 
 
 class ComputeBM25TFCommand(ComputeTFCommand):
@@ -27,23 +27,29 @@ class ComputeBM25TFCommand(ComputeTFCommand):
             default=BM25_K1,
             help="Tunable BM25 K1 parameter",
         )
+        parser.add_argument(
+            "b",
+            type=float,
+            nargs="?",
+            default=BM25_B,
+            help="Tunable BM25 b parameter",
+        )
 
     @override
-    def run(  # type: ignore[override]
-        self, request: ExtendedTermWithDocIDRequest
-    ) -> None:
+    def run(self, request: BM25Request) -> None:  # type: ignore[override]
         """Load the index from cache and print the BM25 TF score for a document.
 
         Args:
-            request (ExtendedTermWithDocIDRequest): Contains the document ID,
-                term, and BM25 k1 parameter.
+            request (BM25Request): Contains the document ID,
+                term, and BM25 k1 and b parameters.
         """
         self.load_cache()
 
         bm25tf = self.inverted_index.get_bm25_tf(
             request.doc_id,
             request.term,
-            request.k1,
+            k1=request.k1,
+            b=request.b,
         )
         print(
             f"BM25 TF score of '{request.term}' in document "

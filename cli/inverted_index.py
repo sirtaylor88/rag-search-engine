@@ -2,13 +2,18 @@
 
 import math
 import os
+from pathlib import Path
 import pickle  # nosec B403
 from collections import defaultdict
 from typing import Counter, TypedDict
 
 import progressbar
 
+from cli.constants import BM25_B, BM25_K1, CACHE_DIR
 from cli.utils import get_stemmed_tokens, get_term_token
+
+
+CACHE_DIR_PATH = Path(CACHE_DIR)
 
 
 class Document(TypedDict):
@@ -32,10 +37,21 @@ class InvertedIndex:
         # * Map document ID to a Counter with frequencies of its token.
         self.term_frequencies: dict[int, Counter] = defaultdict(Counter)
 
+        # * Map document ID to its number of tokens.
+        self.doc_lengths: dict[int, int] = {}
+
+        # * The path to the cache file for document lengths.
+        self.doc_lengths_path = CACHE_DIR_PATH / "doc_lengths.pkl"
+
     @property
     def total_doc_count(self) -> int:
         """Return the total number of indexed documents."""
         return len(self.docmap)
+
+    @property
+    def avg_doc_length(self) -> float:
+        """Return the mean document length across all indexed documents."""
+        return self.__get_avg_doc_length()
 
     def __add_document(self, doc_id: int, text: str) -> None:
         """Index a document by stemming its text and mapping each token to the doc ID.
@@ -46,9 +62,17 @@ class InvertedIndex:
         """
         tokens = get_stemmed_tokens(text)
         counter = Counter(tokens)
+        self.doc_lengths[doc_id] = sum(counter.values())
+
         for token in set(tokens):
             self.index[token].add(doc_id)
             self.term_frequencies[doc_id][token] += counter[token]
+
+    def __get_avg_doc_length(self) -> float:
+        if not self.doc_lengths:
+            return 0.0
+
+        return sum(self.doc_lengths.values()) / len(self.doc_lengths)
 
     def get_documents(self, term: str) -> list[int]:
         """Return sorted document IDs that contain the given term.
@@ -78,8 +102,14 @@ class InvertedIndex:
         return self.term_frequencies[doc_id].get(term_token[0], 0)
 
     def get_df(self, term: str) -> int:
-        """Get document frequency with the term."""
+        """Return the number of documents containing the given term.
 
+        Args:
+            term (str): A single-word term whose stem is looked up.
+
+        Returns:
+            int: Count of documents that contain the term's stem.
+        """
         term_token = get_term_token(term)
         return len(self.index[term_token])
 
@@ -98,25 +128,46 @@ class InvertedIndex:
         return math.log((self.total_doc_count + 1) / (df + 1))
 
     def get_bm25_idf(self, term: str) -> float:
-        """Compute `Okapi BM25` IDF for a single-word term."""
+        """Compute Okapi BM25 IDF for a single-word term.
+
+        Args:
+            term (str): A single-word term to look up.
+
+        Returns:
+            float: log((N - df + 0.5) / (df + 0.5) + 1) where N is total docs
+                and df is match count.
+        """
         df = self.get_df(term)
 
         return math.log((self.total_doc_count - df + 0.5) / (df + 0.5) + 1)
 
-    def get_bm25_tf(self, doc_id: int, term: str, k1: float) -> float:
+    def get_bm25_tf(
+        self,
+        doc_id: int,
+        term: str,
+        k1: float = BM25_K1,
+        b: float = BM25_B,
+    ) -> float:
         """Compute saturated Okapi BM25 TF for a single-token term in a document.
 
         Args:
             doc_id (int): The document's unique identifier.
             term (str): A single-word term whose stem is looked up.
-            k1 (float): BM25 saturation parameter.
+            k1 (float): BM25 saturation parameter controlling TF saturation speed.
+            b (float): BM25 length normalization parameter (0 = no normalization).
 
         Returns:
-            float: (tf * (k1 + 1)) / (tf + k1) where tf is the raw term frequency.
+            float: (tf * (k1 + 1)) / (tf + k1 * length_norm) where
+                length_norm = 1 - b + b * (doc_length / avg_doc_length).
         """
+
+        # * Get the length normalization factor
+        length_norm = 1 - b + b * (self.doc_lengths[doc_id] / self.avg_doc_length)
+
+        # * Get the raw TF score
         raw_tf = self.get_tf(doc_id, term)
 
-        return (raw_tf * (k1 + 1)) / (raw_tf + k1)
+        return (raw_tf * (k1 + 1)) / (raw_tf + k1 * length_norm)
 
     def build(self, movies: list[Document]) -> None:
         """Build the index and document map from a list of movie dicts.
@@ -139,25 +190,22 @@ class InvertedIndex:
         progress.finish()
 
     def save(self) -> None:
-        """Write the index, document map, and term frequencies to cache/."""
-        os.makedirs("cache", exist_ok=True)
+        """Write the index, document map, term frequencies, and doc lengths to cache."""
 
-        with open("cache/index.pkl", "wb") as fh:
-            pickle.dump(self.index, fh)
+        os.makedirs(CACHE_DIR_PATH, exist_ok=True)
+        for attr_name in ["index", "docmap", "term_frequencies"]:
+            with open(CACHE_DIR_PATH / f"{attr_name}.pkl", "wb") as fh:
+                pickle.dump(getattr(self, attr_name), fh)
 
-        with open("cache/docmap.pkl", "wb") as fh:
-            pickle.dump(self.docmap, fh)
-
-        with open("cache/term_frequencies.pkl", "wb") as fh:
-            pickle.dump(self.term_frequencies, fh)
+        with open(self.doc_lengths_path, "wb") as fh:
+            pickle.dump(self.doc_lengths, fh)
 
     def load(self) -> None:
-        """Load the index, document map, and term frequencies from cache/."""
-        with open("cache/index.pkl", "rb") as fh:
-            self.index = pickle.load(fh)  # nosec B301
+        """Load index, document map, term frequencies, and doc lengths from cache."""
 
-        with open("cache/docmap.pkl", "rb") as fh:
-            self.docmap = pickle.load(fh)  # nosec B301
+        for attr_name in ["index", "docmap", "term_frequencies"]:
+            with open(CACHE_DIR_PATH / f"{attr_name}.pkl", "rb") as fh:
+                setattr(self, attr_name, pickle.load(fh))  # nosec B301
 
-        with open("cache/term_frequencies.pkl", "rb") as fh:
-            self.term_frequencies = pickle.load(fh)  # nosec B301
+        with open(self.doc_lengths_path, "rb") as fh:
+            self.doc_lengths = pickle.load(fh)  # nosec B301

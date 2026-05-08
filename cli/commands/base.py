@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import sys
 from typing import Generic, TypeVar
 
-from cli.constants import BM25_K1
+from cli.constants import BM25_B, BM25_K1
 from cli.inverted_index import InvertedIndex
 
 
@@ -28,10 +28,11 @@ class TermWithDocIDRequest(TermRequest):
 
 
 @dataclass
-class ExtendedTermWithDocIDRequest(TermWithDocIDRequest):
+class BM25Request(TermWithDocIDRequest):
     """Request carrying a term, a document ID, and a BM25 k1 parameter."""
 
     k1: float = BM25_K1
+    b: float = BM25_B
 
 
 class BaseCommand(ABC, Generic[RequestT]):

@@ -35,6 +35,13 @@ repos:
         types: [python]
         pass_filenames: false
 
+      - id: sphinx-lint
+        name: sphinx-lint (uv)
+        entry: uv run sphinx-lint docs/
+        language: system
+        types: [rst, markdown]
+        pass_filenames: false
+
       - id: pytest-cov
         name: pytest coverage (uv)
         entry: uv run pytest --cov=cli --cov-report=term-missing --cov-fail-under=100

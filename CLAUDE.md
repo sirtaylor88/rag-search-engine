@@ -49,8 +49,8 @@ uv run python cli/keyword_search_cli.py tfidf <doc_id> <term>
 # Compute BM25 IDF score for a term
 uv run python cli/keyword_search_cli.py bm25idf <term>
 
-# Compute BM25 TF score for a term in a document (k1 optional, default 1.5)
-uv run python cli/keyword_search_cli.py bm25tf <doc_id> <term> [k1]
+# Compute BM25 TF score for a term in a document (k1 default 1.5, b default 0.75)
+uv run python cli/keyword_search_cli.py bm25tf <doc_id> <term> [k1] [b]
 ```
 
 Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, `mypy`, `bandit`, and `pytest` (enforcing 100% coverage) automatically on each commit.
@@ -71,7 +71,7 @@ The project is in early development. Current structure:
 
 - `cli/keyword_search_cli.py` — CLI entry point: builds the `ArgumentParser`, instantiates each command with its subparser (registering arguments), then parses args, wraps them in the appropriate request dataclass, and dispatches to `search`, `build`, `tf`, `idf`, `tfidf`, `bm25idf`, or `bm25tf`.
 - `cli/commands/` — Command classes following an instance-based pattern.
-  - `base.py` — `BaseCommand` abstract base class with `__init__(parser, inverted_index)`, abstract `add_arguments(parser)`, abstract `run(request)`, and concrete `load_cache()` (shared OSError handling). Also defines `TermRequest`, `TermWithDocIDRequest`, and `ExtendedTermWithDocIDRequest` (adds optional `k1`) dataclasses, and `TermCommand` (concrete base that registers a `term` positional arg).
+  - `base.py` — `BaseCommand` abstract base class with `__init__(parser, inverted_index)`, abstract `add_arguments(parser)`, abstract `run(request)`, and concrete `load_cache()` (shared OSError handling). Also defines `TermRequest`, `TermWithDocIDRequest`, and `BM25Request` (adds optional `k1` and `b`) dataclasses, and `TermCommand` (concrete base that registers a `term` positional arg).
   - `build_command.py` — `get_movies()` (loads JSON) and `BuildCommand`: registers `--data-path` and builds/saves the index.
   - `search_command.py` — `display_best_results()` and `SearchCommand`: extends `TermCommand` and runs the search.
   - `compute/` — Subpackage for all scoring/frequency commands.
@@ -79,11 +79,11 @@ The project is in early development. Current structure:
     - `compute_idf_command.py` — `ComputeIDFCommand`: extends `TermCommand` and prints the smoothed IDF via `InvertedIndex.get_idf()`.
     - `compute_tfidf_command.py` — `ComputeTFIDFCommand`: extends `ComputeTFCommand` and prints the TF-IDF score (product of `get_tf()` and `get_idf()`).
     - `compute_bm25_idf_command.py` — `ComputeBM25IDFCommand`: extends `ComputeIDFCommand` and prints the Okapi BM25 IDF via `InvertedIndex.get_bm25_idf()`.
-    - `compute_bm25_tf_command.py` — `ComputeBM25TFCommand`: extends `ComputeTFCommand`, registers optional `k1` arg, and prints the BM25 saturated TF via `InvertedIndex.get_bm25_tf()`.
-- `cli/inverted_index.py` — `InvertedIndex` class: builds a token→doc-ID index, tracks per-document term frequencies, supports `get_documents(term)`, `get_tf(doc_id, term)`, `get_idf(term)` (smoothed log IDF), `get_bm25_idf(term)` (Okapi BM25 IDF), and `get_bm25_tf(doc_id, term, k1)` (BM25 saturated TF), and persists to/loads from `cache/` via pickle. `Document` is a `TypedDict` for movie records.
+    - `compute_bm25_tf_command.py` — `ComputeBM25TFCommand`: extends `ComputeTFCommand`, registers optional `k1` and `b` args, and prints the BM25 saturated TF via `InvertedIndex.get_bm25_tf()`.
+- `cli/inverted_index.py` — `InvertedIndex` class: builds a token→doc-ID index, tracks per-document term frequencies and lengths (`doc_lengths`, `avg_doc_length`), supports `get_documents(term)`, `get_tf(doc_id, term)`, `get_idf(term)` (smoothed log IDF), `get_bm25_idf(term)` (Okapi BM25 IDF), and `get_bm25_tf(doc_id, term, k1, b)` (length-normalized BM25 TF), and persists to/loads from `cache/` via pickle. `Document` is a `TypedDict` for movie records.
 - `cli/utils.py` — Text processing helpers: `remove_all_punctuations` (strips ASCII and common Unicode punctuation: curly quotes, en/em dashes), `tokenize_text`, `get_stemmed_tokens` (Porter stemmer via NLTK; filters stop words; returns ordered list with duplicates), `get_stop_words` (loads from `data/stopwords.txt`), `get_term_token` (validates and stems a single-word term), the shared `STEMMER` instance, and `STOP_WORDS` (loaded once at import time).
-- `cli/constants.py` — Project-wide constants: `BM25_K1` (default BM25 saturation parameter, `1.5`).
-- `cache/` — Pickle files (`index.pkl`, `docmap.pkl`, `term_frequencies.pkl`) written by the `build` command. Excluded from git.
+- `cli/constants.py` — Project-wide constants: `BM25_K1` (default BM25 saturation parameter, `1.5`), `BM25_B` (default length normalization parameter, `0.75`), `CACHE_DIR` (cache directory name, `"cache"`).
+- `cache/` — Pickle files (`index.pkl`, `docmap.pkl`, `term_frequencies.pkl`, `doc_lengths.pkl`) written by the `build` command. Excluded from git.
 - `data/movies.json` — Movie dataset (~25 MB) with fields: `id`, `title`, `description`, and more. Used as the corpus for search.
 - `data/stopwords.txt` — Plain-text list of stop words (one per line) excluded from query tokens.
 - `examples/movies.json` — 20-movie sample of `data/movies.json` for quick testing without the full dataset.

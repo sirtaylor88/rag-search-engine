@@ -704,6 +704,15 @@ wheels = [
 ]
 
 [[package]]
+name = "polib"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/10/9a/79b1067d27e38ddf84fe7da6ec516f1743f31f752c6122193e7bce38bdbf/polib-1.2.0.tar.gz", hash = "sha256:f3ef94aefed6e183e342a8a269ae1fc4742ba193186ad76f175938621dbfc26b", size = 161658, upload-time = "2023-02-23T17:53:56.873Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6b/99/45bb1f9926efe370c6dbe324741c749658e44cb060124f28dad201202274/polib-1.2.0-py2.py3-none-any.whl", hash = "sha256:1c77ee1b81feb31df9bca258cbc58db1bbb32d10214b173882452c73af06d62d", size = 20634, upload-time = "2023-02-23T17:53:59.919Z" },
+]
+
+[[package]]
 name = "pre-commit"
 version = "4.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -864,6 +873,7 @@ dev = [
     { name = "sphinx" },
     { name = "sphinx-autobuild" },
     { name = "sphinx-autodoc-typehints" },
+    { name = "sphinx-lint" },
 ]
 
 [package.metadata]
@@ -886,6 +896,7 @@ dev = [
     { name = "sphinx", specifier = ">=8.0.0" },
     { name = "sphinx-autobuild", specifier = ">=2024.0.0" },
     { name = "sphinx-autodoc-typehints", specifier = ">=2.0.0" },
+    { name = "sphinx-lint", specifier = ">=1.0.2" },
 ]
 
 [[package]]
@@ -1123,6 +1134,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/98/0b/a866924ded68efec7a1759587a4e478aec7559d8165fac8b2ad1c0e774d6/sphinx_basic_ng-1.0.0b2.tar.gz", hash = "sha256:9ec55a47c90c8c002b5960c57492ec3021f5193cb26cebc2dc4ea226848651c9", size = 20736, upload-time = "2023-07-08T18:40:54.166Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3c/dd/018ce05c532a22007ac58d4f45232514cd9d6dd0ee1dc374e309db830983/sphinx_basic_ng-1.0.0b2-py3-none-any.whl", hash = "sha256:eb09aedbabfb650607e9b4b68c9d240b90b1e1be221d6ad71d61c52e29f7932b", size = 22496, upload-time = "2023-07-08T18:40:52.659Z" },
+]
+
+[[package]]
+name = "sphinx-lint"
+version = "1.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "polib" },
+    { name = "regex" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8a/19/9258497fee6e2a0bdb93e8ecea6ef6864afb5d83e996a1606a853f96c658/sphinx_lint-1.0.2.tar.gz", hash = "sha256:4e7fc12f44f750b0006eaad237d7db9b1d8aba92adda9c838af891654b371d35", size = 36870, upload-time = "2025-11-19T08:28:12.269Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c0/62/f29a2988ff706ac01d3c63d0b4cc4ed62d2c83b447916e0317790ca156cf/sphinx_lint-1.0.2-py3-none-any.whl", hash = "sha256:edcd0fa4d916386c5a3ef7ef0f5136f0bb4a15feefc83c1068ba15bc16eec652", size = 20670, upload-time = "2025-11-19T08:28:10.656Z" },
 ]
 
 [[package]]

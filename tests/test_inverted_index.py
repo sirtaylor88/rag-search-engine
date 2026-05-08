@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cli.constants import BM25_K1
+from cli.constants import BM25_B, BM25_K1
 from cli.inverted_index import Document, InvertedIndex
 
 
@@ -55,7 +55,7 @@ def test_build_indexes_description_text() -> None:
 
 
 def test_load(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """load() should restore the index, docmap, and term_frequencies saved by save()."""
+    """load() should restore all five persisted attributes saved by save()."""
     monkeypatch.chdir(tmp_path)
     idx = InvertedIndex()
     idx.build(_make_movies("Batman Begins"))
@@ -66,10 +66,11 @@ def test_load(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert new_idx.index == idx.index
     assert new_idx.docmap == idx.docmap
     assert new_idx.term_frequencies == idx.term_frequencies
+    assert new_idx.doc_lengths == idx.doc_lengths
 
 
 def test_save(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """save() should write pickle files that round-trip back to the original index."""
+    """save() should write pickle files for all four persisted attributes."""
     monkeypatch.chdir(tmp_path)
     idx = InvertedIndex()
     idx.build(_make_movies("Batman Begins"))
@@ -77,6 +78,7 @@ def test_save(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert (tmp_path / "cache" / "index.pkl").exists()
     assert (tmp_path / "cache" / "docmap.pkl").exists()
     assert (tmp_path / "cache" / "term_frequencies.pkl").exists()
+    assert (tmp_path / "cache" / "doc_lengths.pkl").exists()
     with open(tmp_path / "cache" / "index.pkl", "rb") as fh:
         assert pickle.load(fh) == idx.index
 
@@ -121,13 +123,37 @@ def test_get_bm25_idf_higher_for_rare_term(small_index: InvertedIndex) -> None:
     assert small_index.get_bm25_idf("inception") > small_index.get_bm25_idf("batman")
 
 
+def test_build_populates_doc_lengths(small_index: InvertedIndex) -> None:
+    """build() should record the token count for each indexed document."""
+    assert set(small_index.doc_lengths.keys()) == {1, 2, 3}
+    assert all(v > 0 for v in small_index.doc_lengths.values())
+
+
+def test_avg_doc_length_returns_mean(small_index: InvertedIndex) -> None:
+    """avg_doc_length should equal the mean of all per-document token counts."""
+    expected = sum(small_index.doc_lengths.values()) / len(small_index.doc_lengths)
+    assert small_index.avg_doc_length == pytest.approx(expected)
+
+
+def test_avg_doc_length_empty_returns_zero() -> None:
+    """avg_doc_length should be 0.0 when no documents have been indexed."""
+    assert InvertedIndex().avg_doc_length == pytest.approx(0.0)
+
+
 def test_get_bm25_tf_returns_saturated_value(small_index: InvertedIndex) -> None:
-    """get_bm25_tf should return (tf*(k1+1))/(tf+k1) for a known term."""
+    """get_bm25_tf should return the length-normalized BM25 TF for a known term."""
     raw_tf = small_index.get_tf(1, "batman")
-    expected = (raw_tf * (BM25_K1 + 1)) / (raw_tf + BM25_K1)
-    assert small_index.get_bm25_tf(1, "batman", k1=BM25_K1) == pytest.approx(expected)
+    length_norm = (
+        1 - BM25_B + BM25_B * (small_index.doc_lengths[1] / small_index.avg_doc_length)
+    )
+    expected = (raw_tf * (BM25_K1 + 1)) / (raw_tf + BM25_K1 * length_norm)
+    assert small_index.get_bm25_tf(1, "batman", k1=BM25_K1, b=BM25_B) == pytest.approx(
+        expected
+    )
 
 
 def test_get_bm25_tf_zero_for_missing_term(small_index: InvertedIndex) -> None:
     """get_bm25_tf should return 0.0 when the term is absent from the document."""
-    assert small_index.get_bm25_tf(1, "inception", k1=BM25_K1) == pytest.approx(0.0)
+    assert small_index.get_bm25_tf(
+        1, "inception", k1=BM25_K1, b=BM25_B
+    ) == pytest.approx(0.0)

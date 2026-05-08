@@ -277,7 +277,7 @@ def test_bm25tf_command_outputs_result(capsys: CaptureFixture[str]) -> None:
     with (
         patch("sys.argv", ["cli", "bm25tf", "1", "batman"]),
         patch("cli.inverted_index.InvertedIndex.load"),
-        patch("cli.inverted_index.InvertedIndex.get_tf", return_value=2),
+        patch("cli.inverted_index.InvertedIndex.get_bm25_tf", return_value=1.6),
     ):
         main()
     assert "batman" in capsys.readouterr().out

@@ -141,7 +141,7 @@ BM25 IDF score of 'knight': 3.37
 Compute the [Okapi BM25](https://en.wikipedia.org/wiki/Okapi_BM25) saturated term frequency for a term in a specific document:
 
 ```bash
-uv run python cli/keyword_search_cli.py bm25tf <doc_id> <term> [k1]
+uv run python cli/keyword_search_cli.py bm25tf <doc_id> <term> [k1] [b]
 ```
 
 ```
@@ -149,7 +149,7 @@ $ uv run python cli/keyword_search_cli.py bm25tf 1 knight
 BM25 TF score of 'knight' in document '1': 1.60
 ```
 
-The optional `k1` parameter (default: `1.5`) controls term frequency saturation.
+The optional `k1` parameter (default: `1.5`) controls term frequency saturation. The optional `b` parameter (default: `0.75`) controls document length normalization.
 
 ---
 
