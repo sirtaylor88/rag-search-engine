@@ -59,7 +59,7 @@ curl -o data/movies.json https://storage.googleapis.com/qvault-webapp-dynamic-as
 
 ### Build the inverted index
 
-Build and cache the index from the movie dataset before searching:
+Build and cache the index from the movie dataset before searching. Tokenization runs in parallel using a thread pool:
 
 ```bash
 uv run python cli/keyword_search_cli.py build

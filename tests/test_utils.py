@@ -4,11 +4,14 @@ from pathlib import Path
 
 import pytest
 
+from pytest import CaptureFixture
+
 from cli.utils import (
     get_stemmed_tokens,
     get_stop_words,
     get_term_token,
     remove_all_punctuations,
+    timer,
     tokenize_text,
 )
 
@@ -88,3 +91,12 @@ def test_get_stop_words(tmp_path: Path, content: str, expected: list[str]) -> No
     path = tmp_path / "stopwords.txt"
     path.write_text(content, encoding="utf-8")
     assert get_stop_words(str(path)) == expected
+
+
+def test_timer_prints_elapsed_to_stderr(capsys: CaptureFixture[str]) -> None:
+    """timer() should print elapsed time in seconds to stderr on exit."""
+    with timer():
+        pass
+    err = capsys.readouterr().err
+    assert "Completed in" in err
+    assert err.strip().endswith("s")

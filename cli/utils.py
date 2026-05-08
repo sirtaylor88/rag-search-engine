@@ -2,11 +2,27 @@
 
 import string
 import logging
+import sys
+import time
+from collections.abc import Generator
+from contextlib import contextmanager
 
 from nltk.stem import PorterStemmer
 
 STEMMER = PorterStemmer()
 logger = logging.getLogger(__name__)
+
+
+@contextmanager
+def timer() -> Generator[None, None, None]:
+    """Context manager that prints elapsed wall-clock time on exit.
+
+    Yields:
+        None
+    """
+    start = time.perf_counter()
+    yield
+    print(f"\nCompleted in {time.perf_counter() - start:.2f}s", file=sys.stderr)
 
 
 def get_stop_words(data_path: str = "data/stopwords.txt") -> list[str]:

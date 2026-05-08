@@ -2,6 +2,8 @@
 
 import math
 import os
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 import pickle  # nosec B403
 from collections import defaultdict
@@ -10,7 +12,7 @@ from typing import Counter, TypedDict
 import progressbar
 
 from cli.constants import BM25_B, BM25_K1, CACHE_DIR
-from cli.utils import get_stemmed_tokens, get_term_token
+from cli.utils import get_stemmed_tokens, get_term_token, timer
 
 
 CACHE_DIR_PATH = Path(CACHE_DIR)
@@ -43,6 +45,8 @@ class InvertedIndex:
         # * The path to the cache file for document lengths.
         self.doc_lengths_path = CACHE_DIR_PATH / "doc_lengths.pkl"
 
+        self._lock = threading.Lock()
+
     @property
     def total_doc_count(self) -> int:
         """Return the total number of indexed documents."""
@@ -62,11 +66,13 @@ class InvertedIndex:
         """
         tokens = get_stemmed_tokens(text)
         counter = Counter(tokens)
-        self.doc_lengths[doc_id] = sum(counter.values())
+        doc_length = sum(counter.values())
 
-        for token in set(tokens):
-            self.index[token].add(doc_id)
-            self.term_frequencies[doc_id][token] += counter[token]
+        with self._lock:
+            self.doc_lengths[doc_id] = doc_length
+            for token in set(tokens):
+                self.index[token].add(doc_id)
+                self.term_frequencies[doc_id][token] += counter[token]
 
     def __get_avg_doc_length(self) -> float:
         if not self.doc_lengths:
@@ -170,7 +176,10 @@ class InvertedIndex:
         return (raw_tf * (k1 + 1)) / (raw_tf + k1 * length_norm)
 
     def build(self, movies: list[Document]) -> None:
-        """Build the index and document map from a list of movie dicts.
+        """Build the index and document map from a list of movie dicts using threads.
+
+        Tokenization and stemming run in parallel across a thread pool; index
+        writes are serialized via an internal lock.
 
         Args:
             movies (list[Document]): List of movie documents.
@@ -179,15 +188,20 @@ class InvertedIndex:
             maxval=len(movies) + 1,
             widgets=[progressbar.Bar("=", "[", "]"), " ", progressbar.Percentage()],
         )
-        progress.start()
 
-        for idx, movie in enumerate(movies):
+        def _process(movie: Document) -> None:
             self.__add_document(movie["id"], f"{movie['title']} {movie['description']}")
-            self.docmap[movie["id"]] = movie
+            with self._lock:
+                self.docmap[movie["id"]] = movie
 
-            progress.update(idx + 1)
+        with timer():
+            progress.start()
+            with ThreadPoolExecutor() as executor:
+                futures = [executor.submit(_process, movie) for movie in movies]
+                for idx, _ in enumerate(as_completed(futures), start=1):
+                    progress.update(idx)
 
-        progress.finish()
+            progress.finish()
 
     def save(self) -> None:
         """Write the index, document map, term frequencies, and doc lengths to cache."""
