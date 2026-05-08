@@ -24,6 +24,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)**. The current
   - [BM25 IDF score](#bm25-idf-score)
   - [BM25 TF score](#bm25-tf-score)
   - [Verify semantic model](#verify-semantic-model)
+  - [Embed text](#embed-text)
 - [Documentation](#documentation)
 - [Development](#development)
 
@@ -182,6 +183,21 @@ uv run python cli/semantic_search_cli.py verify
 $ uv run python cli/semantic_search_cli.py verify
 Model loaded: SentenceTransformer('all-MiniLM-L6-v2')
 Max sequence length: 256
+```
+
+### Embed text
+
+Encode a text string into a dense embedding vector using `all-MiniLM-L6-v2` and print the first 3 dimensions and total embedding size:
+
+```bash
+uv run python cli/semantic_search_cli.py embed_text "<text>"
+```
+
+```
+$ uv run python cli/semantic_search_cli.py embed_text "the dark knight"
+Text: the dark knight
+First 3 dimensions: [-0.0123  0.0456 -0.0789]
+Dimensions: 384
 ```
 
 ---
