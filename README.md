@@ -33,13 +33,6 @@ uv run python cli/keyword_search_cli.py build --data-path examples/movies.json
 uv run python cli/keyword_search_cli.py search "<query>"
 ```
 
-Pass `--data-path` to use a different dataset:
-
-```bash
-uv run python cli/keyword_search_cli.py search "<query>" \
-  --data-path examples/movies.json
-```
-
 Example:
 
 ```
@@ -47,6 +40,21 @@ $ uv run python cli/keyword_search_cli.py search "the dark knight"
 Searching for: the dark knight
 1. The Dark Knight
 2. The Dark Knight Rises
+```
+
+### Term frequency
+
+Look up how many times a term appears in a specific document:
+
+```bash
+uv run python cli/keyword_search_cli.py tf <doc_id> <term>
+```
+
+Example:
+
+```
+$ uv run python cli/keyword_search_cli.py tf 1 knight
+The term frequency of ``knight`` in document with ID 1 is 2
 ```
 
 ## Development

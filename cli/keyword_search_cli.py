@@ -3,7 +3,7 @@
 from argparse import ArgumentParser
 
 from cli.inverted_index import InvertedIndex
-from cli.commands import BuildCommand, SearchCommand
+from cli.commands import BuildCommand, SearchCommand, TermFrequecyCommand
 
 
 def main() -> None:
@@ -21,6 +21,10 @@ def main() -> None:
         subparsers.add_parser("build", help="Build inverted index"),
         inverted_index,
     )
+    tf_cmd = TermFrequecyCommand(
+        subparsers.add_parser("tf", help="Get term frequency"),
+        inverted_index,
+    )
 
     args = parser.parse_args()
 
@@ -29,6 +33,8 @@ def main() -> None:
             search_cmd.run(args.query)
         case "build":
             build_cmd.run(args.data_path)
+        case "tf":
+            tf_cmd.run(args.doc_id, args.term)
         case _:
             parser.print_help()
 

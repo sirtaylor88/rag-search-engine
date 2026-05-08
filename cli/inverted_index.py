@@ -92,7 +92,7 @@ class InvertedIndex:
         progress.finish()
 
     def save(self) -> None:
-        """Write the index, document map, and term frequencies to the cache/ directory."""
+        """Write the index, document map, and term frequencies to cache/."""
         os.makedirs("cache", exist_ok=True)
 
         with open("cache/index.pkl", "wb") as fh:
@@ -105,7 +105,7 @@ class InvertedIndex:
             pickle.dump(self.term_frequencies, fh)
 
     def load(self) -> None:
-        """Load the index, document map, and term frequencies from the cache/ directory."""
+        """Load the index, document map, and term frequencies from cache/."""
         with open("cache/index.pkl", "rb") as fh:
             self.index = pickle.load(fh)  # nosec B301
 

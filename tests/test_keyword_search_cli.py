@@ -98,7 +98,10 @@ def test_search_missing_cache_prints_error_and_exits(
         main()
 
     assert exc_info.value.code == 1
-    assert capsys.readouterr().out == "Cannot load movies data.\n"
+    assert (
+        capsys.readouterr().out
+        == "Cannot load movies data. Please run build command first.\n"
+    )
 
 
 def test_early_break_when_docs_limit_reached(capsys: CaptureFixture[str]) -> None:
@@ -152,6 +155,35 @@ def test_get_movies_loads_file(tmp_path: Path) -> None:
     path = tmp_path / "movies.json"
     path.write_text(json.dumps(data), encoding="utf-8")
     assert get_movies(str(path)) == data["movies"]
+
+
+def test_tf_command_outputs_result(capsys: CaptureFixture[str]) -> None:
+    """The tf command should load the index and print the term frequency."""
+    with (
+        patch("sys.argv", ["cli", "tf", "1", "batman"]),
+        patch("cli.inverted_index.InvertedIndex.load"),
+        patch("cli.inverted_index.InvertedIndex.get_tf", return_value=3),
+    ):
+        main()
+    assert "batman" in capsys.readouterr().out
+
+
+def test_tf_missing_cache_prints_error_and_exits(
+    capsys: CaptureFixture[str],
+) -> None:
+    """A missing cache file should print an error message and exit with code 1."""
+    with (
+        patch("cli.inverted_index.InvertedIndex.load", side_effect=OSError),
+        patch("sys.argv", ["cli", "tf", "1", "batman"]),
+        pytest.raises(SystemExit) as exc_info,
+    ):
+        main()
+
+    assert exc_info.value.code == 1
+    assert (
+        capsys.readouterr().out
+        == "Cannot load movies data. Please run build command first.\n"
+    )
 
 
 def test_build_missing_data_prints_error_and_exits(

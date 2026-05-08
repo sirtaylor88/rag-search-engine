@@ -24,6 +24,12 @@ ignore_missing_imports = true
 module = "progressbar.*"
 ignore_missing_imports = true
 
+[tool.ruff]
+line-length = 88
+
+[tool.pylint.format]
+max-line-length = 88
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 

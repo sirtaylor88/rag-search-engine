@@ -36,6 +36,9 @@ uv run python cli/keyword_search_cli.py build
 
 # Run the keyword search CLI
 uv run python cli/keyword_search_cli.py search "<query>"
+
+# Get term frequency for a term in a document
+uv run python cli/keyword_search_cli.py tf <doc_id> <term>
 ```
 
 Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, `mypy`, `bandit`, and `pytest` (enforcing 100% coverage) automatically on each commit.
@@ -44,11 +47,12 @@ Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, `mypy`, `bandit`, an
 
 The project is in early development. Current structure:
 
-- `cli/keyword_search_cli.py` — CLI entry point: builds the `ArgumentParser`, instantiates `SearchCommand` and `BuildCommand` with their subparsers (which registers each command's arguments), then parses args and dispatches.
+- `cli/keyword_search_cli.py` — CLI entry point: builds the `ArgumentParser`, instantiates each command with its subparser (registering arguments), then parses args and dispatches to `search`, `build`, or `tf`.
 - `cli/commands/` — Command classes following an instance-based pattern.
   - `base.py` — `BaseCommand` abstract base class with `__init__(parser, inverted_index)`, abstract `add_arguments(parser)`, and abstract `run(*args)`.
   - `build_command.py` — `get_movies()` (loads JSON) and `BuildCommand`: registers `--data-path` and builds/saves the index.
   - `search_command.py` — `display_best_results()` and `SearchCommand`: registers the `query` positional arg and runs the search.
+  - `term_frequency_command.py` — `TermFrequecyCommand`: registers `doc_id` and `term` positional args and prints the term frequency via `InvertedIndex.get_tf()`.
 - `cli/inverted_index.py` — `InvertedIndex` class: builds a token→doc-ID index, tracks per-document term frequencies (`term_frequencies`), supports `get_documents(term)` and `get_tf(doc_id, term)`, and persists to/loads from `cache/` via pickle. `Document` is a `TypedDict` for movie records.
 - `cli/utils.py` — Text processing helpers: `remove_all_punctuations`, `tokenize_text`, `get_stemmed_tokens` (Porter stemmer via NLTK, returns an ordered list with duplicates), `get_stop_words`, and the shared `STEMMER` instance.
 - `cli/constants.py` — Project-wide constants: re-exports `STEMMER` from `cli.utils` and loads `STOP_WORDS` from `data/stopwords.txt` at import time.

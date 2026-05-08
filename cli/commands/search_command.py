@@ -1,4 +1,5 @@
 """Search command: queries the inverted index and prints the top results."""
+# pylint: disable=duplicate-code
 
 from argparse import ArgumentParser
 import sys
@@ -48,7 +49,7 @@ class SearchCommand(BaseCommand):
 
     @override
     def run(self, search_query: str) -> None:  # pylint: disable=arguments-differ
-        """Load the index from cache and display the best matching results for the query.
+        """Load the index from cache and display the best matching results.
 
         Args:
             search_query (str): The search query string.
@@ -56,7 +57,7 @@ class SearchCommand(BaseCommand):
         try:
             self.inverted_index.load()
         except OSError:
-            print("Cannot load movies data.")
+            print("Cannot load movies data. Please run build command first.")
             sys.exit(1)
 
         print("Searching for:", search_query)
