@@ -1,36 +1,63 @@
 # RAG Search Engine
 
-A search engine built with Retrieval Augmented Generation (RAG). The current focus is keyword search over a movie dataset using an inverted index with term-frequency tracking, with BM25 scoring and RAG-based semantic search planned as the next phase.
+![Python](https://img.shields.io/badge/python-3.12.9-blue?logo=python&logoColor=white)
+![uv](https://img.shields.io/badge/uv-package%20manager-blueviolet?logo=astral)
+![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)
+![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+![Ruff](https://img.shields.io/badge/lint-ruff-orange?logo=ruff)
+
+A search engine built with **Retrieval Augmented Generation (RAG)**. The current focus is keyword search over a movie dataset using an inverted index with term-frequency tracking. BM25 scoring and RAG-based semantic search are planned for the next phase.
+
+---
+
+## Table of Contents
+
+- [Setup](#setup)
+- [Dataset](#dataset)
+- [Usage](#usage)
+  - [Build the inverted index](#build-the-inverted-index)
+  - [Search](#search)
+  - [Term frequency](#term-frequency)
+  - [Inverse document frequency](#inverse-document-frequency)
+  - [TF-IDF score](#tf-idf-score)
+  - [BM25 IDF score](#bm25-idf-score)
+- [Development](#development)
+
+---
 
 ## Setup
 
-Python 3.12.9 and [`uv`](https://docs.astral.sh/uv/) are required.
+[Python 3.12.9](https://www.python.org/) and [`uv`](https://docs.astral.sh/uv/) are required.
 
 ```bash
 uv sync
 uv run pre-commit install
 ```
 
+---
+
 ## Dataset
 
-Create a data folder and copy the stop words file from the `examples` folder:
+Create a `data/` folder and copy the stop words file from the `examples/` folder:
 
 ```bash
 mkdir -p data
 cp examples/stopwords.txt data/
 ```
 
-Download the full movie dataset (~25 MB) before building the index:
+Download the full movie dataset (~25 MB):
 
 ```bash
 curl -o data/movies.json https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/course-rag-movies.json
 ```
 
+---
+
 ## Usage
 
 ### Build the inverted index
 
-Before searching, build and cache the index from the movie dataset:
+Build and cache the index from the movie dataset before searching:
 
 ```bash
 uv run python cli/keyword_search_cli.py build
@@ -48,8 +75,6 @@ uv run python cli/keyword_search_cli.py build --data-path examples/movies.json
 uv run python cli/keyword_search_cli.py search "<query>"
 ```
 
-Example:
-
 ```
 $ uv run python cli/keyword_search_cli.py search "the dark knight"
 Searching for: the dark knight
@@ -65,22 +90,18 @@ Look up how many times a term appears in a specific document:
 uv run python cli/keyword_search_cli.py tf <doc_id> <term>
 ```
 
-Example:
-
 ```
 $ uv run python cli/keyword_search_cli.py tf 1 knight
-The term frequency of ``knight`` in document with ID 1 is 2
+The term frequency of ``knight`` in document 1 is 2
 ```
 
 ### Inverse document frequency
 
-Compute the IDF of a term across the full corpus:
+Compute the smoothed IDF of a term across the full corpus:
 
 ```bash
 uv run python cli/keyword_search_cli.py idf <term>
 ```
-
-Example:
 
 ```
 $ uv run python cli/keyword_search_cli.py idf knight
@@ -95,8 +116,6 @@ Compute the TF-IDF score for a term in a specific document:
 uv run python cli/keyword_search_cli.py tfidf <doc_id> <term>
 ```
 
-Example:
-
 ```
 $ uv run python cli/keyword_search_cli.py tfidf 1 knight
 TF-IDF score of 'knight' in document '1': 6.91
@@ -104,29 +123,29 @@ TF-IDF score of 'knight' in document '1': 6.91
 
 ### BM25 IDF score
 
-Compute the Okapi BM25 inverse document frequency for a term:
+Compute the [Okapi BM25](https://en.wikipedia.org/wiki/Okapi_BM25) inverse document frequency for a term:
 
 ```bash
 uv run python cli/keyword_search_cli.py bm25idf <term>
 ```
-
-Example:
 
 ```
 $ uv run python cli/keyword_search_cli.py bm25idf knight
 BM25 IDF score of 'knight': 3.37
 ```
 
+---
+
 ## Development
 
-```bash
-uv run pytest                                                    # run tests
-uv run pytest --cov=cli --cov-report=term-missing               # run tests with coverage report
-uv run mypy .                                                    # type check
-uv run ruff check .                                              # lint
-uv run ruff format .                                             # format
-uv run pylint <file_or_dir>                                      # lint with pylint
-uv run bandit -r cli/                                            # security scan
-```
+| Command | Description |
+|---|---|
+| `uv run pytest` | Run tests |
+| `uv run pytest --cov=cli --cov-report=term-missing` | Run tests with coverage report |
+| `uv run mypy .` | Type check |
+| `uv run ruff check .` | Lint |
+| `uv run ruff format .` | Format |
+| `uv run pylint <file_or_dir>` | Lint with pylint |
+| `uv run bandit -r cli/` | Security scan |
 
 Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, `mypy`, `bandit`, and `pytest` (with 100% coverage enforcement) automatically on each commit.
