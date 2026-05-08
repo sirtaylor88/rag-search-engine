@@ -27,16 +27,26 @@ class Document(TypedDict):
 
 
 class InvertedIndex:
-    """An inverted index, like a SQL database index, helps to accelerate text search."""
+    """Token-based inverted index for fast document retrieval.
+
+    Implemented as a singleton: every call to ``InvertedIndex()`` returns the
+    same instance, so the index is built and loaded only once per process.
+    """
 
     _instance: ClassVar["InvertedIndex | None"] = None
 
     def __new__(cls) -> "InvertedIndex":
+        """Return the singleton instance, creating it on the first call.
+
+        Returns:
+            InvertedIndex: The shared singleton instance.
+        """
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self) -> None:
+        """Initialise index data structures on the first instantiation only."""
         if hasattr(self, "index"):
             return
 
