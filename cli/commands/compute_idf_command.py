@@ -1,12 +1,9 @@
 """IDF command: computes inverse document frequency for a term."""
-# pylint: disable=duplicate-code
 
-import math
 from argparse import ArgumentParser
 from typing import override
 
 from cli.commands.base import BaseCommand
-from cli.utils import get_term_token
 
 
 class ComputeIDFCommand(BaseCommand):
@@ -29,10 +26,6 @@ class ComputeIDFCommand(BaseCommand):
         """
         self.load_cache()
 
-        term_token = get_term_token(term)
-
-        total_doc_count = len(self.inverted_index.docmap)
-        term_match_doc_count = len(self.inverted_index.index[term_token])
-        idf = math.log((total_doc_count + 1) / (term_match_doc_count + 1))
+        idf = self.inverted_index.get_idf(term)
 
         print(f"Inverse document frequency of '{term}': {idf:.2f}")

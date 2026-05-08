@@ -1,5 +1,4 @@
 """Search command: queries the inverted index and prints the top results."""
-# pylint: disable=duplicate-code
 
 from argparse import ArgumentParser
 from typing import override

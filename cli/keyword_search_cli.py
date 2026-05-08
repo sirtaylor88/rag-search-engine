@@ -3,8 +3,13 @@
 from argparse import ArgumentParser
 
 from cli.inverted_index import InvertedIndex
-from cli.commands import BuildCommand, SearchCommand, FindTFCommand
-from cli.commands.compute_idf_command import ComputeIDFCommand
+from cli.commands import (
+    BuildCommand,
+    ComputeIDFCommand,
+    ComputeTFIDFCommand,
+    FindTFCommand,
+    SearchCommand,
+)
 
 
 def main() -> None:
@@ -33,6 +38,13 @@ def main() -> None:
         ),
         inverted_index,
     )
+    tfidf_cmd = ComputeTFIDFCommand(
+        subparsers.add_parser(
+            "tfidf",
+            help="Compute TF-IDF score for a term in a document",
+        ),
+        inverted_index,
+    )
 
     args = parser.parse_args()
 
@@ -45,6 +57,8 @@ def main() -> None:
             tf_cmd.run(args.doc_id, args.term)
         case "idf":
             idf_cmd.run(args.term)
+        case "tfidf":
+            tfidf_cmd.run(args.doc_id, args.term)
         case _:
             parser.print_help()
 

@@ -2,6 +2,7 @@
 
 # pylint: disable=redefined-outer-name
 
+import math
 import pickle
 from pathlib import Path
 
@@ -80,7 +81,7 @@ def test_save(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_get_tf_returns_frequency(small_index: InvertedIndex) -> None:
-    """get_tf should return the number of times the term's stem appears in the document."""
+    """get_tf should return the stem's frequency in the document."""
     assert small_index.get_tf(1, "batman") == 1
 
 
@@ -93,3 +94,14 @@ def test_get_tf_raises_for_multi_word_term(small_index: InvertedIndex) -> None:
     """get_tf should raise ValueError when the term contains more than one word."""
     with pytest.raises(ValueError, match="unique"):
         small_index.get_tf(1, "batman begins")
+
+
+def test_get_idf_returns_smoothed_value(small_index: InvertedIndex) -> None:
+    """get_idf should return log((N+1)/(df+1)) for a known term."""
+    # small_index has 3 docs; "batman" appears in 2 of them
+    assert small_index.get_idf("batman") == pytest.approx(math.log(4 / 3))
+
+
+def test_get_idf_higher_for_rare_term(small_index: InvertedIndex) -> None:
+    """get_idf should be higher for a term that appears in fewer documents."""
+    assert small_index.get_idf("inception") > small_index.get_idf("batman")

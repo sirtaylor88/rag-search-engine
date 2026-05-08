@@ -1,5 +1,4 @@
 """Term-frequency command: looks up how often a term appears in a document."""
-# pylint: disable=duplicate-code
 
 from argparse import ArgumentParser
 from typing import override

@@ -11,6 +11,14 @@ uv sync
 uv run pre-commit install
 ```
 
+## Dataset
+
+Download the full movie dataset (~25 MB) before building the index:
+
+```bash
+curl -o data/movies.json https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/course-rag-movies.json
+```
+
 ## Usage
 
 ### Build the inverted index
@@ -70,6 +78,21 @@ Example:
 ```
 $ uv run python cli/keyword_search_cli.py idf knight
 Inverse document frequency of 'knight': 3.45
+```
+
+### TF-IDF score
+
+Compute the TF-IDF score for a term in a specific document:
+
+```bash
+uv run python cli/keyword_search_cli.py tfidf <doc_id> <term>
+```
+
+Example:
+
+```
+$ uv run python cli/keyword_search_cli.py tfidf 1 knight
+TF-IDF score of 'knight' in document '1': 6.91
 ```
 
 ## Development

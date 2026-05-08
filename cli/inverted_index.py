@@ -1,5 +1,6 @@
 """Inverted index for fast token-based document lookup."""
 
+import math
 import os
 import pickle  # nosec B403
 from collections import defaultdict
@@ -7,7 +8,7 @@ from typing import Counter, TypedDict
 
 import progressbar
 
-from cli.utils import get_stemmed_tokens
+from cli.utils import get_stemmed_tokens, get_term_token
 
 
 class Document(TypedDict):
@@ -70,6 +71,21 @@ class InvertedIndex:
             raise ValueError("The term must be unique.")
 
         return self.term_frequencies[doc_id].get(term_token[0], 0)
+
+    def get_idf(self, term: str) -> float:
+        """Compute smoothed IDF for a single-word term.
+
+        Args:
+            term (str): A single-word term to look up.
+
+        Returns:
+            float: log((N + 1) / (df + 1)) where N is total docs and df is match count.
+        """
+        term_token = get_term_token(term)
+        total_doc_count = len(self.docmap)
+        term_match_doc_count = len(self.index[term_token])
+
+        return math.log((total_doc_count + 1) / (term_match_doc_count + 1))
 
     def build(self, movies: list[Document]) -> None:
         """Build the index and document map from a list of movie dicts.
