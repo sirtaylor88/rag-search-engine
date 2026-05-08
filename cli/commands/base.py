@@ -7,10 +7,18 @@ import sys
 from typing import Generic, TypeVar
 
 from cli.constants import BM25_B, BM25_K1
-from cli.inverted_index import InvertedIndex
+from cli.core.keyword_search import InvertedIndex
 
 
 RequestT = TypeVar("RequestT")
+
+
+@dataclass
+class SearchRequest:
+    """Request carrying a query string and a limit."""
+
+    query: str
+    limit: int = 5
 
 
 @dataclass
@@ -81,3 +89,25 @@ class TermCommand(BaseCommand):
             parser (ArgumentParser): The subparser for this command.
         """
         parser.add_argument("term", type=str, help=self.term_help)
+
+
+class BaseSearchCommand(BaseCommand):
+    """Base command that registers `query` and `--limit` arguments."""
+
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        """Register query and --limit arguments with the search subparser.
+
+        Args:
+            parser (ArgumentParser): The subparser for this command.
+        """
+        parser.add_argument(
+            "query",
+            type=str,
+            help="Search query",
+        )
+        parser.add_argument(
+            "--limit",
+            type=int,
+            default=5,
+            help="Top N documents.",
+        )

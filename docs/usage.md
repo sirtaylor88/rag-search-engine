@@ -33,10 +33,16 @@ uv run python cli/keyword_search_cli.py build
 uv run python cli/keyword_search_cli.py build --data-path examples/movies.json
 ```
 
-### Search
+### Keyword search
 
 ```bash
 uv run python cli/keyword_search_cli.py search "<query>"
+```
+
+### BM25 search
+
+```bash
+uv run python cli/keyword_search_cli.py bm25search "<query>"
 ```
 
 ### Term frequency

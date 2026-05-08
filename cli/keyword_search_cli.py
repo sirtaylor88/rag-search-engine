@@ -2,7 +2,7 @@
 
 from argparse import ArgumentParser
 
-from cli.inverted_index import InvertedIndex
+from cli.core.keyword_search import InvertedIndex
 from cli.commands import (
     BuildCommand,
     ComputeBM25IDFCommand,
@@ -11,9 +11,11 @@ from cli.commands import (
     ComputeTFIDFCommand,
     ComputeTFCommand,
     SearchCommand,
+    BM25SearchCommand,
 )
 from cli.commands.base import (
     BM25Request,
+    SearchRequest,
     TermRequest,
     TermWithDocIDRequest,
 )
@@ -26,14 +28,13 @@ def main() -> None:
 
     inverted_index = InvertedIndex()
 
-    search_cmd = SearchCommand(
-        subparsers.add_parser("search", help="Search movies using BM25"),
-        inverted_index,
-    )
+    # * Build
     build_cmd = BuildCommand(
         subparsers.add_parser("build", help="Build inverted index"),
         inverted_index,
     )
+
+    #  * Compute
     tf_cmd = ComputeTFCommand(
         subparsers.add_parser(
             "tf",
@@ -70,11 +71,21 @@ def main() -> None:
         inverted_index,
     )
 
+    # * Search
+    search_cmd = SearchCommand(
+        subparsers.add_parser("search", help="Search movies using BM25"),
+        inverted_index,
+    )
+    bm25_search_cmd = BM25SearchCommand(
+        subparsers.add_parser(
+            "bm25search", help="Search movies using full BM25 scoring"
+        ),
+        inverted_index,
+    )
+
     args = parser.parse_args()
 
     match args.command:
-        case "search":
-            search_cmd.run(TermRequest(term=args.term))
         case "build":
             build_cmd.run(TermRequest(term=args.term))
         case "idf":
@@ -89,6 +100,10 @@ def main() -> None:
             bm25_tf_cmd.run(
                 BM25Request(doc_id=args.doc_id, term=args.term, k1=args.k1, b=args.b)
             )
+        case "search":
+            search_cmd.run(SearchRequest(query=args.query, limit=args.limit))
+        case "bm25search":
+            bm25_search_cmd.run(SearchRequest(query=args.query, limit=args.limit))
         case _:
             parser.print_help()
 

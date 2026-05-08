@@ -5,6 +5,6 @@
 
 base
 build
-search
+search/index
 compute/index
 ```

@@ -91,6 +91,25 @@ class InvertedIndex:
         """
         return sorted(self.index[term.lower()])
 
+    def search(self, query: str, limit: int = 5) -> list[int]:
+        """Return up to `limit` sorted document IDs whose tokens overlap with the query.
+
+        Args:
+            query (str): The search query string.
+            limit (int): Maximum number of document IDs to return.
+
+        Returns:
+            list[int]: Sorted document IDs of matching documents.
+        """
+        query_tokens = set(get_stemmed_tokens(query))
+        doc_ids: set[int] = set()
+        for query_token in query_tokens:
+            if len(doc_ids) >= limit:
+                break
+            doc_ids.update(self.get_documents(query_token))
+
+        return sorted(doc_ids)[:limit]
+
     def get_tf(self, doc_id: int, term: str) -> int:
         """Return the frequency of a single-token term in the given document.
 
@@ -101,11 +120,9 @@ class InvertedIndex:
         Returns:
             int: Number of times the term's stem appears in the document, or 0.
         """
-        term_token = get_stemmed_tokens(term)
-        if len(term_token) != 1:
-            raise ValueError("The term must be unique.")
+        term_token = get_term_token(term)
 
-        return self.term_frequencies[doc_id].get(term_token[0], 0)
+        return self.term_frequencies[doc_id].get(term_token, 0)
 
     def get_df(self, term: str) -> int:
         """Return the number of documents containing the given term.
@@ -117,6 +134,7 @@ class InvertedIndex:
             int: Count of documents that contain the term's stem.
         """
         term_token = get_term_token(term)
+
         return len(self.index[term_token])
 
     def get_idf(self, term: str) -> float:
@@ -174,6 +192,45 @@ class InvertedIndex:
         raw_tf = self.get_tf(doc_id, term)
 
         return (raw_tf * (k1 + 1)) / (raw_tf + k1 * length_norm)
+
+    def bm25(self, doc_id: int, term: str) -> float:
+        """Compute the full BM25 score for a single term in a document.
+
+        Args:
+            doc_id (int): The document's unique identifier.
+            term (str): A single-word term.
+
+        Returns:
+            float: Product of BM25 TF and BM25 IDF for the term.
+        """
+        bm25_tf = self.get_bm25_tf(doc_id, term)
+        bm25_idf = self.get_bm25_idf(term)
+        return bm25_tf * bm25_idf
+
+    def bm25_search(self, query: str, limit: int) -> list[tuple[int, float]]:
+        """Return the top documents ranked by cumulative BM25 score.
+
+        Args:
+            query (str): The search query string.
+            limit (int): Maximum number of results to return.
+
+        Returns:
+            list[tuple[int, float]]: Descending-score list of (doc_id, score) pairs.
+        """
+        query_tokens = set(get_stemmed_tokens(query))
+        scores: defaultdict[int, float] = defaultdict(lambda: 0)
+
+        for query_token in query_tokens:
+            doc_ids = self.index.get(query_token, set())
+            for doc_id in doc_ids:
+                scores[doc_id] += self.bm25(doc_id, query_token)
+
+        scores_dsc = sorted(
+            scores.items(),
+            key=lambda item: item[1],
+            reverse=True,
+        )
+        return scores_dsc[:limit]
 
     def build(self, movies: list[Document]) -> None:
         """Build the index and document map from a list of movie dicts using threads.

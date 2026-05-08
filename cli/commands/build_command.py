@@ -5,7 +5,7 @@ import json
 import sys
 from typing import override
 
-from cli.inverted_index import Document
+from cli.core.keyword_search import Document
 from cli.commands.base import BaseCommand, TermRequest
 
 

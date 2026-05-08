@@ -6,7 +6,7 @@
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 ![Ruff](https://img.shields.io/badge/lint-ruff-orange?logo=ruff)
 
-A search engine built with **Retrieval Augmented Generation (RAG)**. The current focus is keyword search over a movie dataset using an inverted index with term-frequency tracking. BM25 scoring and RAG-based semantic search are planned for the next phase.
+A search engine built with **Retrieval Augmented Generation (RAG)**. The current focus is keyword search over a movie dataset using an inverted index with [Okapi BM25](https://en.wikipedia.org/wiki/Okapi_BM25) scoring. RAG-based semantic search is planned for the next phase.
 
 ---
 
@@ -16,7 +16,8 @@ A search engine built with **Retrieval Augmented Generation (RAG)**. The current
 - [Dataset](#dataset)
 - [Usage](#usage)
   - [Build the inverted index](#build-the-inverted-index)
-  - [Search](#search)
+  - [Keyword search](#keyword-search)
+  - [BM25 search](#bm25-search)
   - [Term frequency](#term-frequency)
   - [Inverse document frequency](#inverse-document-frequency)
   - [TF-IDF score](#tf-idf-score)
@@ -71,7 +72,9 @@ To use the sample dataset instead:
 uv run python cli/keyword_search_cli.py build --data-path examples/movies.json
 ```
 
-### Search
+### Keyword search
+
+Returns documents whose tokens overlap with the query (unranked):
 
 ```bash
 uv run python cli/keyword_search_cli.py search "<query>"
@@ -82,6 +85,21 @@ $ uv run python cli/keyword_search_cli.py search "the dark knight"
 Searching for: the dark knight
 1. The Dark Knight
 2. The Dark Knight Rises
+```
+
+### BM25 search
+
+Returns documents ranked by cumulative [Okapi BM25](https://en.wikipedia.org/wiki/Okapi_BM25) score:
+
+```bash
+uv run python cli/keyword_search_cli.py bm25search "<query>"
+```
+
+```
+$ uv run python cli/keyword_search_cli.py bm25search "the dark knight"
+Searching for: the dark knight
+1. (1) The Dark Knight - Score: 8.50
+2. (2) The Dark Knight Rises - Score: 7.20
 ```
 
 ### Term frequency

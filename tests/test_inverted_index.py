@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from cli.constants import BM25_B, BM25_K1
-from cli.inverted_index import Document, InvertedIndex
+from cli.core.keyword_search import Document, InvertedIndex
 
 
 def _make_movies(*titles: str) -> list[Document]:
@@ -157,3 +157,45 @@ def test_get_bm25_tf_zero_for_missing_term(small_index: InvertedIndex) -> None:
     assert small_index.get_bm25_tf(
         1, "inception", k1=BM25_K1, b=BM25_B
     ) == pytest.approx(0.0)
+
+
+def test_search_returns_matching_ids(small_index: InvertedIndex) -> None:
+    """search() should return doc IDs containing at least one query token."""
+    results = small_index.search("batman")
+    assert 1 in results
+    assert 2 in results
+
+
+def test_search_respects_limit(small_index: InvertedIndex) -> None:
+    """search() should return at most `limit` results."""
+    assert len(small_index.search("batman", limit=1)) <= 1
+
+
+def test_search_breaks_early_when_limit_reached(small_index: InvertedIndex) -> None:
+    """search() should stop iterating tokens once doc_ids fills the limit."""
+    results = small_index.search("batman begins", limit=1)
+    assert len(results) == 1
+
+
+def test_search_no_match_returns_empty(small_index: InvertedIndex) -> None:
+    """search() should return an empty list when the query matches nothing."""
+    assert small_index.search("nomatch") == []
+
+
+def test_bm25_returns_positive_score(small_index: InvertedIndex) -> None:
+    """bm25() should return a positive score for a term present in the document."""
+    assert small_index.bm25(1, "batman") > 0.0
+
+
+def test_bm25_search_returns_ranked_results(small_index: InvertedIndex) -> None:
+    """bm25_search() should return (doc_id, score) pairs in descending score order."""
+    results = small_index.bm25_search("batman", limit=2)
+    assert len(results) <= 2
+    assert all(score > 0 for _, score in results)
+    if len(results) > 1:
+        assert results[0][1] >= results[1][1]
+
+
+def test_bm25_search_empty_for_no_match(small_index: InvertedIndex) -> None:
+    """bm25_search() should return an empty list when the query matches nothing."""
+    assert small_index.bm25_search("nomatch", limit=5) == []
