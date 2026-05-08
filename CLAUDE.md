@@ -66,7 +66,7 @@ uv run sphinx-build -b html docs docs/_build/html
 uv run sphinx-autobuild docs docs/_build/html
 ```
 
-Dev dependencies: `bandit`, `furo`, `mypy`, `myst-parser`, `pre-commit`, `pylint`, `pytest`, `pytest-cov`, `ruff`, `sphinx`, `sphinx-autobuild`, `sphinx-autodoc-typehints`.
+Dev dependencies: `bandit`, `furo`, `mypy`, `myst-parser`, `pre-commit`, `pylint`, `pytest`, `pytest-cov`, `ruff`, `sphinx`, `sphinx-autobuild`, `sphinx-autodoc-typehints`, `sphinx-copybutton`.
 
 ## Architecture
 

@@ -17,6 +17,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
     "myst_parser",
+    "sphinx_copybutton",
 ]
 
 html_theme = "furo"
