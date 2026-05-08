@@ -66,7 +66,7 @@ uv run python cli/keyword_search_cli.py bm25idf <term>
 ### BM25 TF score
 
 ```bash
-uv run python cli/keyword_search_cli.py bm25tf <doc_id> <term> [k1]
+uv run python cli/keyword_search_cli.py bm25tf <doc_id> <term> [k1] [b]
 ```
 
 ## Development
