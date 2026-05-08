@@ -55,6 +55,13 @@ uv run python cli/keyword_search_cli.py bm25tf <doc_id> <term> [k1]
 
 Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, `mypy`, `bandit`, and `pytest` (enforcing 100% coverage) automatically on each commit.
 
+```bash
+# Build HTML documentation
+uv run sphinx-build -b html docs docs/_build/html
+```
+
+Dev dependencies: `bandit`, `furo`, `mypy`, `myst-parser`, `pre-commit`, `pylint`, `pytest`, `pytest-cov`, `ruff`, `sphinx`, `sphinx-autodoc-typehints`.
+
 ## Architecture
 
 The project is in early development. Current structure:
@@ -79,5 +86,6 @@ The project is in early development. Current structure:
 - `examples/movies.json` — 20-movie sample of `data/movies.json` for quick testing without the full dataset.
 - `examples/stopwords.txt` — Stop words file; copy to `data/stopwords.txt` before running the CLI.
 - `tests/` — Pytest test suite mirroring the `cli/` package structure. 100% coverage is enforced by the pre-commit hook.
+- `docs/` — Sphinx documentation. `conf.py` configures Furo theme, MyST-Parser (Markdown), autodoc, and typehints. `index.md` is the root; `usage.md` covers setup and CLI usage; `api/` contains per-module autodoc pages. Build output goes to `docs/_build/` (git-ignored).
 
 The planned architecture is a RAG pipeline: keyword retrieval (BM25) as the first stage, followed by embedding-based semantic retrieval or re-ranking, with an LLM generating the final answer.

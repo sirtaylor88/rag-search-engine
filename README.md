@@ -22,6 +22,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)**. The current
   - [TF-IDF score](#tf-idf-score)
   - [BM25 IDF score](#bm25-idf-score)
   - [BM25 TF score](#bm25-tf-score)
+- [Documentation](#documentation)
 - [Development](#development)
 
 ---
@@ -149,6 +150,16 @@ BM25 TF score of 'knight' in document '1': 1.60
 ```
 
 The optional `k1` parameter (default: `1.5`) controls term frequency saturation.
+
+---
+
+## Documentation
+
+Build the HTML docs locally with [Sphinx](https://www.sphinx-doc.org/):
+
+```bash
+uv run sphinx-build -b html docs docs/_build/html
+```
 
 ---
 
