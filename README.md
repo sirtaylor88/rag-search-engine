@@ -13,6 +13,13 @@ uv run pre-commit install
 
 ## Dataset
 
+Create a data folder and copy the stop words file from the `examples` folder:
+
+```bash
+mkdir -p data
+cp examples/stopwords.txt data/
+```
+
 Download the full movie dataset (~25 MB) before building the index:
 
 ```bash
