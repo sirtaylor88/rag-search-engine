@@ -39,6 +39,9 @@ uv run python cli/keyword_search_cli.py search "<query>"
 
 # Get term frequency for a term in a document
 uv run python cli/keyword_search_cli.py tf <doc_id> <term>
+
+# Compute inverse document frequency for a term
+uv run python cli/keyword_search_cli.py idf <term>
 ```
 
 Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, `mypy`, `bandit`, and `pytest` (enforcing 100% coverage) automatically on each commit.
@@ -47,14 +50,15 @@ Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, `mypy`, `bandit`, an
 
 The project is in early development. Current structure:
 
-- `cli/keyword_search_cli.py` — CLI entry point: builds the `ArgumentParser`, instantiates each command with its subparser (registering arguments), then parses args and dispatches to `search`, `build`, or `tf`.
+- `cli/keyword_search_cli.py` — CLI entry point: builds the `ArgumentParser`, instantiates each command with its subparser (registering arguments), then parses args and dispatches to `search`, `build`, `tf`, or `idf`.
 - `cli/commands/` — Command classes following an instance-based pattern.
-  - `base.py` — `BaseCommand` abstract base class with `__init__(parser, inverted_index)`, abstract `add_arguments(parser)`, and abstract `run(*args)`.
+  - `base.py` — `BaseCommand` abstract base class with `__init__(parser, inverted_index)`, abstract `add_arguments(parser)`, abstract `run(*args)`, and concrete `load_cache()` (shared OSError handling).
   - `build_command.py` — `get_movies()` (loads JSON) and `BuildCommand`: registers `--data-path` and builds/saves the index.
   - `search_command.py` — `display_best_results()` and `SearchCommand`: registers the `query` positional arg and runs the search.
-  - `term_frequency_command.py` — `TermFrequecyCommand`: registers `doc_id` and `term` positional args and prints the term frequency via `InvertedIndex.get_tf()`.
+  - `find_tf_command.py` — `FindTFCommand`: registers `doc_id` and `term` positional args and prints the term frequency via `InvertedIndex.get_tf()`.
+  - `compute_idf_command.py` — `ComputeIDFCommand`: registers the `term` positional arg and prints the IDF using smoothed log formula.
 - `cli/inverted_index.py` — `InvertedIndex` class: builds a token→doc-ID index, tracks per-document term frequencies (`term_frequencies`), supports `get_documents(term)` and `get_tf(doc_id, term)`, and persists to/loads from `cache/` via pickle. `Document` is a `TypedDict` for movie records.
-- `cli/utils.py` — Text processing helpers: `remove_all_punctuations`, `tokenize_text`, `get_stemmed_tokens` (Porter stemmer via NLTK, returns an ordered list with duplicates), `get_stop_words`, and the shared `STEMMER` instance.
+- `cli/utils.py` — Text processing helpers: `remove_all_punctuations`, `tokenize_text`, `get_stemmed_tokens` (Porter stemmer via NLTK, returns an ordered list with duplicates), `get_stop_words`, `get_term_token` (validates and stems a single-word term), and the shared `STEMMER` instance.
 - `cli/constants.py` — Project-wide constants: re-exports `STEMMER` from `cli.utils` and loads `STOP_WORDS` from `data/stopwords.txt` at import time.
 - `cache/` — Pickle files (`index.pkl`, `docmap.pkl`, `term_frequencies.pkl`) written by the `build` command. Excluded from git.
 - `data/movies.json` — Movie dataset (~25 MB) with fields: `id`, `title`, `description`, and more. Used as the corpus for search.

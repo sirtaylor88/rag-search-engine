@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 
 from argparse import ArgumentParser
+import sys
 from typing import Any
 
 from cli.inverted_index import InvertedIndex
@@ -32,3 +33,11 @@ class BaseCommand(ABC):
     @abstractmethod
     def run(self, *args: Any) -> None:
         """Execute the command with the given parsed argument values."""
+
+    def load_cache(self) -> None:
+        """Load the inverted index from cache, exiting with code 1 on failure."""
+        try:
+            self.inverted_index.load()
+        except OSError:
+            print("Cannot load cache data. Please run build command first.")
+            sys.exit(1)

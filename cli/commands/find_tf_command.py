@@ -1,14 +1,13 @@
 """Term-frequency command: looks up how often a term appears in a document."""
 # pylint: disable=duplicate-code
 
-import sys
 from argparse import ArgumentParser
 from typing import override
 
 from cli.commands.base import BaseCommand
 
 
-class TermFrequecyCommand(BaseCommand):
+class FindTFCommand(BaseCommand):
     """Command that loads the cached index and prints the term frequency for a doc."""
 
     def add_arguments(self, parser: ArgumentParser) -> None:
@@ -28,11 +27,7 @@ class TermFrequecyCommand(BaseCommand):
             doc_id (int): The document ID to look up.
             term (str): The term to look up.
         """
-        try:
-            self.inverted_index.load()
-        except OSError:
-            print("Cannot load movies data. Please run build command first.")
-            sys.exit(1)
+        self.load_cache()
 
         tf = self.inverted_index.get_tf(doc_id, term)
         print(f"The term frequency of ``{term}`` in document with ID {doc_id} is", tf)

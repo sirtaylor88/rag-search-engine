@@ -2,7 +2,6 @@
 # pylint: disable=duplicate-code
 
 from argparse import ArgumentParser
-import sys
 from typing import override
 
 from cli.utils import get_stemmed_tokens
@@ -54,11 +53,8 @@ class SearchCommand(BaseCommand):
         Args:
             search_query (str): The search query string.
         """
-        try:
-            self.inverted_index.load()
-        except OSError:
-            print("Cannot load movies data. Please run build command first.")
-            sys.exit(1)
+
+        self.load_cache()
 
         print("Searching for:", search_query)
 

@@ -7,6 +7,7 @@ import pytest
 from cli.utils import (
     get_stemmed_tokens,
     get_stop_words,
+    get_term_token,
     remove_all_punctuations,
     tokenize_text,
 )
@@ -49,8 +50,19 @@ def test_tokenize_text(text: str, expected: list[str]) -> None:
     ],
 )
 def test_get_stemmed_tokens(text: str, expected: list[str]) -> None:
-    """Tokens should be reduced to their Porter stems and returned as a list in input order."""
+    """Tokens should be reduced to their Porter stems in input order."""
     assert get_stemmed_tokens(text) == expected
+
+
+def test_get_term_token_returns_stem() -> None:
+    """get_term_token should return the Porter stem of a single-word term."""
+    assert get_term_token("running") == "run"
+
+
+def test_get_term_token_raises_for_multi_word() -> None:
+    """get_term_token should raise ValueError for a multi-word term."""
+    with pytest.raises(ValueError, match="unique"):
+        get_term_token("batman begins")
 
 
 @pytest.mark.parametrize(

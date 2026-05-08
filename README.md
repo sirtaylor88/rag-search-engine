@@ -57,6 +57,21 @@ $ uv run python cli/keyword_search_cli.py tf 1 knight
 The term frequency of ``knight`` in document with ID 1 is 2
 ```
 
+### Inverse document frequency
+
+Compute the IDF of a term across the full corpus:
+
+```bash
+uv run python cli/keyword_search_cli.py idf <term>
+```
+
+Example:
+
+```
+$ uv run python cli/keyword_search_cli.py idf knight
+Inverse document frequency of 'knight': 3.45
+```
+
 ## Development
 
 ```bash

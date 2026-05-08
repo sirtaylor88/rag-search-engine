@@ -61,3 +61,22 @@ def get_stop_words(data_path: str = "data/stopwords.txt") -> list[str]:
     with open(data_path, encoding="utf-8") as fh:
         words = fh.read().splitlines()
     return words
+
+
+def get_term_token(term: str) -> str:
+    """Stem a single-word term and return its token.
+
+    Args:
+        term (str): A single-word term to stem.
+
+    Returns:
+        str: The Porter stem of the term.
+
+    Raises:
+        ValueError: If the term produces more or fewer than one token.
+    """
+    term_tokens = get_stemmed_tokens(term)
+    if len(term_tokens) != 1:
+        raise ValueError("The term must be unique.")
+
+    return term_tokens[0]

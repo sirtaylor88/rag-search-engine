@@ -100,7 +100,7 @@ def test_search_missing_cache_prints_error_and_exits(
     assert exc_info.value.code == 1
     assert (
         capsys.readouterr().out
-        == "Cannot load movies data. Please run build command first.\n"
+        == "Cannot load cache data. Please run build command first.\n"
     )
 
 
@@ -182,7 +182,35 @@ def test_tf_missing_cache_prints_error_and_exits(
     assert exc_info.value.code == 1
     assert (
         capsys.readouterr().out
-        == "Cannot load movies data. Please run build command first.\n"
+        == "Cannot load cache data. Please run build command first.\n"
+    )
+
+
+def test_idf_command_outputs_result(capsys: CaptureFixture[str]) -> None:
+    """The idf command should load the index and print the IDF value."""
+    with (
+        patch("sys.argv", ["cli", "idf", "batman"]),
+        patch("cli.inverted_index.InvertedIndex.load"),
+    ):
+        main()
+    assert "batman" in capsys.readouterr().out
+
+
+def test_idf_missing_cache_prints_error_and_exits(
+    capsys: CaptureFixture[str],
+) -> None:
+    """A missing cache file should print an error message and exit with code 1."""
+    with (
+        patch("cli.inverted_index.InvertedIndex.load", side_effect=OSError),
+        patch("sys.argv", ["cli", "idf", "batman"]),
+        pytest.raises(SystemExit) as exc_info,
+    ):
+        main()
+
+    assert exc_info.value.code == 1
+    assert (
+        capsys.readouterr().out
+        == "Cannot load cache data. Please run build command first.\n"
     )
 
 

@@ -3,7 +3,8 @@
 from argparse import ArgumentParser
 
 from cli.inverted_index import InvertedIndex
-from cli.commands import BuildCommand, SearchCommand, TermFrequecyCommand
+from cli.commands import BuildCommand, SearchCommand, FindTFCommand
+from cli.commands.compute_idf_command import ComputeIDFCommand
 
 
 def main() -> None:
@@ -21,8 +22,15 @@ def main() -> None:
         subparsers.add_parser("build", help="Build inverted index"),
         inverted_index,
     )
-    tf_cmd = TermFrequecyCommand(
-        subparsers.add_parser("tf", help="Get term frequency"),
+    tf_cmd = FindTFCommand(
+        subparsers.add_parser("tf", help="Get term frequency of a document"),
+        inverted_index,
+    )
+    idf_cmd = ComputeIDFCommand(
+        subparsers.add_parser(
+            "idf",
+            help="Compute inverse document frequency of a term",
+        ),
         inverted_index,
     )
 
@@ -35,6 +43,8 @@ def main() -> None:
             build_cmd.run(args.data_path)
         case "tf":
             tf_cmd.run(args.doc_id, args.term)
+        case "idf":
+            idf_cmd.run(args.term)
         case _:
             parser.print_help()
 
