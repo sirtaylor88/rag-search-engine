@@ -7,7 +7,7 @@ import pickle
 from pathlib import Path
 import pytest
 
-from cli.constants import BM25_B, BM25_K1
+from cli.constants import BM25_B, BM25_K1, SEARCH_LIMIT
 from cli.core.keyword_search import Document, InvertedIndex
 
 
@@ -174,6 +174,12 @@ def test_search_returns_matching_ids(small_index: InvertedIndex) -> None:
     results = small_index.search("batman")
     assert 1 in results
     assert 2 in results
+
+
+def test_search_default_limit_is_search_limit(small_index: InvertedIndex) -> None:
+    """search() without an explicit limit should use SEARCH_LIMIT as the cap."""
+    results = small_index.search("batman")
+    assert len(results) <= SEARCH_LIMIT
 
 
 def test_search_respects_limit(small_index: InvertedIndex) -> None:
