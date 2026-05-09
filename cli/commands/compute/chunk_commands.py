@@ -1,18 +1,22 @@
 """Chunk commands: split text into fixed-size word or sentence chunks."""
 
-from argparse import ArgumentParser
-from typing import override
 import re
+from abc import abstractmethod
+from argparse import ArgumentParser
+from typing import Generic, TypeVar, override
 
 from cli.commands.base import TermCommand
 from cli.constants import CHUNK_SIZE, SEMANTIC_CHUNK_SIZE, SENTENCE_SPLIT_PATTERN
-from cli.schemas import ChunkPayload, Request, SemanticChunkPayload
+from cli.schemas import ChunkPayload, OverlapPayload, Request, SemanticChunkPayload
 from cli.utils import get_overlapping_chunks
 
+P = TypeVar("P", bound=OverlapPayload)
 
-class BaseChunkCommand(TermCommand):
-    """Abstract base for chunk commands; registers the shared --overlap argument."""
 
+class BaseChunkCommand(TermCommand, Generic[P]):
+    """Abstract base for chunk commands; registers --overlap and owns the run loop."""
+
+    _label: str
     overlap_help = "Number of overlapping text"
 
     def add_arguments(self, parser: ArgumentParser) -> None:
@@ -29,10 +33,37 @@ class BaseChunkCommand(TermCommand):
         )
         super().add_arguments(parser)
 
+    @abstractmethod
+    def _split(self, term: str) -> list[str]:
+        """Split term into parts for chunking."""
 
-class ChunkCommand(BaseChunkCommand):
+    @abstractmethod
+    def _get_chunk_size(self, payload: P) -> int:
+        """Return the chunk size from payload."""
+
+    @override
+    def run(self, request: Request[P]) -> None:
+        """Split the text into chunks and print each one with its index.
+
+        Args:
+            request (Request[P]): Contains text, chunk size, and overlap.
+        """
+        payload = request.payload
+        print(f"{self._label} {len(payload.term)} characters.")
+        parts = self._split(payload.term)
+        chunks = get_overlapping_chunks(
+            parts,
+            chunk_size=self._get_chunk_size(payload),
+            overlap=payload.overlap,
+        )
+        for idx, chunk in enumerate(chunks, start=1):
+            print(f"{idx}. {' '.join(chunk)}")
+
+
+class ChunkCommand(BaseChunkCommand[ChunkPayload]):
     """Command that splits a text into fixed-size word chunks and prints each chunk."""
 
+    _label = "Chunking"
     term_help = "Text to split into fixed-size word chunks"
     overlap_help = "Number of overlap words per chunk."
 
@@ -49,33 +80,21 @@ class ChunkCommand(BaseChunkCommand):
             default=CHUNK_SIZE,
             help=f"Number of words per chunk (default: {CHUNK_SIZE}).",
         )
-
         super().add_arguments(parser)
 
     @override
-    def run(self, request: Request[ChunkPayload]) -> None:
-        """Split the text into word chunks and print each one with its index.
+    def _split(self, term: str) -> list[str]:
+        return term.split()
 
-        Args:
-            request (Request[ChunkPayload]): Contains the text, chunk size, and overlap.
-        """
-        print(f"Chunking {len(request.payload.term)} characters.")
-
-        words = request.payload.term.split()
-
-        chunks = get_overlapping_chunks(
-            words,
-            chunk_size=request.payload.chunk_size,
-            overlap=request.payload.overlap,
-        )
-
-        for idx, chunk in enumerate(chunks, start=1):
-            print(f"{idx}. {' '.join(chunk)}")
+    @override
+    def _get_chunk_size(self, payload: ChunkPayload) -> int:
+        return payload.chunk_size
 
 
-class SemanticChunkCommand(BaseChunkCommand):
+class SemanticChunkCommand(BaseChunkCommand[SemanticChunkPayload]):
     """Command that splits a text into sentence chunks and prints each chunk."""
 
+    _label = "Semantically chunking"
     term_help = "Text to split into fixed-size sentence chunks"
     overlap_help = "Number of overlap sentences per chunk."
 
@@ -92,26 +111,12 @@ class SemanticChunkCommand(BaseChunkCommand):
             default=SEMANTIC_CHUNK_SIZE,
             help=f"Number of sentences per chunk (default: {SEMANTIC_CHUNK_SIZE}).",
         )
-
         super().add_arguments(parser)
 
     @override
-    def run(self, request: Request[SemanticChunkPayload]) -> None:
-        """Split the text into sentence chunks and print each one with its index.
+    def _split(self, term: str) -> list[str]:
+        return re.split(SENTENCE_SPLIT_PATTERN, term)
 
-        Args:
-            request (Request[SemanticChunkPayload]): Contains the text, max sentences
-                per chunk, and overlap.
-        """
-        print(f"Semantically chunking {len(request.payload.term)} characters.")
-
-        sentences = re.split(SENTENCE_SPLIT_PATTERN, request.payload.term)
-
-        chunks = get_overlapping_chunks(
-            sentences,
-            chunk_size=request.payload.max_chunk_size,
-            overlap=request.payload.overlap,
-        )
-
-        for idx, chunk in enumerate(chunks, start=1):
-            print(f"{idx}. {' '.join(chunk)}")
+    @override
+    def _get_chunk_size(self, payload: SemanticChunkPayload) -> int:
+        return payload.max_chunk_size
