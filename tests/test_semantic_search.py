@@ -20,7 +20,7 @@ class TestSemanticSearch:
         """SemanticSearch should load the all-MiniLM-L6-v2 model on instantiation."""
         mock_model = MagicMock()
         with patch(
-            "sentence_transformers.SentenceTransformer", return_value=mock_model
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
         ) as mock_st:
             ss = SemanticSearch()
             mock_st.assert_called_once_with("all-MiniLM-L6-v2")
@@ -32,7 +32,7 @@ class TestSemanticSearch:
         mock_model = MagicMock()
         mock_model.encode.return_value = [mock_tensor]
         with patch(
-            "sentence_transformers.SentenceTransformer", return_value=mock_model
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
         ):
             ss = SemanticSearch()
             result = ss.generate_embedding("hello world")
@@ -44,7 +44,7 @@ class TestSemanticSearch:
         """generate_embedding should raise ValueError for whitespace-only text."""
         mock_model = MagicMock()
         with patch(
-            "sentence_transformers.SentenceTransformer", return_value=mock_model
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
         ):
             ss = SemanticSearch()
             with pytest.raises(ValueError, match="empty"):
@@ -58,7 +58,10 @@ class TestSemanticSearch:
         ]
         mock_model = MagicMock()
         with (
-            patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer",
+                return_value=mock_model,
+            ),
             patch("cli.core.semantic_search.np.save"),
         ):
             ss = SemanticSearch()
@@ -74,7 +77,10 @@ class TestSemanticSearch:
         mock_model = MagicMock()
         mock_model.encode.return_value = mock_embeddings
         with (
-            patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer",
+                return_value=mock_model,
+            ),
             patch("cli.core.semantic_search.np.save") as mock_save,
         ):
             ss = SemanticSearch()
@@ -93,7 +99,10 @@ class TestSemanticSearch:
         mock_path = MagicMock()
         mock_path.is_file.return_value = True
         with (
-            patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer",
+                return_value=mock_model,
+            ),
             patch.object(SemanticSearch, "EMBEDDINGS_FILE_PATH", mock_path),
             patch("cli.core.semantic_search.np.load", return_value=mock_embeddings),
         ):
@@ -113,7 +122,10 @@ class TestSemanticSearch:
         mock_path = MagicMock()
         mock_path.is_file.return_value = True
         with (
-            patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer",
+                return_value=mock_model,
+            ),
             patch.object(SemanticSearch, "EMBEDDINGS_FILE_PATH", mock_path),
             patch("cli.core.semantic_search.np.load", return_value=stale),
             patch("cli.core.semantic_search.np.save"),
@@ -132,7 +144,10 @@ class TestSemanticSearch:
         mock_path = MagicMock()
         mock_path.is_file.return_value = False
         with (
-            patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer",
+                return_value=mock_model,
+            ),
             patch.object(SemanticSearch, "EMBEDDINGS_FILE_PATH", mock_path),
             patch("cli.core.semantic_search.np.save"),
         ):
@@ -152,7 +167,7 @@ class TestVerifyModel:
         mock_model = MagicMock()
         mock_model.max_seq_length = 128
         with patch(
-            "sentence_transformers.SentenceTransformer", return_value=mock_model
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
         ):
             verify_model()
 
@@ -172,7 +187,7 @@ class TestEmbedText:
         mock_model = MagicMock()
         mock_model.encode.return_value = [mock_embedding]
         with patch(
-            "sentence_transformers.SentenceTransformer", return_value=mock_model
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
         ):
             embed_text("hello")
 
@@ -195,7 +210,10 @@ class TestVerifyEmbeddings:
         ]
         mock_model = MagicMock()
         with (
-            patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer",
+                return_value=mock_model,
+            ),
             patch("cli.core.semantic_search.get_movies", return_value=mock_docs),
             patch.object(
                 SemanticSearch,

@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 import numpy as np
+from sentence_transformers import SentenceTransformer
+from torch import Tensor
 
 from cli.commands.build_command import get_movies
 from cli.core.keyword_search import CACHE_DIR_PATH, Document
-
-if TYPE_CHECKING:
-    from sentence_transformers import SentenceTransformer
-    from torch import Tensor
 
 
 def verify_model() -> None:
@@ -55,8 +53,6 @@ class SemanticSearch:
 
     def __init__(self) -> None:
         """Load the all-MiniLM-L6-v2 model (downloads automatically on first use)."""
-        from sentence_transformers import SentenceTransformer  # pylint: disable=import-outside-toplevel
-
         self.model: SentenceTransformer = SentenceTransformer("all-MiniLM-L6-v2")
         self.embeddings: Optional[Tensor] = None
         self.documents: Optional[list[Document]] = None

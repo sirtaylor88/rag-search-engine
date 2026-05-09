@@ -14,7 +14,7 @@ def test_verify_command_calls_verify_model(capsys: CaptureFixture[str]) -> None:
     mock_model.max_seq_length = 128
     with (
         patch("sys.argv", ["cli", "verify"]),
-        patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+        patch("cli.core.semantic_search.SentenceTransformer", return_value=mock_model),
     ):
         main()
 
@@ -34,7 +34,7 @@ def test_verify_embeddings_command_prints_shape(capsys: CaptureFixture[str]) -> 
     mock_model = MagicMock()
     with (
         patch("sys.argv", ["cli", "verify_embeddings"]),
-        patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+        patch("cli.core.semantic_search.SentenceTransformer", return_value=mock_model),
         patch("cli.core.semantic_search.get_movies", return_value=mock_docs),
         patch.object(
             SemanticSearch,
@@ -58,7 +58,7 @@ def test_embed_text_command_prints_embedding_info(capsys: CaptureFixture[str]) -
     mock_model.encode.return_value = [mock_embedding]
     with (
         patch("sys.argv", ["cli", "embed_text", "hello world"]),
-        patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+        patch("cli.core.semantic_search.SentenceTransformer", return_value=mock_model),
     ):
         main()
 
