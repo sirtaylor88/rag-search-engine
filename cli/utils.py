@@ -1,13 +1,23 @@
-"""Utility functions for text processing."""
+"""Utility functions for text processing and data loading."""
 
+from __future__ import annotations
+
+import json
 import string
 import logging
 import sys
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
+from typing import TYPE_CHECKING, Any
+import numpy as np
 
 from nltk.stem import PorterStemmer
+
+if TYPE_CHECKING:
+    import numpy.typing as npt
+    from cli.core.keyword_search import Document
+    from torch import Tensor
 
 STEMMER = PorterStemmer()
 logger = logging.getLogger(__name__)
@@ -101,3 +111,41 @@ def get_term_token(term: str) -> str:
         raise ValueError("The term must be unique.")
 
     return term_tokens[0]
+
+
+def get_movies(data_path: str = "data/movies.json") -> list[Document]:
+    """Load and return the list of movies from a JSON file.
+
+    Args:
+        data_path (str): Path to the JSON file containing movie data.
+
+    Returns:
+        list[Document]: List of movie documents from the 'movies' key.
+    """
+    with open(data_path, encoding="utf-8") as fh:
+        data = json.load(fh)
+
+    return data["movies"]
+
+
+def cosine_similarity(
+    vec1: npt.NDArray[Any] | Tensor,
+    vec2: npt.NDArray[Any] | Tensor,
+) -> float:
+    """Return the cosine similarity between two vectors, or 0.0 if either is zero.
+
+    Args:
+        vec1 (Tensor): First embedding vector.
+        vec2 (Tensor): Second embedding vector.
+
+    Returns:
+        float: Cosine similarity in [-1, 1], or 0.0 when either norm is zero.
+    """
+    dot_product = np.dot(vec1, vec2)
+    norm1 = np.linalg.norm(vec1)
+    norm2 = np.linalg.norm(vec2)
+
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+
+    return dot_product / (norm1 * norm2)

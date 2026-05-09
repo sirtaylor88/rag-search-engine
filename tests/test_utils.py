@@ -6,7 +6,10 @@ import pytest
 
 from pytest import CaptureFixture
 
+import numpy as np
+
 from cli.utils import (
+    cosine_similarity,
     get_stemmed_tokens,
     get_stop_words,
     get_term_token,
@@ -100,3 +103,34 @@ def test_timer_prints_elapsed_to_stderr(capsys: CaptureFixture[str]) -> None:
     err = capsys.readouterr().err
     assert "Completed in" in err
     assert err.strip().endswith("s")
+
+
+class TestCosineSimilarity:
+    """Tests for the cosine_similarity function."""
+
+    def test_identical_vectors_return_one(self) -> None:
+        """Identical non-zero vectors should have cosine similarity of 1.0."""
+        vec = np.array([1.0, 2.0, 3.0])
+        result = cosine_similarity(vec, vec)
+        assert abs(result - 1.0) < 1e-6
+
+    def test_orthogonal_vectors_return_zero(self) -> None:
+        """Orthogonal vectors should have cosine similarity of 0.0."""
+        vec1 = np.array([1.0, 0.0])
+        vec2 = np.array([0.0, 1.0])
+        result = cosine_similarity(vec1, vec2)
+        assert abs(result) < 1e-6
+
+    def test_opposite_vectors_return_minus_one(self) -> None:
+        """Opposite vectors should have cosine similarity of -1.0."""
+        vec1 = np.array([1.0, 0.0])
+        vec2 = np.array([-1.0, 0.0])
+        result = cosine_similarity(vec1, vec2)
+        assert abs(result - (-1.0)) < 1e-6
+
+    def test_zero_vector_returns_zero(self) -> None:
+        """A zero vector should yield 0.0 to avoid division by zero."""
+        zero = np.array([0.0, 0.0])
+        vec = np.array([1.0, 2.0])
+        assert cosine_similarity(zero, vec) == 0.0
+        assert cosine_similarity(vec, zero) == 0.0

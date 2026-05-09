@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 from pytest import CaptureFixture
 
@@ -170,6 +171,65 @@ class TestSemanticSearch:
             result = ss.load_or_create_embeddings(docs)  # type: ignore[arg-type]
 
         assert result is fresh
+
+    def test_search_raises_when_embeddings_not_loaded(self) -> None:
+        """search should raise ValueError when embeddings have not been loaded."""
+        mock_model = MagicMock()
+        with patch(
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+        ):
+            ss = SemanticSearch()
+            with pytest.raises(ValueError, match="No embeddings loaded"):
+                ss.search("batman", 5)
+
+    def test_search_returns_top_results_ranked_by_score(self) -> None:
+        """search should return results sorted by descending cosine similarity."""
+        docs = [
+            {"id": 1, "title": "A", "description": "desc A"},
+            {"id": 2, "title": "B", "description": "desc B"},
+        ]
+        mock_model = MagicMock()
+        query_emb = np.array([1.0, 0.0])
+        doc_emb_high = np.array([1.0, 0.0])
+        doc_emb_low = np.array([0.0, 1.0])
+        mock_model.encode.return_value = [query_emb]
+        with patch(
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+        ):
+            ss = SemanticSearch()
+            ss.documents = docs  # type: ignore[assignment]
+            ss.embeddings = np.array(  # type: ignore[assignment]
+                [doc_emb_high, doc_emb_low]
+            )
+
+            results = ss.search("query", 2)
+
+        assert results[0]["title"] == "A"
+        assert results[1]["title"] == "B"
+        assert results[0]["score"] > results[1]["score"]
+
+    def test_search_respects_limit(self) -> None:
+        """search should return at most `limit` results."""
+        docs = [
+            {"id": 1, "title": "A", "description": "desc A"},
+            {"id": 2, "title": "B", "description": "desc B"},
+            {"id": 3, "title": "C", "description": "desc C"},
+        ]
+        mock_model = MagicMock()
+        query_emb = np.array([1.0, 0.0])
+        mock_model.encode.return_value = [query_emb]
+        with patch(
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+        ):
+            ss = SemanticSearch()
+            ss.documents = docs  # type: ignore[assignment]
+            ss.embeddings = np.array(  # type: ignore[assignment]
+                [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
+            )
+
+            results = ss.search("query", 2)
+
+        assert len(results) == 2
 
 
 class TestVerifyModel:

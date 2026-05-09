@@ -1,28 +1,12 @@
 """Build command: loads movies from JSON and constructs the inverted index."""
 
 from argparse import ArgumentParser
-import json
 import sys
 from typing import override
 
-from cli.core.keyword_search import Document
 from cli.commands.base import BaseCommand
 from cli.schemas import Request, TermPayload
-
-
-def get_movies(data_path: str = "data/movies.json") -> list[Document]:
-    """Load and return the list of movies from a JSON file.
-
-    Args:
-        data_path (str): Path to the JSON file containing movie data.
-
-    Returns:
-        list[Document]: List of movie documents from the 'movies' key.
-    """
-    with open(data_path, encoding="utf-8") as fh:
-        data = json.load(fh)
-
-    return data["movies"]
+from cli.utils import get_movies
 
 
 class BuildCommand(BaseCommand[TermPayload]):

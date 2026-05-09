@@ -10,6 +10,7 @@ from cli.commands.compute.tf_commands import (
 from cli.commands.compute.idf_commands import ComputeIDFCommand, ComputeBM25IDFCommand
 from cli.commands.search.bm25_search_command import BM25SearchCommand
 from cli.commands.embed_commands import EmbedQueryCommand, EmbedTextCommand
+from cli.commands.search.semantic_search_command import SemanticSearchCommand
 from cli.commands.verify_commands import VerifyCommand, VerifyEmbeddingsCommand
 
 __all__ = [
@@ -23,6 +24,7 @@ __all__ = [
     "EmbedQueryCommand",
     "EmbedTextCommand",
     "SearchCommand",
+    "SemanticSearchCommand",
     "VerifyCommand",
     "VerifyEmbeddingsCommand",
 ]

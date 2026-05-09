@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest import CaptureFixture
 
-from cli.commands.build_command import get_movies
+from cli.utils import get_movies
 from cli.keyword_search_cli import main
 
 

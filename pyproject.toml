@@ -34,7 +34,7 @@ line-length = 88
 disable = ["too-few-public-methods", "duplicate-code"]
 
 [tool.pylint.typecheck]
-ignored-modules = ["sentence_transformers", "torch"]
+ignored-modules = ["numpy", "sentence_transformers", "torch"]
 
 [tool.pylint.format]
 max-line-length = 88

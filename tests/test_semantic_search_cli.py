@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 from pytest import CaptureFixture
 
 from cli.core.semantic_search import SemanticSearch
@@ -85,6 +86,44 @@ def test_embed_query_command_prints_embedding_info(capsys: CaptureFixture[str]) 
     assert "Query: dark knight" in out
     assert "First 3 dimensions:" in out
     assert "Shape:" in out
+
+
+def test_search_command_prints_ranked_results(capsys: CaptureFixture[str]) -> None:
+    """The search command should print ranked results with scores and descriptions."""
+    docs = [{"id": 1, "title": "The Dark Knight", "description": "Batman fights Joker"}]
+    mock_model = MagicMock()
+    query_emb = np.array([1.0, 0.0])
+    doc_emb = np.array([1.0, 0.0])
+    mock_model.encode.return_value = [query_emb]
+    with (
+        patch("sys.argv", ["cli", "search", "batman"]),
+        patch("cli.core.semantic_search.SentenceTransformer", return_value=mock_model),
+        patch(
+            "cli.commands.search.semantic_search_command.get_movies", return_value=docs
+        ),
+        patch.object(
+            SemanticSearch,
+            "load_or_create_embeddings",
+            return_value=np.array([doc_emb]),
+        ),
+        patch.object(
+            SemanticSearch,
+            "search",
+            return_value=[
+                {
+                    "title": "The Dark Knight",
+                    "score": 1.0,
+                    "description": "Batman fights Joker",
+                }
+            ],
+        ),
+    ):
+        main()
+
+    out = capsys.readouterr().out
+    assert "Searching for: batman" in out
+    assert "The Dark Knight" in out
+    assert "score:" in out
 
 
 def test_no_command_prints_help(capsys: CaptureFixture[str]) -> None:

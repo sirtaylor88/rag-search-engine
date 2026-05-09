@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from torch import Tensor
 
-from cli.commands.build_command import get_movies
 from cli.constants import CACHE_DIR_PATH
 from cli.core.keyword_search import Document
 from cli.singleton import Singleton
+from cli.utils import cosine_similarity, get_movies
 
 
 def verify_model() -> None:
@@ -137,3 +137,44 @@ class SemanticSearch(Singleton):
                 return self.embeddings
 
         return self.build_embeddings(documents)
+
+    def search(self, query: str, limit: int) -> list[dict[str, Any]]:
+        """Rank documents by cosine similarity to the query and return the top results.
+
+        Args:
+            query (str): The search query string.
+            limit (int): Maximum number of results to return.
+
+        Returns:
+            list[dict[str, Any]]: Top-ranked results, each with ``score``, ``title``,
+                and ``description`` keys, sorted by descending similarity.
+
+        Raises:
+            ValueError: If embeddings have not been loaded yet.
+        """
+        if self.embeddings is None or self.documents is None:
+            raise ValueError(
+                "No embeddings loaded. Call `load_or_create_embeddings` first."
+            )
+
+        query_embedding = self.generate_embedding(query)
+
+        score_doc_pair: list[tuple[float, Document]] = []
+        for document, embedding in zip(self.documents, self.embeddings):
+            score = cosine_similarity(query_embedding, embedding)
+            score_doc_pair.append((score, document))
+
+        sorted_score_doc_pair = sorted(
+            score_doc_pair,
+            key=lambda x: x[0],
+            reverse=True,
+        )
+
+        return [
+            {
+                "score": score,
+                "title": doc["title"],
+                "description": doc["description"],
+            }
+            for score, doc in sorted_score_doc_pair[:limit]
+        ]

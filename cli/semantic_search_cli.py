@@ -2,9 +2,21 @@
 
 import argparse
 
-from cli.schemas import EmptyPayload, EmptyRequest, TermPayload, TermRequest
-from cli.commands.embed_commands import EmbedQueryCommand, EmbedTextCommand
-from cli.commands.verify_commands import VerifyCommand, VerifyEmbeddingsCommand
+from cli.schemas import (
+    EmptyPayload,
+    EmptyRequest,
+    SearchPayload,
+    SearchRequest,
+    TermPayload,
+    TermRequest,
+)
+from cli.commands import (
+    SemanticSearchCommand,
+    EmbedQueryCommand,
+    EmbedTextCommand,
+    VerifyCommand,
+    VerifyEmbeddingsCommand,
+)
 
 
 def main() -> None:
@@ -24,6 +36,9 @@ def main() -> None:
     embed_query_cmd = EmbedQueryCommand(
         subparsers.add_parser("embed_query", help="Embed a query string")
     )
+    search_cmd = SemanticSearchCommand(
+        subparsers.add_parser("search", help="Search string")
+    )
 
     args = parser.parse_args()
 
@@ -36,6 +51,10 @@ def main() -> None:
             embed_text_cmd.run(TermRequest(payload=TermPayload(term=args.term)))
         case "embed_query":
             embed_query_cmd.run(TermRequest(payload=TermPayload(term=args.term)))
+        case "search":
+            search_cmd.run(
+                SearchRequest(payload=SearchPayload(query=args.query, limit=args.limit))
+            )
         case _:
             parser.print_help()
 

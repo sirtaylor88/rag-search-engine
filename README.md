@@ -27,6 +27,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)**. The current
   - [Verify embeddings](#verify-embeddings)
   - [Embed text](#embed-text)
   - [Embed query](#embed-query)
+  - [Semantic search](#semantic-search)
 - [Documentation](#documentation)
 - [Development](#development)
 
@@ -229,6 +230,23 @@ $ uv run python cli/semantic_search_cli.py embed_query "the dark knight"
 Query: the dark knight
 First 3 dimensions: [-0.0123  0.0456 -0.0789]
 Shape: (384,)
+```
+
+### Semantic search
+
+Search the movie corpus using dense embeddings ranked by [cosine similarity](https://en.wikipedia.org/wiki/Cosine_similarity). The [`all-MiniLM-L6-v2`](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) model encodes both the query and corpus. Embeddings are loaded from cache or built on first run:
+
+```bash
+uv run python cli/semantic_search_cli.py search "<query>"
+```
+
+```
+$ uv run python cli/semantic_search_cli.py search "superhero battles villain"
+Searching for: superhero battles villain
+1. The Dark Knight (score: 0.7823)
+  Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon...
+2. Spider-Man (score: 0.7541)
+  When bitten by a genetically altered spider, nerdy high school student Peter...
 ```
 
 ---

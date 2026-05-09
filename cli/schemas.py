@@ -4,7 +4,7 @@ from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
-from cli.constants import BM25_B, BM25_K1
+from cli.constants import BM25_B, BM25_K1, SEARCH_LIMIT
 
 T = TypeVar("T")
 
@@ -17,7 +17,7 @@ class SearchPayload(BaseModel):
     """Payload for search commands: non-empty query string and positive result limit."""
 
     query: str = Field(min_length=1)
-    limit: int = Field(default=5, ge=1)
+    limit: int = Field(default=SEARCH_LIMIT, ge=1)
 
 
 class TermPayload(BaseModel):
