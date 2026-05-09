@@ -149,3 +149,28 @@ def cosine_similarity(
         return 0.0
 
     return dot_product / (norm1 * norm2)
+
+
+def get_overlapping_chunks(
+    words: list[str],
+    chunk_size: int,
+    overlap: int,
+) -> list[list[str]]:
+    """Split a word list into overlapping fixed-size chunks.
+
+    Args:
+        words (list[str]): The list of words to chunk.
+        chunk_size (int): Maximum number of words per chunk.
+        overlap (int): Number of words shared between consecutive chunks.
+
+    Returns:
+        list[list[str]]: List of word-list chunks; the last chunk may be shorter.
+
+    Raises:
+        ValueError: If overlap is greater than or equal to chunk_size.
+    """
+    if overlap >= chunk_size:
+        raise ValueError("Overlap value must be smaller than chunk size.")
+
+    step = chunk_size - overlap
+    return [words[i : i + chunk_size] for i in range(0, len(words), step)]

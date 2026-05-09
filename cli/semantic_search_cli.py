@@ -62,7 +62,11 @@ def main() -> None:
         case "chunk":
             chunk_cmd.run(
                 ChunkRequest(
-                    payload=ChunkPayload(term=args.term, chunk_size=args.chunk_size)
+                    payload=ChunkPayload(
+                        term=args.term,
+                        chunk_size=args.chunk_size,
+                        overlap=args.overlap,
+                    )
                 )
             )
         case _:

@@ -252,20 +252,20 @@ Searching for: superhero battles villain
 
 ### Chunk text
 
-Split a text string into fixed-size word chunks. Useful for preparing long documents for embedding:
+Split a text string into fixed-size word chunks with optional overlap. Useful for preparing long documents for embedding:
 
 ```bash
-uv run python cli/semantic_search_cli.py chunk "<text>" [--chunk-size N]
+uv run python cli/semantic_search_cli.py chunk "<text>" [--chunk-size N] [--overlap N]
 ```
 
 ```
-$ uv run python cli/semantic_search_cli.py chunk "the dark knight rises" --chunk-size 2
-Chunking 21 characters.
-1. the dark
-2. knight rises
+$ uv run python cli/semantic_search_cli.py chunk "The bear attack was very terrifying." --chunk-size 4 --overlap 1
+Chunking 36 characters.
+1. The bear attack was
+2. was very terrifying.
 ```
 
-The optional `--chunk-size` parameter (default: `200`) controls the number of words per chunk.
+The optional `--chunk-size` parameter (default: `200`) controls the number of words per chunk. The optional `--overlap` parameter (default: `0`) controls how many words are shared between consecutive chunks.
 
 ---
 

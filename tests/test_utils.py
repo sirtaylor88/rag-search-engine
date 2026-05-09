@@ -10,6 +10,7 @@ import numpy as np
 
 from cli.utils import (
     cosine_similarity,
+    get_overlapping_chunks,
     get_stemmed_tokens,
     get_stop_words,
     get_term_token,
@@ -134,3 +135,37 @@ class TestCosineSimilarity:
         vec = np.array([1.0, 2.0])
         assert cosine_similarity(zero, vec) == 0.0
         assert cosine_similarity(vec, zero) == 0.0
+
+
+class TestGetOverlappingChunks:
+    """Tests for the get_overlapping_chunks function."""
+
+    def test_no_overlap_produces_non_overlapping_chunks(self) -> None:
+        """With overlap=0, chunks should not share words."""
+        words = ["a", "b", "c", "d"]
+        assert get_overlapping_chunks(words, chunk_size=2, overlap=0) == [
+            ["a", "b"],
+            ["c", "d"],
+        ]
+
+    def test_overlap_shares_words_between_chunks(self) -> None:
+        """With overlap=1, consecutive chunks should share one word."""
+        words = "The bear attack was very terrifying".split()
+        result = get_overlapping_chunks(words, chunk_size=4, overlap=1)
+        assert result[0] == ["The", "bear", "attack", "was"]
+        assert result[1] == ["was", "very", "terrifying"]
+
+    def test_last_chunk_may_be_shorter(self) -> None:
+        """The final chunk should include remaining words even if shorter."""
+        words = ["a", "b", "c", "d", "e"]
+        result = get_overlapping_chunks(words, chunk_size=3, overlap=0)
+        assert result[-1] == ["d", "e"]
+
+    def test_overlap_equal_to_chunk_size_raises(self) -> None:
+        """overlap >= chunk_size should raise ValueError."""
+        with pytest.raises(ValueError, match="Overlap"):
+            get_overlapping_chunks(["a", "b"], chunk_size=2, overlap=2)
+
+    def test_empty_words_returns_empty(self) -> None:
+        """An empty word list should return an empty list."""
+        assert get_overlapping_chunks([], chunk_size=3, overlap=1) == []

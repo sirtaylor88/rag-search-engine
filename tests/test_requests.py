@@ -53,13 +53,23 @@ class TestChunkPayload:
     """Validation tests for ChunkPayload."""
 
     def test_valid_defaults(self) -> None:
-        """Default chunk_size should equal CHUNK_SIZE."""
+        """Default chunk_size should equal CHUNK_SIZE and overlap should be 0."""
         payload = ChunkPayload(term="hello world")
         assert payload.chunk_size == CHUNK_SIZE
+        assert payload.overlap == 0
 
     def test_custom_chunk_size(self) -> None:
         """A positive chunk_size should be accepted."""
         assert ChunkPayload(term="hello", chunk_size=10).chunk_size == 10
+
+    def test_custom_overlap(self) -> None:
+        """A non-negative overlap should be accepted."""
+        assert ChunkPayload(term="hello world", chunk_size=5, overlap=2).overlap == 2
+
+    def test_negative_overlap_raises(self) -> None:
+        """A negative overlap should raise ValidationError."""
+        with pytest.raises(ValidationError):
+            ChunkPayload(term="hello", overlap=-1)
 
     def test_zero_chunk_size_raises(self) -> None:
         """A chunk_size of zero should raise ValidationError."""

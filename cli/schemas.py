@@ -27,9 +27,10 @@ class TermPayload(BaseModel):
 
 
 class ChunkPayload(TermPayload):
-    """Payload for the chunk command: text to split and number of words per chunk."""
+    """Payload for the chunk command: text, words per chunk, and overlap count."""
 
     chunk_size: int = Field(default=CHUNK_SIZE, ge=1)
+    overlap: int = Field(default=0, ge=0)
 
 
 class TermWithDocIDPayload(TermPayload):

@@ -136,6 +136,29 @@ def test_chunk_command_prints_chunks(capsys: CaptureFixture[str]) -> None:
     assert "1." in out
 
 
+def test_chunk_command_with_overlap_prints_multiple_chunks(
+    capsys: CaptureFixture[str],
+) -> None:
+    """The chunk command with --overlap should produce overlapping chunks."""
+    with patch(
+        "sys.argv",
+        [
+            "cli",
+            "chunk",
+            "The bear attack was very terrifying",
+            "--chunk-size",
+            "4",
+            "--overlap",
+            "1",
+        ],
+    ):
+        main()
+
+    out = capsys.readouterr().out
+    assert "1." in out
+    assert "2." in out
+
+
 def test_no_command_prints_help(capsys: CaptureFixture[str]) -> None:
     """Running without a subcommand should print the help message."""
     with patch("sys.argv", ["cli"]):
