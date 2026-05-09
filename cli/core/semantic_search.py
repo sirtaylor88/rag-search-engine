@@ -10,17 +10,18 @@ from torch import Tensor
 
 from cli.commands.build_command import get_movies
 from cli.core.keyword_search import CACHE_DIR_PATH, Document
+from cli.singleton import Singleton
 
 
 def verify_model() -> None:
-    """Instantiate SemanticSearch and print model info to verify it loaded correctly."""
+    """Access the SemanticSearch singleton and print model info to verify it loaded."""
     sem_search = SemanticSearch()
     print(f"Model loaded: {sem_search.model}")
     print(f"Max sequence length: {sem_search.model.max_seq_length}")
 
 
 def embed_text(text: str) -> None:
-    """Instantiate SemanticSearch, encode text, and print embedding info.
+    """Encode text using the SemanticSearch singleton and print embedding info.
 
     Args:
         text (str): The text to encode.
@@ -47,7 +48,7 @@ def verify_embeddings() -> None:
 
 
 def embed_query_text(query: str) -> None:
-    """Instantiate SemanticSearch, encode a query string, and print its embedding info.
+    """Encode a query using the SemanticSearch singleton and print its embedding info.
 
     Args:
         query (str): The query text to encode.
@@ -60,17 +61,20 @@ def embed_query_text(query: str) -> None:
     print(f"Shape: {embedding.shape}")
 
 
-class SemanticSearch:
+class SemanticSearch(Singleton):
     """Wraps SentenceTransformer to encode text into dense embedding vectors."""
 
     EMBEDDINGS_FILE_PATH = CACHE_DIR_PATH / "movie_embeddings.np"
 
     def __init__(self) -> None:
         """Load the all-MiniLM-L6-v2 model (downloads automatically on first use)."""
+        if self._initialized:
+            return
         self.model: SentenceTransformer = SentenceTransformer("all-MiniLM-L6-v2")
         self.embeddings: Optional[Tensor] = None
         self.documents: Optional[list[Document]] = None
         self.document_map: dict[int, Document] = {}
+        self._initialized = True
 
     def generate_embedding(self, text: str) -> Tensor:
         """Encode text into a dense embedding vector.

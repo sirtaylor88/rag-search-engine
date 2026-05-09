@@ -3,6 +3,7 @@
 ```{toctree}
 :maxdepth: 1
 
+singleton
 inverted_index
 semantic_search
 utils

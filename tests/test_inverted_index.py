@@ -33,6 +33,11 @@ def small_index() -> InvertedIndex:
     return idx
 
 
+def test_returns_same_instance_on_multiple_calls() -> None:
+    """Two InvertedIndex() calls should return the identical object."""
+    assert InvertedIndex() is InvertedIndex()
+
+
 @pytest.mark.parametrize("term", ["batman", "BATMAN"])
 def test_get_documents_returns_matching_ids(
     small_index: InvertedIndex, term: str

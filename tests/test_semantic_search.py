@@ -14,8 +14,22 @@ from cli.core.semantic_search import (
 )
 
 
+@pytest.fixture(autouse=True)
+def _reset_singleton(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reset the SemanticSearch singleton before each test."""
+    monkeypatch.setattr(SemanticSearch, "_instance", None)
+
+
 class TestSemanticSearch:
     """Tests for the SemanticSearch class."""
+
+    def test_returns_same_instance_on_multiple_calls(self) -> None:
+        """Two SemanticSearch() calls should return the identical object."""
+        mock_model = MagicMock()
+        with patch(
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+        ):
+            assert SemanticSearch() is SemanticSearch()
 
     def test_loads_model_on_init(self) -> None:
         """SemanticSearch should load the all-MiniLM-L6-v2 model on instantiation."""

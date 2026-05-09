@@ -7,11 +7,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 import pickle  # nosec B403
 from collections import defaultdict
-from typing import ClassVar, Counter, TypedDict
+from typing import Counter, TypedDict
 
 import progressbar
 
 from cli.constants import BM25_B, BM25_K1, CACHE_DIR
+from cli.singleton import Singleton
 from cli.utils import get_stemmed_tokens, get_term_token, timer
 
 
@@ -26,29 +27,18 @@ class Document(TypedDict):
     description: str
 
 
-class InvertedIndex:
+class InvertedIndex(Singleton):
     """Token-based inverted index for fast document retrieval.
 
     Implemented as a singleton: every call to ``InvertedIndex()`` returns the
     same instance, so the index is built and loaded only once per process.
     """
 
-    _instance: ClassVar["InvertedIndex | None"] = None
     CACHED_ATTR_NAMES = ["index", "docmap", "term_frequencies"]
-
-    def __new__(cls) -> "InvertedIndex":
-        """Return the singleton instance, creating it on the first call.
-
-        Returns:
-            InvertedIndex: The shared singleton instance.
-        """
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self) -> None:
         """Initialise index data structures on the first instantiation only."""
-        if hasattr(self, "index"):
+        if self._initialized:
             return
 
         # * Map token to a set of document IDs.
@@ -67,6 +57,7 @@ class InvertedIndex:
         self.doc_lengths_path = CACHE_DIR_PATH / "doc_lengths.pkl"
 
         self._lock = threading.Lock()
+        self._initialized = True
 
     @property
     def total_doc_count(self) -> int:
