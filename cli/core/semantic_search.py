@@ -8,7 +8,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from torch import Tensor
 
-from cli.constants import CACHE_DIR_PATH
+from cli.constants import CACHE_DIR_PATH, DEFAULT_EMBEDDING_MODEL
 from cli.core.keyword_search import Document
 from cli.singleton import Singleton
 from cli.utils import cosine_similarity, get_movies
@@ -67,11 +67,11 @@ class SemanticSearch(Singleton):
 
     EMBEDDINGS_FILE_PATH = CACHE_DIR_PATH / "movie_embeddings.np"
 
-    def __init__(self) -> None:
+    def __init__(self, model_name: str = DEFAULT_EMBEDDING_MODEL) -> None:
         """Load the all-MiniLM-L6-v2 model (downloads automatically on first use)."""
         if self._initialized:
             return
-        self.model: SentenceTransformer = SentenceTransformer("all-MiniLM-L6-v2")
+        self.model: SentenceTransformer = SentenceTransformer(model_name)
         self.embeddings: Optional[Tensor] = None
         self.documents: Optional[list[Document]] = None
         self.document_map: dict[int, Document] = {}

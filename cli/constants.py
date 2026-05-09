@@ -12,6 +12,7 @@ BM25_K1 = 1.5
 
 # * Search
 SEARCH_LIMIT = 5
+CHUNKED_SEARCH_LIMIT = 10
 
 # * Chunk sizes
 CHUNK_SIZE = 200
@@ -19,3 +20,6 @@ SEMANTIC_CHUNK_SIZE = 4
 
 # * Regex
 SENTENCE_SPLIT_PATTERN = r"(?<=[.!?])\s+"
+
+# * LLM model
+DEFAULT_EMBEDDING_MODEL = "all-MiniLM-L6-v2"

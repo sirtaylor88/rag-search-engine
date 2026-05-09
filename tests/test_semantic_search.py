@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from pytest import CaptureFixture
 
+from cli.constants import DEFAULT_EMBEDDING_MODEL
 from cli.core.semantic_search import (
     SemanticSearch,
     embed_query_text,
@@ -39,7 +40,7 @@ class TestSemanticSearch:
             "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
         ) as mock_st:
             ss = SemanticSearch()
-            mock_st.assert_called_once_with("all-MiniLM-L6-v2")
+            mock_st.assert_called_once_with(DEFAULT_EMBEDDING_MODEL)
             assert ss.model is mock_model
 
     def test_generate_embedding_returns_encoded_tensor(self) -> None:
