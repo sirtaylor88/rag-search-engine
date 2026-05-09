@@ -34,6 +34,7 @@ class InvertedIndex:
     """
 
     _instance: ClassVar["InvertedIndex | None"] = None
+    CACHED_ATTR_NAMES = ["index", "docmap", "term_frequencies"]
 
     def __new__(cls) -> "InvertedIndex":
         """Return the singleton instance, creating it on the first call.
@@ -284,7 +285,7 @@ class InvertedIndex:
         """Write the index, document map, term frequencies, and doc lengths to cache."""
 
         os.makedirs(CACHE_DIR_PATH, exist_ok=True)
-        for attr_name in ["index", "docmap", "term_frequencies"]:
+        for attr_name in self.CACHED_ATTR_NAMES:
             with open(CACHE_DIR_PATH / f"{attr_name}.pkl", "wb") as fh:
                 pickle.dump(getattr(self, attr_name), fh)
 
@@ -294,7 +295,7 @@ class InvertedIndex:
     def load(self) -> None:
         """Load index, document map, term frequencies, and doc lengths from cache."""
 
-        for attr_name in ["index", "docmap", "term_frequencies"]:
+        for attr_name in self.CACHED_ATTR_NAMES:
             with open(CACHE_DIR_PATH / f"{attr_name}.pkl", "rb") as fh:
                 setattr(self, attr_name, pickle.load(fh))  # nosec B301
 

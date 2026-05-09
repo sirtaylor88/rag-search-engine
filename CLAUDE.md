@@ -58,6 +58,9 @@ uv run python cli/keyword_search_cli.py bm25tf <doc_id> <term> [k1] [b]
 # Verify that the semantic search model loads correctly
 uv run python cli/semantic_search_cli.py verify
 
+# Load or create corpus embeddings and print their shape (cached to cache/)
+uv run python cli/semantic_search_cli.py verify_embeddings
+
 # Encode a text string and print its embedding info
 uv run python cli/semantic_search_cli.py embed_text "<text>"
 ```
@@ -79,14 +82,14 @@ Dev dependencies: `bandit`, `furo`, `mypy`, `myst-parser`, `pre-commit`, `pylint
 The project is in early development. Current structure:
 
 - `cli/keyword_search_cli.py` — CLI entry point: builds the `ArgumentParser`, instantiates each command with its subparser (registering arguments), then parses args, wraps them in the appropriate `Request[XPayload]` instance, and dispatches to `build`, `search`, `bm25search`, `tf`, `idf`, `tfidf`, `bm25idf`, or `bm25tf`.
-- `cli/semantic_search_cli.py` — Semantic search CLI entry point: registers the `verify` and `embed_text` subcommands and dispatches them to `VerifyCommand` (via `EmptyRequest`) and `EmbedTextCommand` (via `TermRequest`).
+- `cli/semantic_search_cli.py` — Semantic search CLI entry point: registers `verify`, `verify_embeddings`, and `embed_text` subcommands; dispatches to `VerifyCommand`, `VerifyEmbeddingsCommand` (both via `EmptyRequest`), and `EmbedTextCommand` (via `TermRequest`).
 - `cli/commands/` — Command classes following an instance-based pattern.
   - `base.py` — Generic typed request architecture. **Payload models** (Pydantic `BaseModel` with field validation): `EmptyPayload` (no fields), `SearchPayload` (`query` min_length=1, `limit` ge=1), `TermPayload` (`term` min_length=1), `TermWithDocIDPayload` (adds `doc_id` ge=1), `BM25Payload` (adds `k1` gt=0, `b` ge=0 le=1). **Request envelope**: `Request[T]` generic `BaseModel` with a single `payload: T` field; concrete aliases `EmptyRequest`, `SearchRequest`, `TermRequest`, `TermWithDocIDRequest`, `BM25Request` narrow the type. **`BaseCommand[PayloadT]`** abstract base with `__init__(parser)`, abstract `add_arguments(parser)`, abstract `run(request: Request[PayloadT])`, concrete `load_cache()` (shared OSError handling), and `inverted_index` property returning the `InvertedIndex` singleton. Concrete bases: `TermCommand` (registers `term` positional arg), `BaseSearchCommand` (registers `query` positional arg and `--limit` optional arg).
   - `build_command.py` — `get_movies()` (loads JSON) and `BuildCommand`: registers `--data-path` and builds/saves the index.
   - `search/` — Subpackage for search and semantic commands.
     - `search_command.py` — `SearchCommand(BaseSearchCommand)`: calls `InvertedIndex.search()` and prints matching doc titles (unranked).
     - `bm25_search_command.py` — `BM25SearchCommand(SearchCommand)`: calls `InvertedIndex.bm25_search()` and prints results ranked by BM25 score.
-    - `verify_command.py` — `VerifyCommand(BaseCommand[EmptyPayload])`: registers no arguments and calls `verify_model()` on run.
+    - `verify_command.py` — `VerifyCommand(BaseCommand[EmptyPayload])`: calls `verify_model()` on run. `VerifyEmbeddingsCommand(VerifyCommand)`: calls `verify_embeddings()` to load or build corpus embeddings and print their shape.
     - `embed_text_command.py` — `EmbedTextCommand(TermCommand)`: calls `embed_text()` to encode the input term and print its embedding info.
   - `compute/` — Subpackage for all scoring/frequency commands.
     - `compute_tf_command.py` — `ComputeTFCommand`: registers `doc_id` and `term` positional args and prints the raw term frequency via `InvertedIndex.get_tf()`.
@@ -94,7 +97,7 @@ The project is in early development. Current structure:
     - `compute_tfidf_command.py` — `ComputeTFIDFCommand`: extends `ComputeTFCommand` and prints the TF-IDF score (product of `get_tf()` and `get_idf()`).
     - `compute_bm25_idf_command.py` — `ComputeBM25IDFCommand`: extends `ComputeIDFCommand` and prints the Okapi BM25 IDF via `InvertedIndex.get_bm25_idf()`.
     - `compute_bm25_tf_command.py` — `ComputeBM25TFCommand`: extends `ComputeTFCommand`, registers optional `k1` and `b` args, and prints the BM25 saturated TF via `InvertedIndex.get_bm25_tf()`.
-- `cli/core/semantic_search.py` — `SemanticSearch` class wrapping `SentenceTransformer("all-MiniLM-L6-v2")`; the `sentence_transformers` import is deferred to `__init__` (lazy) so that importing the module does not load PyTorch. `generate_embedding(text)` encodes text to a 1-D `Tensor` (raises `ValueError` on empty input); `verify_model()` instantiates it and prints model info; `embed_text(text)` encodes text and prints the embedding dimensions.
+- `cli/core/semantic_search.py` — `SemanticSearch` class wrapping `SentenceTransformer("all-MiniLM-L6-v2")`; `sentence_transformers` is imported lazily inside `__init__` to avoid loading PyTorch at module import time. Methods: `generate_embedding(text)` → 1-D `Tensor` (raises `ValueError` on empty input); `build_embeddings(documents)` → encodes all docs and saves to `cache/movie_embeddings.np`; `load_or_create_embeddings(documents)` → loads from disk if count matches, otherwise rebuilds. Module-level helpers: `verify_model()` prints model info; `embed_text(text)` prints embedding dimensions; `verify_embeddings()` loads or builds corpus embeddings and prints their shape.
 - `cli/core/keyword_search.py` — `InvertedIndex` singleton class: `__new__` returns the same instance on every call so the index is built and loaded only once per process; `__init__` is guarded by `hasattr` so it runs only on the first instantiation. Builds a token→doc-ID index using `ThreadPoolExecutor` (tokenization runs in parallel; a `threading.Lock` serializes index writes), tracks per-document term frequencies and lengths (`doc_lengths`, `avg_doc_length`), supports `get_documents(term)`, `search(query, limit)` (unranked token-overlap), `get_tf(doc_id, term)`, `get_idf(term)` (smoothed log IDF), `get_bm25_idf(term)` (Okapi BM25 IDF), `get_bm25_tf(doc_id, term, k1, b)` (length-normalized BM25 TF), `bm25(doc_id, term)` (full BM25 score = BM25 TF × BM25 IDF), `bm25_search(query, limit)` (ranked by cumulative BM25), and persists to/loads from `cache/` via pickle. `Document` is a `TypedDict` for movie records.
 - `cli/utils.py` — Text processing helpers: `remove_all_punctuations` (strips ASCII and common Unicode punctuation: curly quotes, en/em dashes), `tokenize_text`, `get_stemmed_tokens` (Porter stemmer via NLTK; filters stop words; returns ordered list with duplicates), `get_stop_words` (loads from `data/stopwords.txt`), `get_term_token` (validates and stems a single-word term), `timer` (context manager that prints elapsed wall-clock time to stderr), the shared `STEMMER` instance, and `STOP_WORDS` (loaded once at import time).
 - `cli/constants.py` — Project-wide constants: `BM25_K1` (default BM25 saturation parameter, `1.5`), `BM25_B` (default length normalization parameter, `0.75`), `CACHE_DIR` (cache directory name, `"cache"`).

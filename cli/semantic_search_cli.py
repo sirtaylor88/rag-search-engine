@@ -3,7 +3,7 @@
 import argparse
 
 from cli.commands.base import EmptyPayload, EmptyRequest, TermPayload, TermRequest
-from cli.commands.search import VerifyCommand, EmbedTextCommand
+from cli.commands.search import VerifyCommand, EmbedTextCommand, VerifyEmbeddingsCommand
 
 
 def main() -> None:
@@ -14,8 +14,11 @@ def main() -> None:
     verify_cmd = VerifyCommand(
         subparsers.add_parser("verify", help="Verify semantic model")
     )
+    verify_embeddings_cmd = VerifyEmbeddingsCommand(
+        subparsers.add_parser("verify_embeddings", help="Verify embeddings")
+    )
     embed_text_cmd = EmbedTextCommand(
-        subparsers.add_parser("embed_text", help="Verify semantic model")
+        subparsers.add_parser("embed_text", help="Embed a text string")
     )
 
     args = parser.parse_args()
@@ -23,6 +26,8 @@ def main() -> None:
     match args.command:
         case "verify":
             verify_cmd.run(EmptyRequest(payload=EmptyPayload()))
+        case "verify_embeddings":
+            verify_embeddings_cmd.run(EmptyRequest(payload=EmptyPayload()))
         case "embed_text":
             embed_text_cmd.run(TermRequest(payload=TermPayload(term=args.term)))
         case _:

@@ -24,6 +24,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)**. The current
   - [BM25 IDF score](#bm25-idf-score)
   - [BM25 TF score](#bm25-tf-score)
   - [Verify semantic model](#verify-semantic-model)
+  - [Verify embeddings](#verify-embeddings)
   - [Embed text](#embed-text)
 - [Documentation](#documentation)
 - [Development](#development)
@@ -183,6 +184,20 @@ uv run python cli/semantic_search_cli.py verify
 $ uv run python cli/semantic_search_cli.py verify
 Model loaded: SentenceTransformer('all-MiniLM-L6-v2')
 Max sequence length: 256
+```
+
+### Verify embeddings
+
+Load or create dense embeddings for the full movie corpus and print their shape. Embeddings are cached to `cache/movie_embeddings.np` on first run:
+
+```bash
+uv run python cli/semantic_search_cli.py verify_embeddings
+```
+
+```
+$ uv run python cli/semantic_search_cli.py verify_embeddings
+Number of docs:   9000
+Embeddings shape: 9000 vectors in 384 dimensions
 ```
 
 ### Embed text

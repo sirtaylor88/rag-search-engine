@@ -5,7 +5,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest import CaptureFixture
 
-from cli.core.semantic_search import SemanticSearch, embed_text, verify_model
+from cli.core.semantic_search import (
+    SemanticSearch,
+    embed_text,
+    verify_embeddings,
+    verify_model,
+)
 
 
 class TestSemanticSearch:
@@ -44,6 +49,97 @@ class TestSemanticSearch:
             ss = SemanticSearch()
             with pytest.raises(ValueError, match="empty"):
                 ss.generate_embedding("   ")
+
+    def test_build_embeddings_populates_documents_and_map(self) -> None:
+        """build_embeddings should set documents and document_map via _populate_docs."""
+        docs = [
+            {"id": 1, "title": "A", "description": "desc A"},
+            {"id": 2, "title": "B", "description": "desc B"},
+        ]
+        mock_model = MagicMock()
+        with (
+            patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+            patch("cli.core.semantic_search.np.save"),
+        ):
+            ss = SemanticSearch()
+            ss.build_embeddings(docs)  # type: ignore[arg-type]
+
+        assert ss.documents == docs
+        assert ss.document_map == {1: docs[0], 2: docs[1]}
+
+    def test_build_embeddings_encodes_and_saves(self) -> None:
+        """build_embeddings should encode docs and persist the matrix to disk."""
+        docs = [{"id": 1, "title": "A", "description": "desc"}]
+        mock_embeddings = MagicMock()
+        mock_model = MagicMock()
+        mock_model.encode.return_value = mock_embeddings
+        with (
+            patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+            patch("cli.core.semantic_search.np.save") as mock_save,
+        ):
+            ss = SemanticSearch()
+            result = ss.build_embeddings(docs)  # type: ignore[arg-type]
+
+        mock_model.encode.assert_called_once_with(["A: desc"], show_progress_bar=True)
+        mock_save.assert_called_once()
+        assert result is mock_embeddings
+
+    def test_load_or_create_embeddings_returns_cached_when_file_exists(self) -> None:
+        """load_or_create_embeddings returns cached embeddings when count matches."""
+        docs = [{"id": 1, "title": "A", "description": "desc"}]
+        mock_embeddings = MagicMock()
+        mock_embeddings.__len__ = MagicMock(return_value=1)
+        mock_model = MagicMock()
+        mock_path = MagicMock()
+        mock_path.is_file.return_value = True
+        with (
+            patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+            patch.object(SemanticSearch, "EMBEDDINGS_FILE_PATH", mock_path),
+            patch("cli.core.semantic_search.np.load", return_value=mock_embeddings),
+        ):
+            ss = SemanticSearch()
+            result = ss.load_or_create_embeddings(docs)  # type: ignore[arg-type]
+
+        assert result is mock_embeddings
+
+    def test_load_or_create_embeddings_rebuilds_on_count_mismatch(self) -> None:
+        """load_or_create_embeddings should rebuild when cached count doesn't match."""
+        docs = [{"id": 1, "title": "A", "description": "desc"}]
+        stale = MagicMock()
+        stale.__len__ = MagicMock(return_value=99)
+        fresh = MagicMock()
+        mock_model = MagicMock()
+        mock_model.encode.return_value = fresh
+        mock_path = MagicMock()
+        mock_path.is_file.return_value = True
+        with (
+            patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+            patch.object(SemanticSearch, "EMBEDDINGS_FILE_PATH", mock_path),
+            patch("cli.core.semantic_search.np.load", return_value=stale),
+            patch("cli.core.semantic_search.np.save"),
+        ):
+            ss = SemanticSearch()
+            result = ss.load_or_create_embeddings(docs)  # type: ignore[arg-type]
+
+        assert result is fresh
+
+    def test_load_or_create_embeddings_builds_when_no_file(self) -> None:
+        """load_or_create_embeddings should build embeddings when no file exists."""
+        docs = [{"id": 1, "title": "A", "description": "desc"}]
+        fresh = MagicMock()
+        mock_model = MagicMock()
+        mock_model.encode.return_value = fresh
+        mock_path = MagicMock()
+        mock_path.is_file.return_value = False
+        with (
+            patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+            patch.object(SemanticSearch, "EMBEDDINGS_FILE_PATH", mock_path),
+            patch("cli.core.semantic_search.np.save"),
+        ):
+            ss = SemanticSearch()
+            result = ss.load_or_create_embeddings(docs)  # type: ignore[arg-type]
+
+        assert result is fresh
 
 
 class TestVerifyModel:
@@ -84,3 +180,31 @@ class TestEmbedText:
         assert "Text: hello" in out
         assert "First 3 dimensions:" in out
         assert "Dimensions:" in out
+
+
+class TestVerifyEmbeddings:
+    """Tests for the verify_embeddings function."""
+
+    def test_prints_document_count_and_shape(self, capsys: CaptureFixture[str]) -> None:
+        """verify_embeddings should print number of docs and embedding shape."""
+        mock_embeddings = MagicMock()
+        mock_embeddings.shape = (2, 384)
+        mock_docs = [
+            {"id": 1, "title": "A", "description": "desc A"},
+            {"id": 2, "title": "B", "description": "desc B"},
+        ]
+        mock_model = MagicMock()
+        with (
+            patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+            patch("cli.core.semantic_search.get_movies", return_value=mock_docs),
+            patch.object(
+                SemanticSearch,
+                "load_or_create_embeddings",
+                return_value=mock_embeddings,
+            ),
+        ):
+            verify_embeddings()
+
+        out = capsys.readouterr().out
+        assert "Number of docs:" in out
+        assert "Embeddings shape:" in out

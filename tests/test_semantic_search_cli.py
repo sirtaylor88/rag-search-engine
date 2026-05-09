@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from pytest import CaptureFixture
 
+from cli.core.semantic_search import SemanticSearch
 from cli.semantic_search_cli import main
 
 
@@ -20,6 +21,32 @@ def test_verify_command_calls_verify_model(capsys: CaptureFixture[str]) -> None:
     out = capsys.readouterr().out
     assert "Model loaded:" in out
     assert "Max sequence length:" in out
+
+
+def test_verify_embeddings_command_prints_shape(capsys: CaptureFixture[str]) -> None:
+    """The verify_embeddings command should print document count and embedding shape."""
+    mock_embeddings = MagicMock()
+    mock_embeddings.shape = (2, 384)
+    mock_docs = [
+        {"id": 1, "title": "A", "description": "desc A"},
+        {"id": 2, "title": "B", "description": "desc B"},
+    ]
+    mock_model = MagicMock()
+    with (
+        patch("sys.argv", ["cli", "verify_embeddings"]),
+        patch("sentence_transformers.SentenceTransformer", return_value=mock_model),
+        patch("cli.core.semantic_search.get_movies", return_value=mock_docs),
+        patch.object(
+            SemanticSearch,
+            "load_or_create_embeddings",
+            return_value=mock_embeddings,
+        ),
+    ):
+        main()
+
+    out = capsys.readouterr().out
+    assert "Number of docs:" in out
+    assert "Embeddings shape:" in out
 
 
 def test_embed_text_command_prints_embedding_info(capsys: CaptureFixture[str]) -> None:
