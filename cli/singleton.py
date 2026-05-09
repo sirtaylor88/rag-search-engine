@@ -1,7 +1,5 @@
 """Generic singleton base class."""
 
-# pylint: disable=too-few-public-methods
-
 from typing import ClassVar, TypeVar, cast
 
 _T = TypeVar("_T", bound="Singleton")

@@ -1,7 +1,5 @@
 """Pydantic payload and request models shared across CLI commands."""
 
-# pylint: disable=too-few-public-methods
-
 from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field
