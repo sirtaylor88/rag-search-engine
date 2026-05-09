@@ -75,6 +75,50 @@ uv run python cli/keyword_search_cli.py bm25idf <term>
 uv run python cli/keyword_search_cli.py bm25tf <doc_id> <term> [k1] [b]
 ```
 
+## Semantic Search CLI
+
+### Verify model
+
+```bash
+uv run python cli/semantic_search_cli.py verify
+```
+
+### Verify embeddings
+
+```bash
+uv run python cli/semantic_search_cli.py verify_embeddings
+```
+
+### Embed text
+
+```bash
+uv run python cli/semantic_search_cli.py embed_text "<text>"
+```
+
+### Embed query
+
+```bash
+uv run python cli/semantic_search_cli.py embed_query "<query>"
+```
+
+### Semantic search
+
+```bash
+uv run python cli/semantic_search_cli.py search "<query>"
+```
+
+### Chunk text (word-based)
+
+```bash
+uv run python cli/semantic_search_cli.py chunk "<text>" [--chunk-size N] [--overlap N]
+```
+
+### Chunk text (sentence-based)
+
+```bash
+uv run python cli/semantic_search_cli.py semantic_chunk "<text>" [--max-chunk-size N] [--overlap N]
+```
+
 ## Development
 
 ```bash
@@ -83,5 +127,6 @@ uv run pytest --cov=cli --cov-report=term-missing    # with coverage
 uv run mypy .                                         # type check
 uv run ruff check .                                   # lint
 uv run ruff format .                                  # format
+uv run pydocstyle cli/ --convention=google            # docstring style
 uv run bandit -r cli/                                 # security scan
 ```

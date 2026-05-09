@@ -1,8 +1,7 @@
 # BM25 TF Command
 
 ```{eval-rst}
-.. automodule:: cli.commands.compute.tf_commands
+.. autoclass:: cli.commands.compute.tf_commands.ComputeBM25TFCommand
    :members:
-   :undoc-members:
    :show-inheritance:
 ```

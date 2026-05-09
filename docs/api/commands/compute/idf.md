@@ -1,8 +1,7 @@
 # IDF Command
 
 ```{eval-rst}
-.. automodule:: cli.commands.compute.idf_commands
+.. autoclass:: cli.commands.compute.idf_commands.ComputeIDFCommand
    :members:
-   :undoc-members:
    :show-inheritance:
 ```

@@ -1,8 +1,7 @@
 # TF Command
 
 ```{eval-rst}
-.. automodule:: cli.commands.compute.tf_commands
+.. autoclass:: cli.commands.compute.tf_commands.ComputeTFCommand
    :members:
-   :undoc-members:
    :show-inheritance:
 ```
