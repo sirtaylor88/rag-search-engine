@@ -9,7 +9,8 @@ from sentence_transformers import SentenceTransformer
 from torch import Tensor
 
 from cli.commands.build_command import get_movies
-from cli.core.keyword_search import CACHE_DIR_PATH, Document
+from cli.constants import CACHE_DIR_PATH
+from cli.core.keyword_search import Document
 from cli.singleton import Singleton
 
 

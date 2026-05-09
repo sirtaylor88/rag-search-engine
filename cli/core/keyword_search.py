@@ -4,19 +4,15 @@ import math
 import os
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
 import pickle  # nosec B403
 from collections import defaultdict
 from typing import Counter, TypedDict
 
 import progressbar
 
-from cli.constants import BM25_B, BM25_K1, CACHE_DIR
+from cli.constants import BM25_B, BM25_K1, CACHE_DIR_PATH, SEARCH_LIMIT
 from cli.singleton import Singleton
 from cli.utils import get_stemmed_tokens, get_term_token, timer
-
-
-CACHE_DIR_PATH = Path(CACHE_DIR)
 
 
 class Document(TypedDict):
@@ -69,7 +65,11 @@ class InvertedIndex(Singleton):
         """Return the mean document length across all indexed documents."""
         return self.__get_avg_doc_length()
 
-    def __add_document(self, doc_id: int, text: str) -> None:
+    def __add_document(
+        self,
+        doc_id: int,
+        text: str,
+    ) -> None:
         """Index a document by stemming its text and mapping each token to the doc ID.
 
         Args:
@@ -103,7 +103,11 @@ class InvertedIndex(Singleton):
         """
         return sorted(self.index[term.lower()])
 
-    def search(self, query: str, limit: int = 5) -> list[int]:
+    def search(
+        self,
+        query: str,
+        limit: int = SEARCH_LIMIT,
+    ) -> list[int]:
         """Return up to `limit` sorted document IDs whose tokens overlap with the query.
 
         Args:
@@ -122,7 +126,11 @@ class InvertedIndex(Singleton):
 
         return sorted(doc_ids)[:limit]
 
-    def get_tf(self, doc_id: int, term: str) -> int:
+    def get_tf(
+        self,
+        doc_id: int,
+        term: str,
+    ) -> int:
         """Return the frequency of a single-token term in the given document.
 
         Args:
@@ -205,7 +213,11 @@ class InvertedIndex(Singleton):
 
         return (raw_tf * (k1 + 1)) / (raw_tf + k1 * length_norm)
 
-    def bm25(self, doc_id: int, term: str) -> float:
+    def bm25(
+        self,
+        doc_id: int,
+        term: str,
+    ) -> float:
         """Compute the full BM25 score for a single term in a document.
 
         Args:
@@ -219,7 +231,11 @@ class InvertedIndex(Singleton):
         bm25_idf = self.get_bm25_idf(term)
         return bm25_tf * bm25_idf
 
-    def bm25_search(self, query: str, limit: int) -> list[tuple[int, float]]:
+    def bm25_search(
+        self,
+        query: str,
+        limit: int,
+    ) -> list[tuple[int, float]]:
         """Return the top documents ranked by cumulative BM25 score.
 
         Args:

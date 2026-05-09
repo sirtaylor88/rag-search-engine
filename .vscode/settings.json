@@ -1,8 +1,8 @@
 {
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
     "python.analysis.extraPaths": [
-        "${workspaceFolder}/.venv/lib/python3.12/site-packages",
-        "${workspaceFolder}/cli"
+        "${workspaceFolder}/.venv/lib/python3.12/site-packages"
     ],
-    "python.analysis.autoSearchPaths": true
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.importFormat": "absolute"
 }
