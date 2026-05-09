@@ -133,8 +133,8 @@ class TestCosineSimilarity:
         """A zero vector should yield 0.0 to avoid division by zero."""
         zero = np.array([0.0, 0.0])
         vec = np.array([1.0, 2.0])
-        assert cosine_similarity(zero, vec) == 0.0
-        assert cosine_similarity(vec, zero) == 0.0
+        assert cosine_similarity(zero, vec) == pytest.approx(0.0)
+        assert cosine_similarity(vec, zero) == pytest.approx(0.0)
 
 
 class TestGetOverlappingChunks:
