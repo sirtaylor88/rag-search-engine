@@ -28,6 +28,13 @@ repos:
         types: [python]
         pass_filenames: false
 
+      - id: pydocstyle
+        name: pydocstyle (uv)
+        entry: uv run pydocstyle cli/ --convention=google
+        language: system
+        types: [python]
+        pass_filenames: false
+
       - id: bandit
         name: bandit (uv)
         entry: uv run bandit -r cli/

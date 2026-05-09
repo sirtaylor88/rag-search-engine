@@ -16,7 +16,6 @@ class SearchCommand(BaseSearchCommand):
         Args:
             request (Request[SearchPayload]): Contains the search query string.
         """
-
         self.load_cache()
 
         print("Searching for:", request.payload.query)

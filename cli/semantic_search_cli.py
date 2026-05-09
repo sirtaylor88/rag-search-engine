@@ -2,6 +2,7 @@
 
 import argparse
 
+from cli.commands.compute.chunk_commands import SemanticChunkCommand
 from cli.schemas import (
     ChunkPayload,
     ChunkRequest,
@@ -9,6 +10,8 @@ from cli.schemas import (
     EmptyRequest,
     SearchPayload,
     SearchRequest,
+    SemanticChunkPayload,
+    SemanticChunkRequest,
     TermPayload,
     TermRequest,
 )
@@ -43,6 +46,11 @@ def main() -> None:
         subparsers.add_parser("search", help="Search string")
     )
     chunk_cmd = ChunkCommand(subparsers.add_parser("chunk", help="Chunk a text"))
+    sem_chunk_cmd = SemanticChunkCommand(
+        subparsers.add_parser(
+            "semantic_chunk", help="Chunk a text using semantic chunk"
+        )
+    )
 
     args = parser.parse_args()
 
@@ -65,6 +73,16 @@ def main() -> None:
                     payload=ChunkPayload(
                         term=args.term,
                         chunk_size=args.chunk_size,
+                        overlap=args.overlap,
+                    )
+                )
+            )
+        case "semantic_chunk":
+            sem_chunk_cmd.run(
+                SemanticChunkRequest(
+                    payload=SemanticChunkPayload(
+                        term=args.term,
+                        max_chunk_size=args.max_chunk_size,
                         overlap=args.overlap,
                     )
                 )

@@ -4,7 +4,7 @@ from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
-from cli.constants import BM25_B, BM25_K1, CHUNK_SIZE, SEARCH_LIMIT
+from cli.constants import BM25_B, BM25_K1, CHUNK_SIZE, SEARCH_LIMIT, SEMANTIC_CHUNK_SIZE
 
 T = TypeVar("T")
 
@@ -26,11 +26,22 @@ class TermPayload(BaseModel):
     term: str = Field(min_length=1)
 
 
-class ChunkPayload(TermPayload):
+class OverlapPayload(TermPayload):
+    """Payload carrying a term and a non-negative overlap count."""
+
+    overlap: int = Field(default=0, ge=0)
+
+
+class ChunkPayload(OverlapPayload):
     """Payload for the chunk command: text, words per chunk, and overlap count."""
 
     chunk_size: int = Field(default=CHUNK_SIZE, ge=1)
-    overlap: int = Field(default=0, ge=0)
+
+
+class SemanticChunkPayload(OverlapPayload):
+    """Payload for the semantic chunk command: text, sentences per chunk, overlap."""
+
+    max_chunk_size: int = Field(default=SEMANTIC_CHUNK_SIZE, ge=1)
 
 
 class TermWithDocIDPayload(TermPayload):
@@ -79,6 +90,12 @@ class ChunkRequest(Request[ChunkPayload]):
     """Request carrying a text and the number of words per chunk."""
 
     payload: ChunkPayload
+
+
+class SemanticChunkRequest(Request[SemanticChunkPayload]):
+    """Request carrying a text, max sentences per chunk, and overlap count."""
+
+    payload: SemanticChunkPayload
 
 
 class TermWithDocIDRequest(Request[TermWithDocIDPayload]):

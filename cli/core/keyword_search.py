@@ -166,7 +166,6 @@ class InvertedIndex(Singleton):
         Returns:
             float: log((N + 1) / (df + 1)) where N is total docs and df is match count.
         """
-
         df = self.get_df(term)
 
         return math.log((self.total_doc_count + 1) / (df + 1))
@@ -204,7 +203,6 @@ class InvertedIndex(Singleton):
             float: (tf * (k1 + 1)) / (tf + k1 * length_norm) where
                 length_norm = 1 - b + b * (doc_length / avg_doc_length).
         """
-
         # * Get the length normalization factor
         length_norm = 1 - b + b * (self.doc_lengths[doc_id] / self.avg_doc_length)
 
@@ -290,7 +288,6 @@ class InvertedIndex(Singleton):
 
     def save(self) -> None:
         """Write the index, document map, term frequencies, and doc lengths to cache."""
-
         os.makedirs(CACHE_DIR_PATH, exist_ok=True)
         for attr_name in self.CACHED_ATTR_NAMES:
             with open(CACHE_DIR_PATH / f"{attr_name}.pkl", "wb") as fh:
@@ -301,7 +298,6 @@ class InvertedIndex(Singleton):
 
     def load(self) -> None:
         """Load index, document map, term frequencies, and doc lengths from cache."""
-
         for attr_name in self.CACHED_ATTR_NAMES:
             with open(CACHE_DIR_PATH / f"{attr_name}.pkl", "rb") as fh:
                 setattr(self, attr_name, pickle.load(fh))  # nosec B301

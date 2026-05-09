@@ -29,6 +29,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)**. The current
   - [Embed query](#embed-query)
   - [Semantic search](#semantic-search)
   - [Chunk text](#chunk-text)
+  - [Semantic chunk text](#semantic-chunk-text)
 - [Documentation](#documentation)
 - [Development](#development)
 
@@ -267,6 +268,23 @@ Chunking 36 characters.
 
 The optional `--chunk-size` parameter (default: `200`) controls the number of words per chunk. The optional `--overlap` parameter (default: `0`) controls how many words are shared between consecutive chunks.
 
+### Semantic chunk text
+
+Split a text string into fixed-size sentence chunks using punctuation boundaries (`!`, `.`, `?`) with optional overlap. Useful for preparing long documents for sentence-level embedding:
+
+```bash
+uv run python cli/semantic_search_cli.py semantic_chunk "<text>" [--max-chunk-size N] [--overlap N]
+```
+
+```
+$ uv run python cli/semantic_search_cli.py semantic_chunk "This is the first sentence. This is the second sentence. This is the third sentence." --max-chunk-size 2
+Semantically chunking 85 characters.
+1. This is the first sentence. This is the second sentence.
+2. This is the third sentence.
+```
+
+The optional `--max-chunk-size` parameter (default: `4`) controls the maximum number of sentences per chunk. The optional `--overlap` parameter (default: `0`) controls how many sentences are shared between consecutive chunks.
+
 ---
 
 ## Documentation
@@ -296,5 +314,6 @@ uv run sphinx-autobuild docs docs/_build/html
 | `uv run ruff format .` | Format |
 | `uv run pylint <file_or_dir>` | Lint with pylint |
 | `uv run bandit -r cli/` | Security scan |
+| `uv run pydocstyle cli/ --convention=google` | Docstring style check |
 
-Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, `mypy`, `bandit`, and `pytest` (with 100% coverage enforcement) automatically on each commit.
+Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, `mypy`, `pydocstyle`, `bandit`, and `pytest` (with 100% coverage enforcement) automatically on each commit.

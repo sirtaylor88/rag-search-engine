@@ -10,14 +10,76 @@ from cli.schemas import (
     ChunkRequest,
     EmptyPayload,
     EmptyRequest,
+    OverlapPayload,
     SearchPayload,
     SearchRequest,
+    SemanticChunkPayload,
+    SemanticChunkRequest,
     TermPayload,
     TermRequest,
     TermWithDocIDPayload,
     TermWithDocIDRequest,
 )
-from cli.constants import BM25_B, BM25_K1, CHUNK_SIZE
+from cli.constants import BM25_B, BM25_K1, CHUNK_SIZE, SEMANTIC_CHUNK_SIZE
+
+
+class TestOverlapPayload:
+    """Validation tests for OverlapPayload."""
+
+    def test_valid_defaults(self) -> None:
+        """Default overlap should be 0."""
+        payload = OverlapPayload(term="hello world")
+        assert payload.overlap == 0
+
+    def test_custom_overlap(self) -> None:
+        """A non-negative overlap should be accepted."""
+        assert OverlapPayload(term="hello world", overlap=2).overlap == 2
+
+    def test_negative_overlap_raises(self) -> None:
+        """A negative overlap should raise ValidationError."""
+        with pytest.raises(ValidationError):
+            OverlapPayload(term="hello", overlap=-1)
+
+    def test_empty_term_raises(self) -> None:
+        """An empty term should raise ValidationError."""
+        with pytest.raises(ValidationError):
+            OverlapPayload(term="")
+
+
+class TestSemanticChunkPayload:
+    """Validation tests for SemanticChunkPayload."""
+
+    def test_valid_defaults(self) -> None:
+        """Default max_chunk_size should equal SEMANTIC_CHUNK_SIZE and overlap 0."""
+        payload = SemanticChunkPayload(term="Hello world.")
+        assert payload.max_chunk_size == SEMANTIC_CHUNK_SIZE
+        assert payload.overlap == 0
+
+    def test_custom_max_chunk_size(self) -> None:
+        """A positive max_chunk_size should be accepted."""
+        assert SemanticChunkPayload(term="Hello.", max_chunk_size=3).max_chunk_size == 3
+
+    def test_custom_overlap(self) -> None:
+        """A non-negative overlap should be accepted."""
+        assert (
+            SemanticChunkPayload(term="Hello.", max_chunk_size=3, overlap=1).overlap
+            == 1
+        )
+
+    def test_zero_max_chunk_size_raises(self) -> None:
+        """A max_chunk_size of zero should raise ValidationError."""
+        with pytest.raises(ValidationError):
+            SemanticChunkPayload(term="Hello.", max_chunk_size=0)
+
+    def test_negative_overlap_raises(self) -> None:
+        """A negative overlap should raise ValidationError."""
+        with pytest.raises(ValidationError):
+            SemanticChunkPayload(term="Hello.", overlap=-1)
+
+    def test_empty_term_raises(self) -> None:
+        """An empty term should raise ValidationError."""
+        with pytest.raises(ValidationError):
+            SemanticChunkPayload(term="")
 
 
 class TestSearchPayload:
@@ -187,3 +249,11 @@ class TestRequestConstruction:
         """EmptyRequest should be constructable with an EmptyPayload."""
         req = EmptyRequest(payload=EmptyPayload())
         assert isinstance(req.payload, EmptyPayload)
+
+    def test_semantic_chunk_request(self) -> None:
+        """SemanticChunkRequest should expose its text and max_chunk_size."""
+        req = SemanticChunkRequest(
+            payload=SemanticChunkPayload(term="Hello world.", max_chunk_size=3)
+        )
+        assert req.payload.term == "Hello world."
+        assert req.payload.max_chunk_size == 3

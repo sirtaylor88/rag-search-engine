@@ -18,7 +18,6 @@ class SemanticSearchCommand(BaseSearchCommand):
         Args:
             request (Request[SearchPayload]): Contains the search query string.
         """
-
         sem_search = SemanticSearch()
         documents = get_movies()
         sem_search.load_or_create_embeddings(documents)

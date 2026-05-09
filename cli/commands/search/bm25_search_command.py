@@ -16,7 +16,6 @@ class BM25SearchCommand(SearchCommand):
         Args:
             request (Request[SearchPayload]): Contains the search query string.
         """
-
         self.load_cache()
 
         print("Searching for:", request.payload.query)

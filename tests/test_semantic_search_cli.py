@@ -159,6 +159,36 @@ def test_chunk_command_with_overlap_prints_multiple_chunks(
     assert "2." in out
 
 
+def test_semantic_chunk_command_prints_chunks(capsys: CaptureFixture[str]) -> None:
+    """The semantic_chunk command should split text into chunks and print each one."""
+    text = "This is sentence one. This is sentence two. This is sentence three."
+    with patch(
+        "sys.argv",
+        ["cli", "semantic_chunk", text, "--max-chunk-size", "2"],
+    ):
+        main()
+
+    out = capsys.readouterr().out
+    assert "Semantically chunking" in out
+    assert "1." in out
+    assert "2." in out
+
+
+def test_semantic_chunk_command_with_overlap(capsys: CaptureFixture[str]) -> None:
+    """The semantic_chunk command with --overlap should produce overlapping chunks."""
+    text = "First sentence. Second sentence. Third sentence. Fourth sentence."
+    with patch(
+        "sys.argv",
+        ["cli", "semantic_chunk", text, "--max-chunk-size", "2", "--overlap", "1"],
+    ):
+        main()
+
+    out = capsys.readouterr().out
+    assert "1." in out
+    assert "2." in out
+    assert "3." in out
+
+
 def test_no_command_prints_help(capsys: CaptureFixture[str]) -> None:
     """Running without a subcommand should print the help message."""
     with patch("sys.argv", ["cli"]):
