@@ -4,7 +4,7 @@ from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
-from cli.constants import BM25_B, BM25_K1, SEARCH_LIMIT
+from cli.constants import BM25_B, BM25_K1, CHUNK_SIZE, SEARCH_LIMIT
 
 T = TypeVar("T")
 
@@ -24,6 +24,12 @@ class TermPayload(BaseModel):
     """Payload carrying a single non-empty term string."""
 
     term: str = Field(min_length=1)
+
+
+class ChunkPayload(TermPayload):
+    """Payload for the chunk command: text to split and number of words per chunk."""
+
+    chunk_size: int = Field(default=CHUNK_SIZE, ge=1)
 
 
 class TermWithDocIDPayload(TermPayload):
@@ -66,6 +72,12 @@ class TermRequest(Request[TermPayload]):
     """Request carrying a single non-empty term."""
 
     payload: TermPayload
+
+
+class ChunkRequest(Request[ChunkPayload]):
+    """Request carrying a text and the number of words per chunk."""
+
+    payload: ChunkPayload
 
 
 class TermWithDocIDRequest(Request[TermWithDocIDPayload]):

@@ -3,6 +3,8 @@
 import argparse
 
 from cli.schemas import (
+    ChunkPayload,
+    ChunkRequest,
     EmptyPayload,
     EmptyRequest,
     SearchPayload,
@@ -11,6 +13,7 @@ from cli.schemas import (
     TermRequest,
 )
 from cli.commands import (
+    ChunkCommand,
     SemanticSearchCommand,
     EmbedQueryCommand,
     EmbedTextCommand,
@@ -39,6 +42,7 @@ def main() -> None:
     search_cmd = SemanticSearchCommand(
         subparsers.add_parser("search", help="Search string")
     )
+    chunk_cmd = ChunkCommand(subparsers.add_parser("chunk", help="Chunk a text"))
 
     args = parser.parse_args()
 
@@ -54,6 +58,12 @@ def main() -> None:
         case "search":
             search_cmd.run(
                 SearchRequest(payload=SearchPayload(query=args.query, limit=args.limit))
+            )
+        case "chunk":
+            chunk_cmd.run(
+                ChunkRequest(
+                    payload=ChunkPayload(term=args.term, chunk_size=args.chunk_size)
+                )
             )
         case _:
             parser.print_help()

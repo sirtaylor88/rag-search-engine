@@ -126,6 +126,16 @@ def test_search_command_prints_ranked_results(capsys: CaptureFixture[str]) -> No
     assert "score:" in out
 
 
+def test_chunk_command_prints_chunks(capsys: CaptureFixture[str]) -> None:
+    """The chunk command should split the text and print each chunk with its index."""
+    with patch("sys.argv", ["cli", "chunk", "the dark knight rises"]):
+        main()
+
+    out = capsys.readouterr().out
+    assert "Chunking" in out
+    assert "1." in out
+
+
 def test_no_command_prints_help(capsys: CaptureFixture[str]) -> None:
     """Running without a subcommand should print the help message."""
     with patch("sys.argv", ["cli"]):

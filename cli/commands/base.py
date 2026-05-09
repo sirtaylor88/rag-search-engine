@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 import sys
 from typing import Generic, TypeVar
 
+from cli.constants import SEARCH_LIMIT
 from cli.core.keyword_search import InvertedIndex
 from cli.schemas import Request
 
@@ -79,6 +80,6 @@ class BaseSearchCommand(BaseCommand):
         parser.add_argument(
             "--limit",
             type=int,
-            default=5,
+            default=SEARCH_LIMIT,
             help="Top N documents.",
         )

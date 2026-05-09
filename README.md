@@ -28,6 +28,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)**. The current
   - [Embed text](#embed-text)
   - [Embed query](#embed-query)
   - [Semantic search](#semantic-search)
+  - [Chunk text](#chunk-text)
 - [Documentation](#documentation)
 - [Development](#development)
 
@@ -248,6 +249,23 @@ Searching for: superhero battles villain
 2. Spider-Man (score: 0.7541)
   When bitten by a genetically altered spider, nerdy high school student Peter...
 ```
+
+### Chunk text
+
+Split a text string into fixed-size word chunks. Useful for preparing long documents for embedding:
+
+```bash
+uv run python cli/semantic_search_cli.py chunk "<text>" [--chunk-size N]
+```
+
+```
+$ uv run python cli/semantic_search_cli.py chunk "the dark knight rises" --chunk-size 2
+Chunking 21 characters.
+1. the dark
+2. knight rises
+```
+
+The optional `--chunk-size` parameter (default: `200`) controls the number of words per chunk.
 
 ---
 

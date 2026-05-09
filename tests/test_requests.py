@@ -6,6 +6,8 @@ from pydantic import ValidationError
 from cli.schemas import (
     BM25Payload,
     BM25Request,
+    ChunkPayload,
+    ChunkRequest,
     EmptyPayload,
     EmptyRequest,
     SearchPayload,
@@ -15,7 +17,7 @@ from cli.schemas import (
     TermWithDocIDPayload,
     TermWithDocIDRequest,
 )
-from cli.constants import BM25_B, BM25_K1
+from cli.constants import BM25_B, BM25_K1, CHUNK_SIZE
 
 
 class TestSearchPayload:
@@ -45,6 +47,29 @@ class TestSearchPayload:
         """A negative limit should raise ValidationError."""
         with pytest.raises(ValidationError):
             SearchPayload(query="batman", limit=-1)
+
+
+class TestChunkPayload:
+    """Validation tests for ChunkPayload."""
+
+    def test_valid_defaults(self) -> None:
+        """Default chunk_size should equal CHUNK_SIZE."""
+        payload = ChunkPayload(term="hello world")
+        assert payload.chunk_size == CHUNK_SIZE
+
+    def test_custom_chunk_size(self) -> None:
+        """A positive chunk_size should be accepted."""
+        assert ChunkPayload(term="hello", chunk_size=10).chunk_size == 10
+
+    def test_zero_chunk_size_raises(self) -> None:
+        """A chunk_size of zero should raise ValidationError."""
+        with pytest.raises(ValidationError):
+            ChunkPayload(term="hello", chunk_size=0)
+
+    def test_empty_term_raises(self) -> None:
+        """An empty term should raise ValidationError."""
+        with pytest.raises(ValidationError):
+            ChunkPayload(term="")
 
 
 class TestTermPayload:
@@ -141,6 +166,12 @@ class TestRequestConstruction:
         req = BM25Request(payload=BM25Payload(term="batman", doc_id=1))
         assert req.payload.k1 == BM25_K1
         assert req.payload.b == BM25_B
+
+    def test_chunk_request(self) -> None:
+        """ChunkRequest should expose its text and chunk_size."""
+        req = ChunkRequest(payload=ChunkPayload(term="hello world", chunk_size=5))
+        assert req.payload.term == "hello world"
+        assert req.payload.chunk_size == 5
 
     def test_empty_request(self) -> None:
         """EmptyRequest should be constructable with an EmptyPayload."""

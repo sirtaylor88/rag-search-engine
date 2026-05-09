@@ -1,5 +1,6 @@
 """CLI command classes."""
 
+from cli.commands.compute.chunk_command import ChunkCommand
 from cli.commands.search.search_command import SearchCommand
 from cli.commands.build_command import BuildCommand
 from cli.commands.compute.tf_commands import (
@@ -16,6 +17,7 @@ from cli.commands.verify_commands import VerifyCommand, VerifyEmbeddingsCommand
 __all__ = [
     "BM25SearchCommand",
     "BuildCommand",
+    "ChunkCommand",
     "ComputeBM25IDFCommand",
     "ComputeBM25TFCommand",
     "ComputeIDFCommand",
