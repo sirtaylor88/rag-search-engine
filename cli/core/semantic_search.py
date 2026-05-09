@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Any, Optional
 
 import numpy as np
+import numpy.typing as npt
 from sentence_transformers import SentenceTransformer
-from torch import Tensor
 
 from cli.constants import CACHE_DIR_PATH, DEFAULT_EMBEDDING_MODEL
 from cli.core.keyword_search import Document
@@ -72,19 +72,19 @@ class SemanticSearch(Singleton):
         if self._initialized:
             return
         self.model: SentenceTransformer = SentenceTransformer(model_name)
-        self.embeddings: Optional[Tensor] = None
+        self.embeddings: Optional[npt.NDArray[Any]] = None
         self.documents: Optional[list[Document]] = None
         self.document_map: dict[int, Document] = {}
         self._initialized = True
 
-    def generate_embedding(self, text: str) -> Tensor:
+    def generate_embedding(self, text: str) -> npt.NDArray[Any]:
         """Encode text into a dense embedding vector.
 
         Args:
             text (str): The text to encode. Must not be empty or whitespace-only.
 
         Returns:
-            Tensor: A 1-D tensor of shape (embedding_dim,).
+            npt.NDArray[Any]: A 1-D array of shape (embedding_dim,).
 
         Raises:
             ValueError: If text is empty or contains only whitespace.
@@ -92,7 +92,7 @@ class SemanticSearch(Singleton):
         if not text.strip():
             raise ValueError("The text cannot be empty or contains only whitespaces.")
 
-        return self.model.encode([text])[0]
+        return np.asarray(self.model.encode([text])[0])
 
     def _populate_docs(self, documents: list[Document]) -> None:
         """Store documents and build a lookup map keyed by document ID.
@@ -103,32 +103,33 @@ class SemanticSearch(Singleton):
         self.documents = documents
         self.document_map = {doc["id"]: doc for doc in documents}
 
-    def build_embeddings(self, documents: list[Document]) -> Tensor:
+    def build_embeddings(self, documents: list[Document]) -> npt.NDArray[Any]:
         """Encode all documents and persist the embedding matrix to disk.
 
         Args:
             documents (list[Document]): Documents to encode.
 
         Returns:
-            Tensor: 2-D tensor of shape (num_docs, embedding_dim).
+            npt.NDArray[Any]: 2-D array of shape (num_docs, embedding_dim).
         """
         self._populate_docs(documents)
 
         doc_reprs = [f"{doc['title']}: {doc['description']}" for doc in documents]
-        self.embeddings = self.model.encode(doc_reprs, show_progress_bar=True)
+        embeddings = np.asarray(self.model.encode(doc_reprs, show_progress_bar=True))
+        self.embeddings = embeddings
 
-        np.save(self.EMBEDDINGS_FILE_PATH, self.embeddings)
+        np.save(self.EMBEDDINGS_FILE_PATH, embeddings)
 
-        return self.embeddings
+        return embeddings
 
-    def load_or_create_embeddings(self, documents: list[Document]) -> Tensor:
+    def load_or_create_embeddings(self, documents: list[Document]) -> npt.NDArray[Any]:
         """Load embeddings from disk when count matches, else build them.
 
         Args:
             documents (list[Document]): Documents to encode if building is needed.
 
         Returns:
-            Tensor: 2-D tensor of shape (num_docs, embedding_dim).
+            npt.NDArray[Any]: 2-D array of shape (num_docs, embedding_dim).
         """
         self._populate_docs(documents)
         if self.EMBEDDINGS_FILE_PATH.is_file():

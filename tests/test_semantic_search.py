@@ -45,9 +45,9 @@ class TestSemanticSearch:
 
     def test_generate_embedding_returns_encoded_tensor(self) -> None:
         """generate_embedding should call model.encode and return the first element."""
-        mock_tensor = MagicMock()
+        mock_embedding = np.array([1.0, 2.0, 3.0])
         mock_model = MagicMock()
-        mock_model.encode.return_value = [mock_tensor]
+        mock_model.encode.return_value = [mock_embedding]
         with patch(
             "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
         ):
@@ -55,7 +55,7 @@ class TestSemanticSearch:
             result = ss.generate_embedding("hello world")
 
         mock_model.encode.assert_called_once_with(["hello world"])
-        assert result is mock_tensor
+        assert np.array_equal(result, mock_embedding)
 
     def test_generate_embedding_raises_on_empty_text(self) -> None:
         """generate_embedding should raise ValueError for whitespace-only text."""
@@ -90,7 +90,7 @@ class TestSemanticSearch:
     def test_build_embeddings_encodes_and_saves(self) -> None:
         """build_embeddings should encode docs and persist the matrix to disk."""
         docs = [{"id": 1, "title": "A", "description": "desc"}]
-        mock_embeddings = MagicMock()
+        mock_embeddings = np.array([[1.0, 2.0, 3.0]])
         mock_model = MagicMock()
         mock_model.encode.return_value = mock_embeddings
         with (
@@ -105,7 +105,7 @@ class TestSemanticSearch:
 
         mock_model.encode.assert_called_once_with(["A: desc"], show_progress_bar=True)
         mock_save.assert_called_once()
-        assert result is mock_embeddings
+        assert np.array_equal(result, mock_embeddings)
 
     def test_load_or_create_embeddings_returns_cached_when_file_exists(self) -> None:
         """load_or_create_embeddings returns cached embeddings when count matches."""
@@ -131,9 +131,8 @@ class TestSemanticSearch:
     def test_load_or_create_embeddings_rebuilds_on_count_mismatch(self) -> None:
         """load_or_create_embeddings should rebuild when cached count doesn't match."""
         docs = [{"id": 1, "title": "A", "description": "desc"}]
-        stale = MagicMock()
-        stale.__len__ = MagicMock(return_value=99)
-        fresh = MagicMock()
+        stale = np.zeros((99, 3))
+        fresh = np.array([[1.0, 2.0, 3.0]])
         mock_model = MagicMock()
         mock_model.encode.return_value = fresh
         mock_path = MagicMock()
@@ -150,12 +149,12 @@ class TestSemanticSearch:
             ss = SemanticSearch()
             result = ss.load_or_create_embeddings(docs)  # type: ignore[arg-type]
 
-        assert result is fresh
+        assert np.array_equal(result, fresh)
 
     def test_load_or_create_embeddings_builds_when_no_file(self) -> None:
         """load_or_create_embeddings should build embeddings when no file exists."""
         docs = [{"id": 1, "title": "A", "description": "desc"}]
-        fresh = MagicMock()
+        fresh = np.array([[1.0, 2.0, 3.0]])
         mock_model = MagicMock()
         mock_model.encode.return_value = fresh
         mock_path = MagicMock()
@@ -171,7 +170,7 @@ class TestSemanticSearch:
             ss = SemanticSearch()
             result = ss.load_or_create_embeddings(docs)  # type: ignore[arg-type]
 
-        assert result is fresh
+        assert np.array_equal(result, fresh)
 
     def test_search_raises_when_embeddings_not_loaded(self) -> None:
         """search should raise ValueError when embeddings have not been loaded."""

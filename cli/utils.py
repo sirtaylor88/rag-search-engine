@@ -17,7 +17,6 @@ from nltk.stem import PorterStemmer
 if TYPE_CHECKING:
     import numpy.typing as npt
     from cli.core.keyword_search import Document
-    from torch import Tensor
 
 STEMMER = PorterStemmer()
 logger = logging.getLogger(__name__)
@@ -129,14 +128,14 @@ def get_movies(data_path: str = "data/movies.json") -> list[Document]:
 
 
 def cosine_similarity(
-    vec1: npt.NDArray[Any] | Tensor,
-    vec2: npt.NDArray[Any] | Tensor,
+    vec1: npt.NDArray[Any],
+    vec2: npt.NDArray[Any],
 ) -> float:
     """Return the cosine similarity between two vectors, or 0.0 if either is zero.
 
     Args:
-        vec1 (Tensor): First embedding vector.
-        vec2 (Tensor): Second embedding vector.
+        vec1 (npt.NDArray[Any]): First embedding vector.
+        vec2 (npt.NDArray[Any]): Second embedding vector.
 
     Returns:
         float: Cosine similarity in [-1, 1], or 0.0 when either norm is zero.
