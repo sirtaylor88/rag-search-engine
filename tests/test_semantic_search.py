@@ -7,6 +7,7 @@ from pytest import CaptureFixture
 
 from cli.core.semantic_search import (
     SemanticSearch,
+    embed_query_text,
     embed_text,
     verify_embeddings,
     verify_model,
@@ -226,3 +227,24 @@ class TestVerifyEmbeddings:
         out = capsys.readouterr().out
         assert "Number of docs:" in out
         assert "Embeddings shape:" in out
+
+
+class TestEmbedQueryText:
+    """Tests for the embed_query_text function."""
+
+    def test_prints_query_and_embedding_info(self, capsys: CaptureFixture[str]) -> None:
+        """embed_query_text should print the query, first 3 dimensions, and shape."""
+        mock_embedding = MagicMock()
+        mock_embedding.__getitem__ = MagicMock(return_value="[0.1, 0.2, 0.3]")
+        mock_embedding.shape = (384,)
+        mock_model = MagicMock()
+        mock_model.encode.return_value = [mock_embedding]
+        with patch(
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+        ):
+            embed_query_text("dark knight")
+
+        out = capsys.readouterr().out
+        assert "Query: dark knight" in out
+        assert "First 3 dimensions:" in out
+        assert "Shape:" in out

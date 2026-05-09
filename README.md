@@ -26,6 +26,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)**. The current
   - [Verify semantic model](#verify-semantic-model)
   - [Verify embeddings](#verify-embeddings)
   - [Embed text](#embed-text)
+  - [Embed query](#embed-query)
 - [Documentation](#documentation)
 - [Development](#development)
 
@@ -213,6 +214,21 @@ $ uv run python cli/semantic_search_cli.py embed_text "the dark knight"
 Text: the dark knight
 First 3 dimensions: [-0.0123  0.0456 -0.0789]
 Dimensions: 384
+```
+
+### Embed query
+
+Encode a query string and print its full embedding shape (useful for inspecting query representations before semantic search):
+
+```bash
+uv run python cli/semantic_search_cli.py embed_query "<query>"
+```
+
+```
+$ uv run python cli/semantic_search_cli.py embed_query "the dark knight"
+Query: the dark knight
+First 3 dimensions: [-0.0123  0.0456 -0.0789]
+Shape: (384,)
 ```
 
 ---

@@ -46,6 +46,20 @@ def verify_embeddings() -> None:
     )
 
 
+def embed_query_text(query: str) -> None:
+    """Instantiate SemanticSearch, encode a query string, and print its embedding info.
+
+    Args:
+        query (str): The query text to encode.
+    """
+    sem_search = SemanticSearch()
+    embedding = sem_search.generate_embedding(query)
+
+    print(f"Query: {query}")
+    print(f"First 3 dimensions: {embedding[:3]}")
+    print(f"Shape: {embedding.shape}")
+
+
 class SemanticSearch:
     """Wraps SentenceTransformer to encode text into dense embedding vectors."""
 

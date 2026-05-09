@@ -3,7 +3,12 @@
 import argparse
 
 from cli.commands.base import EmptyPayload, EmptyRequest, TermPayload, TermRequest
-from cli.commands.search import VerifyCommand, EmbedTextCommand, VerifyEmbeddingsCommand
+from cli.commands.search import (
+    VerifyCommand,
+    EmbedTextCommand,
+    VerifyEmbeddingsCommand,
+    EmbedQueryCommand,
+)
 
 
 def main() -> None:
@@ -20,6 +25,9 @@ def main() -> None:
     embed_text_cmd = EmbedTextCommand(
         subparsers.add_parser("embed_text", help="Embed a text string")
     )
+    embed_query_cmd = EmbedQueryCommand(
+        subparsers.add_parser("embed_query", help="Embed a query string")
+    )
 
     args = parser.parse_args()
 
@@ -30,6 +38,8 @@ def main() -> None:
             verify_embeddings_cmd.run(EmptyRequest(payload=EmptyPayload()))
         case "embed_text":
             embed_text_cmd.run(TermRequest(payload=TermPayload(term=args.term)))
+        case "embed_query":
+            embed_query_cmd.run(TermRequest(payload=TermPayload(term=args.term)))
         case _:
             parser.print_help()
 

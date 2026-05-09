@@ -68,6 +68,25 @@ def test_embed_text_command_prints_embedding_info(capsys: CaptureFixture[str]) -
     assert "Dimensions:" in out
 
 
+def test_embed_query_command_prints_embedding_info(capsys: CaptureFixture[str]) -> None:
+    """The embed_query command should encode the query and print its embedding info."""
+    mock_embedding = MagicMock()
+    mock_embedding.__getitem__ = MagicMock(return_value="[0.1, 0.2, 0.3]")
+    mock_embedding.shape = (384,)
+    mock_model = MagicMock()
+    mock_model.encode.return_value = [mock_embedding]
+    with (
+        patch("sys.argv", ["cli", "embed_query", "dark knight"]),
+        patch("cli.core.semantic_search.SentenceTransformer", return_value=mock_model),
+    ):
+        main()
+
+    out = capsys.readouterr().out
+    assert "Query: dark knight" in out
+    assert "First 3 dimensions:" in out
+    assert "Shape:" in out
+
+
 def test_no_command_prints_help(capsys: CaptureFixture[str]) -> None:
     """Running without a subcommand should print the help message."""
     with patch("sys.argv", ["cli"]):
