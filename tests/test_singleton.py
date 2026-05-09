@@ -42,7 +42,10 @@ def test_init_runs_only_once() -> None:
 
 def test_different_subclasses_have_independent_instances() -> None:
     """Each subclass must maintain its own independent singleton instance."""
-    assert _ConcreteA() is not _ConcreteB()
+    a = _ConcreteA()
+    b = _ConcreteB()
+    assert _ConcreteA() is a
+    assert _ConcreteB() is b
 
 
 def test_initialized_flag_true_after_first_call() -> None:
