@@ -2,12 +2,15 @@
 
 from cli.commands.search.search_command import SearchCommand
 from cli.commands.build_command import BuildCommand
-from cli.commands.compute.compute_tf_command import ComputeTFCommand
-from cli.commands.compute.compute_idf_command import ComputeIDFCommand
-from cli.commands.compute.compute_tfidf_command import ComputeTFIDFCommand
-from cli.commands.compute.compute_bm25_idf_command import ComputeBM25IDFCommand
-from cli.commands.compute.compute_bm25_tf_command import ComputeBM25TFCommand
+from cli.commands.compute.tf_commands import (
+    ComputeTFCommand,
+    ComputeTFIDFCommand,
+    ComputeBM25TFCommand,
+)
+from cli.commands.compute.idf_commands import ComputeIDFCommand, ComputeBM25IDFCommand
 from cli.commands.search.bm25_search_command import BM25SearchCommand
+from cli.commands.embed_commands import EmbedQueryCommand, EmbedTextCommand
+from cli.commands.verify_commands import VerifyCommand, VerifyEmbeddingsCommand
 
 __all__ = [
     "BM25SearchCommand",
@@ -17,5 +20,9 @@ __all__ = [
     "ComputeIDFCommand",
     "ComputeTFIDFCommand",
     "ComputeTFCommand",
+    "EmbedQueryCommand",
+    "EmbedTextCommand",
     "SearchCommand",
+    "VerifyCommand",
+    "VerifyEmbeddingsCommand",
 ]

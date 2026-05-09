@@ -6,6 +6,7 @@
 base
 build
 verify
+embed
 search/index
 compute/index
 ```

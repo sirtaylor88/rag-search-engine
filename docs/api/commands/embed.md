@@ -1,7 +1,7 @@
-# TF Command
+# Embed Commands
 
 ```{eval-rst}
-.. automodule:: cli.commands.compute.tf_commands
+.. automodule:: cli.commands.embed_commands
    :members:
    :undoc-members:
    :show-inheritance:

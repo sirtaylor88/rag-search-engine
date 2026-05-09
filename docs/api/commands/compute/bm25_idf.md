@@ -1,7 +1,7 @@
 # BM25 IDF Command
 
 ```{eval-rst}
-.. automodule:: cli.commands.compute.compute_bm25_idf_command
+.. automodule:: cli.commands.compute.idf_commands
    :members:
    :undoc-members:
    :show-inheritance:
