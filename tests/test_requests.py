@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from cli.commands.base import (
+from cli.schemas import (
     BM25Payload,
     BM25Request,
     EmptyPayload,

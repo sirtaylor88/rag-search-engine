@@ -3,7 +3,8 @@
 from argparse import ArgumentParser
 from typing import override
 
-from cli.commands.base import Request, TermCommand, TermWithDocIDPayload, BM25Payload
+from cli.commands.base import TermCommand
+from cli.schemas import BM25Payload, Request, TermWithDocIDPayload
 from cli.constants import BM25_B, BM25_K1
 
 

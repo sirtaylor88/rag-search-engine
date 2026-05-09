@@ -12,7 +12,7 @@ from cli.commands import (
     SearchCommand,
     BM25SearchCommand,
 )
-from cli.commands.base import (
+from cli.schemas import (
     BM25Payload,
     BM25Request,
     SearchPayload,

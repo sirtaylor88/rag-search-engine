@@ -6,7 +6,8 @@ import sys
 from typing import override
 
 from cli.core.keyword_search import Document
-from cli.commands.base import BaseCommand, Request, TermPayload
+from cli.commands.base import BaseCommand
+from cli.schemas import Request, TermPayload
 
 
 def get_movies(data_path: str = "data/movies.json") -> list[Document]:

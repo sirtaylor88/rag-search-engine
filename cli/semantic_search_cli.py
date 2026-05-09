@@ -2,7 +2,7 @@
 
 import argparse
 
-from cli.commands.base import EmptyPayload, EmptyRequest, TermPayload, TermRequest
+from cli.schemas import EmptyPayload, EmptyRequest, TermPayload, TermRequest
 from cli.commands.embed_commands import EmbedQueryCommand, EmbedTextCommand
 from cli.commands.verify_commands import VerifyCommand, VerifyEmbeddingsCommand
 

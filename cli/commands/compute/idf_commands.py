@@ -2,7 +2,8 @@
 
 from typing import override
 
-from cli.commands.base import Request, TermCommand, TermPayload
+from cli.commands.base import TermCommand
+from cli.schemas import Request, TermPayload
 
 
 class ComputeIDFCommand(TermCommand):

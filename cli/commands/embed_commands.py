@@ -2,7 +2,8 @@
 
 from typing import override
 
-from cli.commands.base import Request, TermCommand, TermPayload
+from cli.commands.base import TermCommand
+from cli.schemas import Request, TermPayload
 from cli.core.semantic_search import embed_query_text, embed_text
 
 

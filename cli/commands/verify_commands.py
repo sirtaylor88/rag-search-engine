@@ -3,7 +3,8 @@
 from argparse import ArgumentParser
 from typing import override
 
-from cli.commands.base import BaseCommand, EmptyPayload, Request
+from cli.commands.base import BaseCommand
+from cli.schemas import EmptyPayload, Request
 from cli.core.semantic_search import verify_model, verify_embeddings
 
 

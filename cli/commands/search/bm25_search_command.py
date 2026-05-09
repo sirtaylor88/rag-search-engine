@@ -2,7 +2,7 @@
 
 from typing import override
 
-from cli.commands.base import Request, SearchPayload
+from cli.schemas import Request, SearchPayload
 from cli.commands.search.search_command import SearchCommand
 
 

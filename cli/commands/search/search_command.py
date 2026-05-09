@@ -2,7 +2,8 @@
 
 from typing import override
 
-from cli.commands.base import BaseSearchCommand, Request, SearchPayload
+from cli.commands.base import BaseSearchCommand
+from cli.schemas import Request, SearchPayload
 
 
 class SearchCommand(BaseSearchCommand):
