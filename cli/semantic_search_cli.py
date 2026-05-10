@@ -1,18 +1,18 @@
 """CLI for semantic movie search using sentence-transformers."""
 
-import argparse
+from argparse import ArgumentParser
 
 from cli.commands import (
     ChunkCommand,
     EmbedChunksCommand,
     EmbedQueryCommand,
     EmbedTextCommand,
+    SearchChunkedCommand,
+    SemanticChunkCommand,
     SemanticSearchCommand,
     VerifyCommand,
     VerifyEmbeddingsCommand,
 )
-from cli.commands.compute.chunk_commands import SemanticChunkCommand
-from cli.commands.search.semantic_search_command import SearchChunkedCommand
 from cli.schemas import (
     ChunkPayload,
     ChunkRequest,
@@ -29,36 +29,38 @@ from cli.schemas import (
 
 def main() -> None:
     """Parse CLI arguments and dispatch to the appropriate semantic search command."""
-    parser = argparse.ArgumentParser(description="Semantic Search CLI")
+    parser = ArgumentParser(description="Semantic Search CLI")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     verify_cmd = VerifyCommand(
-        subparsers.add_parser("verify", help="Verify semantic model")
+        subparsers.add_parser("verify", help="Verify semantic model"),
     )
     verify_embeddings_cmd = VerifyEmbeddingsCommand(
-        subparsers.add_parser("verify_embeddings", help="Verify embeddings")
+        subparsers.add_parser("verify_embeddings", help="Verify corpus embeddings"),
     )
     embed_text_cmd = EmbedTextCommand(
-        subparsers.add_parser("embed_text", help="Embed a text string")
+        subparsers.add_parser("embed_text", help="Embed a text string"),
     )
     embed_query_cmd = EmbedQueryCommand(
-        subparsers.add_parser("embed_query", help="Embed a query string")
+        subparsers.add_parser("embed_query", help="Embed a query string"),
     )
     embed_chunks_cmd = EmbedChunksCommand(
-        subparsers.add_parser("embed_chunks", help="Embed chunks")
+        subparsers.add_parser("embed_chunks", help="Embed corpus sentence chunks"),
     )
     search_cmd = SemanticSearchCommand(
-        subparsers.add_parser("search", help="Search string using sematic search")
-    )
-    chunk_cmd = ChunkCommand(subparsers.add_parser("chunk", help="Chunk a text"))
-    sem_chunk_cmd = SemanticChunkCommand(
-        subparsers.add_parser(
-            "semantic_chunk", help="Chunk a text using semantic chunk"
-        )
+        subparsers.add_parser("search", help="Search movies using semantic search"),
     )
     search_chunked_cmd = SearchChunkedCommand(
         subparsers.add_parser(
-            "search_chunked", help="Search string using chunked sematic search"
+            "search_chunked", help="Search movies using chunked semantic search"
+        ),
+    )
+    chunk_cmd = ChunkCommand(
+        subparsers.add_parser("chunk", help="Chunk text into fixed-size word groups"),
+    )
+    sem_chunk_cmd = SemanticChunkCommand(
+        subparsers.add_parser(
+            "semantic_chunk", help="Chunk text into fixed-size sentence groups"
         ),
     )
 
