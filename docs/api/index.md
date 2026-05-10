@@ -6,6 +6,7 @@
 singleton
 inverted_index
 semantic_search
+hybrid_search
 utils
 constants
 schemas

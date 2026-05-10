@@ -10,6 +10,7 @@ from cli.schemas.payloads import (
     SemanticChunkPayload,
     TermPayload,
     TermWithDocIDPayload,
+    WeightedSearchPayload,
 )
 from cli.schemas.requests import (
     BM25Request,
@@ -21,6 +22,7 @@ from cli.schemas.requests import (
     SemanticChunkRequest,
     TermRequest,
     TermWithDocIDRequest,
+    WeightedSearchRequest,
 )
 
 __all__ = [
@@ -42,4 +44,6 @@ __all__ = [
     "TermRequest",
     "TermWithDocIDPayload",
     "TermWithDocIDRequest",
+    "WeightedSearchPayload",
+    "WeightedSearchRequest",
 ]

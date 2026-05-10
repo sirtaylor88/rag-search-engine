@@ -1,11 +1,22 @@
-"""Tests for cli.hybrid_search_cli and the NormalizeCommand."""
+"""Tests for cli.hybrid_search_cli, NormalizeCommand, and WeightedSearchCommand."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest import CaptureFixture
 
+from cli.core.hybrid_search import HybridSearch
+from cli.core.keyword_search import InvertedIndex
+from cli.core.semantic_search import ChunkedSemanticSearch
 from cli.hybrid_search_cli import main
+
+
+@pytest.fixture(autouse=True)
+def _reset_singletons(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reset all relevant singletons before each test."""
+    monkeypatch.setattr(HybridSearch, "_instance", None)
+    monkeypatch.setattr(InvertedIndex, "_instance", None)
+    monkeypatch.setattr(ChunkedSemanticSearch, "_instance", None)
 
 
 def test_normalize_command_prints_scaled_scores(capsys: CaptureFixture[str]) -> None:
@@ -61,3 +72,103 @@ def test_no_command_prints_help(capsys: CaptureFixture[str]) -> None:
     with patch("sys.argv", ["cli"]):
         main()
     assert capsys.readouterr().out != ""
+
+
+class TestWeightedSearchCommand:
+    """Tests for the weighted-search subcommand in hybrid_search_cli."""
+
+    _mock_results = [
+        {
+            "id": 1,
+            "title": "Movie A",
+            "document": "Action adventure.",
+            "hybrid_score": 0.75,
+            "bm25_score": 0.6,
+            "semantic_score": 0.9,
+        }
+    ]
+    _mock_docs = [{"id": 1, "title": "Movie A", "description": "Action adventure."}]
+
+    def test_prints_results_for_query(self, capsys: CaptureFixture[str]) -> None:
+        """weighted-search should print title and scores for each result."""
+        mock_model = MagicMock()
+        with (
+            patch("sys.argv", ["cli", "weighted-search", "action"]),
+            patch(
+                "cli.commands.search.hybrid_search_command.load_movies",
+                return_value=self._mock_docs,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(
+                InvertedIndex,
+                "index_path",
+                MagicMock(exists=lambda: True),
+            ),
+            patch.object(
+                HybridSearch, "weighted_search", return_value=self._mock_results
+            ),
+        ):
+            main()
+
+        out = capsys.readouterr().out
+        assert "Movie A" in out
+        assert "0.7500" in out
+        assert "0.6000" in out
+        assert "0.9000" in out
+
+    def test_passes_custom_alpha_to_weighted_search(self) -> None:
+        """weighted-search --alpha should forward the value to weighted_search."""
+        mock_model = MagicMock()
+        with (
+            patch("sys.argv", ["cli", "weighted-search", "action", "--alpha", "0.3"]),
+            patch(
+                "cli.commands.search.hybrid_search_command.load_movies",
+                return_value=self._mock_docs,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(
+                InvertedIndex,
+                "index_path",
+                MagicMock(exists=lambda: True),
+            ),
+            patch.object(
+                HybridSearch, "weighted_search", return_value=self._mock_results
+            ) as mock_ws,
+        ):
+            main()
+
+        call_args, _ = mock_ws.call_args
+        assert call_args[1] == pytest.approx(0.3)
+
+    def test_empty_results_prints_only_banner(
+        self, capsys: CaptureFixture[str]
+    ) -> None:
+        """weighted-search with no results should print the banner but no entries."""
+        mock_model = MagicMock()
+        with (
+            patch("sys.argv", ["cli", "weighted-search", "xyzzy"]),
+            patch(
+                "cli.commands.search.hybrid_search_command.load_movies",
+                return_value=self._mock_docs,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(
+                InvertedIndex,
+                "index_path",
+                MagicMock(exists=lambda: True),
+            ),
+            patch.object(HybridSearch, "weighted_search", return_value=[]),
+        ):
+            main()
+
+        out = capsys.readouterr().out
+        assert "xyzzy" in out

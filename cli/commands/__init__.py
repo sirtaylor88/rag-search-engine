@@ -14,6 +14,7 @@ from cli.commands.embed_commands import (
     EmbedQueryCommand,
     EmbedTextCommand,
 )
+from cli.commands.search.hybrid_search_command import WeightedSearchCommand
 from cli.commands.search.keyword_search_commands import BM25SearchCommand, SearchCommand
 from cli.commands.search.semantic_search_command import (
     SearchChunkedCommand,
@@ -40,4 +41,5 @@ __all__ = [
     "SemanticSearchCommand",
     "VerifyCommand",
     "VerifyEmbeddingsCommand",
+    "WeightedSearchCommand",
 ]

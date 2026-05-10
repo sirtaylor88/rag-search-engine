@@ -3,6 +3,7 @@
 from typing import override
 
 from cli.commands.base import BaseListCommand
+from cli.core.hybrid_search import normalize_scores
 from cli.schemas import Request
 from cli.schemas.payloads import ScoreListPayload
 
@@ -21,16 +22,11 @@ class NormalizeCommand(BaseListCommand):
             request (Request[ScoreListPayload]): Contains the list of scores.
         """
         scores = request.payload.scores
+
         if not scores:
             return
 
-        min_score = min(scores)
-        max_score = max(scores)
+        results = normalize_scores(scores)
 
-        for score in scores:
-            try:
-                normalized_score = (score - min_score) / (max_score - min_score)
-            except ZeroDivisionError:
-                normalized_score = 1.0
-
-            print(f"* {normalized_score:.4f}")
+        for score in results:
+            print(f"* {score:.4f}")

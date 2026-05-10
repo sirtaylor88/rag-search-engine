@@ -34,6 +34,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)** over a movie
   - [Semantic chunk text](#semantic-chunk-text)
 - [Hybrid Search CLI](#hybrid-search-cli)
   - [Normalize scores](#normalize-scores)
+  - [Weighted search](#weighted-search)
 - [Documentation](#documentation)
 - [Development](#development)
 
@@ -341,6 +342,23 @@ $ uv run python cli/hybrid_search_cli.py normalize 0.3 0.6 0.9
 * 0.0000
 * 0.5000
 * 1.0000
+```
+
+### Weighted search
+
+Rank movies using a weighted combination of [Okapi BM25](https://en.wikipedia.org/wiki/Okapi_BM25) keyword scoring and chunked [semantic similarity](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2). The `--alpha` parameter (default `0.5`) controls how much weight is given to BM25 vs. semantic: `score = alpha × BM25 + (1 − alpha) × semantic`.
+
+```bash
+uv run python cli/hybrid_search_cli.py weighted-search "<query>" [--alpha A] [--limit N]
+```
+
+```
+$ uv run python cli/hybrid_search_cli.py weighted-search "superhero family"
+Results for: "superhero family"
+
+1. The Incredibles
+   Hybrid: 0.3521  BM25: 0.1234  Semantic: 0.5808
+   ...
 ```
 
 ---

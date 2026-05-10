@@ -2,8 +2,13 @@
 
 from argparse import ArgumentParser
 
-from cli.commands import NormalizeCommand
-from cli.schemas import ScoreListPayload, ScoreListRequest
+from cli.commands import NormalizeCommand, WeightedSearchCommand
+from cli.schemas import (
+    ScoreListPayload,
+    ScoreListRequest,
+    WeightedSearchPayload,
+    WeightedSearchRequest,
+)
 
 
 def main() -> None:
@@ -14,6 +19,11 @@ def main() -> None:
     normalize_cmd = NormalizeCommand(
         subparsers.add_parser("normalize", help="Normalize scores via min-max scaling"),
     )
+    weighted_search_cmd = WeightedSearchCommand(
+        subparsers.add_parser(
+            "weighted-search", help="Search movies using weighted search"
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -21,6 +31,16 @@ def main() -> None:
         case "normalize":
             normalize_cmd.run(
                 ScoreListRequest(payload=ScoreListPayload(scores=args.args))
+            )
+        case "weighted-search":
+            weighted_search_cmd.run(
+                WeightedSearchRequest(
+                    payload=WeightedSearchPayload(
+                        query=args.query,
+                        alpha=args.alpha,
+                        limit=args.limit,
+                    )
+                )
             )
         case _:
             parser.print_help()

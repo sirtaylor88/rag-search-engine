@@ -4,7 +4,14 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from cli.constants import BM25_B, BM25_K1, CHUNK_SIZE, SEARCH_LIMIT, SEMANTIC_CHUNK_SIZE
+from cli.constants import (
+    BM25_B,
+    BM25_K1,
+    CHUNK_SIZE,
+    DEFAULT_ALPHA,
+    SEARCH_LIMIT,
+    SEMANTIC_CHUNK_SIZE,
+)
 
 PositiveFloat = Annotated[float, Field(gt=0)]
 
@@ -18,6 +25,12 @@ class SearchPayload(BaseModel):
 
     query: str = Field(min_length=1)
     limit: int = Field(default=SEARCH_LIMIT, ge=1)
+
+
+class WeightedSearchPayload(SearchPayload):
+    """Payload for weighted search: query, limit, and BM25/semantic alpha weight."""
+
+    alpha: float = Field(default=DEFAULT_ALPHA, ge=0, le=1)
 
 
 class TermPayload(BaseModel):

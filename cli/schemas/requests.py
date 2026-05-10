@@ -13,6 +13,7 @@ from cli.schemas.payloads import (
     SemanticChunkPayload,
     TermPayload,
     TermWithDocIDPayload,
+    WeightedSearchPayload,
 )
 
 T = TypeVar("T")
@@ -39,6 +40,12 @@ class SearchRequest(Request[SearchPayload]):
     """Request carrying a non-empty search query and a positive result limit."""
 
     payload: SearchPayload
+
+
+class WeightedSearchRequest(Request[WeightedSearchPayload]):
+    """Request carrying a search query, result limit, and alpha weight."""
+
+    payload: WeightedSearchPayload
 
 
 class TermRequest(Request[TermPayload]):

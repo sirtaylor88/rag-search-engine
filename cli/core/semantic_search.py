@@ -211,9 +211,10 @@ class SemanticSearch(Singleton):
 
         return [
             {
+                "id": doc["id"],
                 "score": round(score, SCORE_PRECISION),
                 "title": doc["title"],
-                "description": doc["description"],
+                "document": doc["description"][:100],
             }
             for score, doc in top_results[:limit]
         ]

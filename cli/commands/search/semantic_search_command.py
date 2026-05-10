@@ -56,7 +56,7 @@ class SemanticSearchCommand(BaseSemanticSearchCommand):
         return SemanticSearch().search(query, limit)
 
     def _get_excerpt(self, result: dict[str, Any]) -> str:
-        return result["description"]
+        return result["document"]
 
 
 class SearchChunkedCommand(BaseSemanticSearchCommand):

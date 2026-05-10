@@ -119,9 +119,10 @@ def test_search_command_prints_ranked_results(capsys: CaptureFixture[str]) -> No
             "search",
             return_value=[
                 {
+                    "id": 1,
                     "title": "The Dark Knight",
                     "score": 1.0,
-                    "description": "Batman fights Joker",
+                    "document": "Batman fights Joker",
                 }
             ],
         ),

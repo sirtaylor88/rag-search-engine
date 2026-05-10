@@ -1,6 +1,6 @@
 """Generic singleton base class."""
 
-from typing import ClassVar, TypeVar, cast
+from typing import Any, ClassVar, TypeVar, cast
 
 _T = TypeVar("_T", bound="Singleton")
 
@@ -16,7 +16,7 @@ class Singleton:
     _instance: ClassVar["Singleton | None"] = None
     _initialized: bool = False
 
-    def __new__(cls: type[_T]) -> _T:
+    def __new__(cls: type[_T], *_args: Any, **_kwargs: Any) -> _T:
         """Return the singleton instance, creating it on first call.
 
         Args:

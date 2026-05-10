@@ -32,6 +32,10 @@ class InvertedIndex(Singleton):
 
     CACHED_ATTR_NAMES = ["index", "docmap", "term_frequencies"]
 
+    index_path = CACHE_DIR_PATH / "index.pkl"
+    docmap_path = CACHE_DIR_PATH / "docmap.pkl"
+    term_frequencies_path = CACHE_DIR_PATH / "term_frequencies.pkl"
+
     def __init__(self) -> None:
         """Initialise index data structures on the first instantiation only."""
         if self._initialized:
@@ -292,7 +296,7 @@ class InvertedIndex(Singleton):
         """Write the index, document map, term frequencies, and doc lengths to cache."""
         os.makedirs(CACHE_DIR_PATH, exist_ok=True)
         for attr_name in self.CACHED_ATTR_NAMES:
-            with open(CACHE_DIR_PATH / f"{attr_name}.pkl", "wb") as fh:
+            with open(getattr(self, f"{attr_name}_path"), "wb") as fh:
                 pickle.dump(getattr(self, attr_name), fh)
 
         with open(self.doc_lengths_path, "wb") as fh:
@@ -301,7 +305,7 @@ class InvertedIndex(Singleton):
     def load(self) -> None:
         """Load index, document map, term frequencies, and doc lengths from cache."""
         for attr_name in self.CACHED_ATTR_NAMES:
-            with open(CACHE_DIR_PATH / f"{attr_name}.pkl", "rb") as fh:
+            with open(getattr(self, f"{attr_name}_path"), "rb") as fh:
                 setattr(self, attr_name, pickle.load(fh))  # nosec B301
 
         with open(self.doc_lengths_path, "rb") as fh:
