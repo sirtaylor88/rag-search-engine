@@ -188,9 +188,17 @@ def get_sentences(text: str) -> list[str]:
     """Split text into sentences at punctuation boundaries.
 
     Args:
-        text (str): The text to split.
+        text (str): The text to split. Leading/trailing whitespace is ignored.
 
     Returns:
-        list[str]: Sentence strings split at ``!``, ``.``, or ``?`` boundaries.
+        list[str]: Non-empty, stripped sentence strings split at ``!``, ``.``,
+            or ``?`` boundaries. Returns an empty list if ``text`` is blank.
     """
-    return re.split(SENTENCE_SPLIT_PATTERN, text)
+    normalized_text = text.strip()
+    if not normalized_text:
+        return []
+    return [
+        s
+        for s in (s.strip() for s in re.split(SENTENCE_SPLIT_PATTERN, normalized_text))
+        if s
+    ]

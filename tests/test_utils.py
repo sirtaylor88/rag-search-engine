@@ -11,6 +11,7 @@ import numpy as np
 from cli.utils import (
     cosine_similarity,
     get_overlapping_chunks,
+    get_sentences,
     get_stemmed_tokens,
     get_stop_words,
     get_term_token,
@@ -175,3 +176,40 @@ class TestGetOverlappingChunks:
     def test_empty_words_returns_empty(self) -> None:
         """An empty word list should return an empty list."""
         assert get_overlapping_chunks([], chunk_size=3, overlap=1) == []
+
+
+class TestGetSentences:
+    """Tests for get_sentences."""
+
+    def test_splits_on_period(self) -> None:
+        """Text with period boundaries should produce one sentence per segment."""
+        result = get_sentences("Hello world. Goodbye world.")
+        assert result == ["Hello world.", "Goodbye world."]
+
+    def test_splits_on_exclamation_and_question(self) -> None:
+        """Text with ! and ? boundaries should produce correct sentence splits."""
+        result = get_sentences("Really? Yes! Great.")
+        assert result == ["Really?", "Yes!", "Great."]
+
+    def test_single_sentence_without_punctuation(self) -> None:
+        """A single sentence with no terminal punctuation is returned as-is."""
+        result = get_sentences("no punctuation here")
+        assert result == ["no punctuation here"]
+
+    def test_empty_string_returns_empty_list(self) -> None:
+        """An empty string should return an empty list."""
+        assert get_sentences("") == []
+
+    def test_whitespace_only_returns_empty_list(self) -> None:
+        """A whitespace-only string should return an empty list."""
+        assert get_sentences("   ") == []
+
+    def test_strips_surrounding_whitespace_from_text(self) -> None:
+        """Leading and trailing whitespace in the input text is ignored."""
+        result = get_sentences("  Hello world.  ")
+        assert result == ["Hello world."]
+
+    def test_filters_empty_sentences(self) -> None:
+        """Empty strings produced by the split are not included in the result."""
+        result = get_sentences("Hello.  World.")
+        assert all(s for s in result)
