@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest import CaptureFixture
 
-from cli.utils import get_movies
+from cli.utils import load_movies
 from cli.keyword_search_cli import main
 
 
@@ -85,7 +85,7 @@ def test_build_command_builds_and_saves_index(capsys: CaptureFixture[str]) -> No
     movies = [{"id": 1, "title": "Test", "description": ""}]
     with (
         patch("sys.argv", ["cli", "build"]),
-        patch("cli.commands.build_command.get_movies", return_value=movies),
+        patch("cli.commands.build_command.load_movies", return_value=movies),
         patch("cli.core.keyword_search.InvertedIndex.build"),
         patch("cli.core.keyword_search.InvertedIndex.save"),
     ):
@@ -102,12 +102,12 @@ def test_no_command_prints_help(capsys: CaptureFixture[str]) -> None:
     assert capsys.readouterr().out != ""
 
 
-def test_get_movies_loads_file(tmp_path: Path) -> None:
-    """get_movies should parse a JSON file and return the 'movies' list."""
+def test_load_movies_loads_file(tmp_path: Path) -> None:
+    """load_movies should parse a JSON file and return the 'movies' list."""
     data = {"movies": [{"id": 1, "title": "Test", "description": ""}]}
     path = tmp_path / "movies.json"
     path.write_text(json.dumps(data), encoding="utf-8")
-    assert get_movies(str(path)) == data["movies"]
+    assert load_movies(str(path)) == data["movies"]
 
 
 def test_tf_command_outputs_result(capsys: CaptureFixture[str]) -> None:

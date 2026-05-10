@@ -3,7 +3,6 @@
 ```{toctree}
 :maxdepth: 1
 
-search_command
-bm25_search_command
+keyword_search_commands
 semantic_search_command
 ```

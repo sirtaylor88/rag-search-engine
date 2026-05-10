@@ -44,7 +44,7 @@ def test_verify_embeddings_command_prints_shape(capsys: CaptureFixture[str]) -> 
     with (
         patch("sys.argv", ["cli", "verify_embeddings"]),
         patch("cli.core.semantic_search.SentenceTransformer", return_value=mock_model),
-        patch("cli.core.semantic_search.get_movies", return_value=mock_docs),
+        patch("cli.core.semantic_search.load_movies", return_value=mock_docs),
         patch.object(
             SemanticSearch,
             "load_or_create_embeddings",
@@ -107,7 +107,7 @@ def test_search_command_prints_ranked_results(capsys: CaptureFixture[str]) -> No
         patch("sys.argv", ["cli", "search", "batman"]),
         patch("cli.core.semantic_search.SentenceTransformer", return_value=mock_model),
         patch(
-            "cli.commands.search.semantic_search_command.get_movies", return_value=docs
+            "cli.commands.search.semantic_search_command.load_movies", return_value=docs
         ),
         patch.object(
             SemanticSearch,
@@ -205,7 +205,7 @@ def test_embed_chunks_command_prints_chunk_count(capsys: CaptureFixture[str]) ->
     with (
         patch("sys.argv", ["cli", "embed_chunks"]),
         patch("cli.core.semantic_search.SentenceTransformer", return_value=mock_model),
-        patch("cli.core.semantic_search.get_movies", return_value=mock_docs),
+        patch("cli.core.semantic_search.load_movies", return_value=mock_docs),
         patch.object(
             ChunkedSemanticSearch,
             "load_or_create_chunk_embeddings",
@@ -217,6 +217,40 @@ def test_embed_chunks_command_prints_chunk_count(capsys: CaptureFixture[str]) ->
     out = capsys.readouterr().out
     assert "5" in out
     assert "chunked embeddings" in out
+
+
+def test_search_chunked_command_prints_ranked_results(
+    capsys: CaptureFixture[str],
+) -> None:
+    """The search_chunked command should print results ranked by chunk similarity."""
+    mock_model = MagicMock()
+    mock_docs = [{"id": 1, "title": "The Dark Knight", "description": "Batman"}]
+    with (
+        patch("sys.argv", ["cli", "search_chunked", "batman"]),
+        patch("cli.core.semantic_search.SentenceTransformer", return_value=mock_model),
+        patch(
+            "cli.commands.search.semantic_search_command.load_movies",
+            return_value=mock_docs,
+        ),
+        patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+        patch.object(
+            ChunkedSemanticSearch,
+            "search_chunks",
+            return_value=[
+                {
+                    "title": "The Dark Knight",
+                    "score": 0.99,
+                    "document": "Batman fights Joker",
+                }
+            ],
+        ),
+    ):
+        main()
+
+    out = capsys.readouterr().out
+    assert "Searching for: batman" in out
+    assert "The Dark Knight" in out
+    assert "score:" in out
 
 
 def test_no_command_prints_help(capsys: CaptureFixture[str]) -> None:

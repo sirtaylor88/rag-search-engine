@@ -21,5 +21,8 @@ SEMANTIC_CHUNK_SIZE = 4
 # * Regex
 SENTENCE_SPLIT_PATTERN = r"(?<=[.!?])\s+"
 
-# * LLM model
+# * Embedding model
 DEFAULT_EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+
+# * Score
+SCORE_PRECISION = 4

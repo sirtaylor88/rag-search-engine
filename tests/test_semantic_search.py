@@ -293,7 +293,7 @@ class TestVerifyEmbeddings:
                 "cli.core.semantic_search.SentenceTransformer",
                 return_value=mock_model,
             ),
-            patch("cli.core.semantic_search.get_movies", return_value=mock_docs),
+            patch("cli.core.semantic_search.load_movies", return_value=mock_docs),
             patch.object(
                 SemanticSearch,
                 "load_or_create_embeddings",
@@ -459,7 +459,7 @@ class TestEmbedChunks:
             patch(
                 "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
             ),
-            patch("cli.core.semantic_search.get_movies", return_value=mock_docs),
+            patch("cli.core.semantic_search.load_movies", return_value=mock_docs),
             patch.object(
                 ChunkedSemanticSearch,
                 "load_or_create_chunk_embeddings",
@@ -471,3 +471,60 @@ class TestEmbedChunks:
         out = capsys.readouterr().out
         assert "5" in out
         assert "chunked embeddings" in out
+
+
+class TestSearchChunks:
+    """Tests for ChunkedSemanticSearch.search_chunks."""
+
+    def test_raises_when_chunk_embeddings_not_loaded(self) -> None:
+        """search_chunks raises ValueError when embeddings have not been loaded."""
+        mock_model = MagicMock()
+        with patch(
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+        ):
+            css = ChunkedSemanticSearch()
+            with pytest.raises(ValueError, match="No chunked embeddings"):
+                css.search_chunks("batman", 5)
+
+    def test_search_chunks_raises_when_metadata_is_none(self) -> None:
+        """search_chunks raises ValueError when chunk_metadata is None."""
+        docs = [{"id": 1, "title": "A", "description": "desc"}]
+        mock_model = MagicMock()
+        mock_model.encode.return_value = [np.array([1.0, 0.0])]
+        with patch(
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+        ):
+            css = ChunkedSemanticSearch()
+            css.documents = docs  # type: ignore[assignment]
+            css.chunk_embeddings = np.array([[1.0, 0.0]])
+            with pytest.raises(ValueError, match="Chunk metadata not loaded"):
+                css.search_chunks("query", 5)
+
+    def test_returns_top_results_ranked_by_max_chunk_score(self) -> None:
+        """search_chunks should rank documents by their highest chunk similarity."""
+        docs = [
+            {"id": 1, "title": "A", "description": "First doc description here."},
+            {"id": 2, "title": "B", "description": "Second doc description here."},
+        ]
+        query_emb = np.array([1.0, 0.0])
+        chunk_emb_high = np.array([1.0, 0.0])
+        chunk_emb_low = np.array([0.0, 1.0])
+        mock_model = MagicMock()
+        mock_model.encode.return_value = [query_emb]
+        with patch(
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+        ):
+            css = ChunkedSemanticSearch()
+            css.documents = docs  # type: ignore[assignment]
+            css.document_map = {1: docs[0], 2: docs[1]}  # type: ignore[dict-item]
+            css.chunk_embeddings = np.array([chunk_emb_high, chunk_emb_low])
+            css.chunk_metadata = [
+                {"doc_id": 1, "chunk_idx": 0, "total_chunks": 1},
+                {"doc_id": 2, "chunk_idx": 0, "total_chunks": 1},
+            ]
+
+            results = css.search_chunks("query", 2)
+
+        assert results[0]["title"] == "A"
+        assert results[1]["title"] == "B"
+        assert results[0]["score"] > results[1]["score"]

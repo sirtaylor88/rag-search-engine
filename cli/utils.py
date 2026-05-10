@@ -115,7 +115,7 @@ def get_term_token(term: str) -> str:
     return term_tokens[0]
 
 
-def get_movies(data_path: str = "data/movies.json") -> list[Document]:
+def load_movies(data_path: str = "data/movies.json") -> list[Document]:
     """Load and return the list of movies from a JSON file.
 
     Args:

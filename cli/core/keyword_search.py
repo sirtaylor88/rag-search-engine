@@ -124,7 +124,9 @@ class InvertedIndex(Singleton):
                 break
             doc_ids.update(self.get_documents(query_token))
 
-        return sorted(doc_ids)[:limit]
+        top_results = sorted(doc_ids)[:limit]
+
+        return top_results
 
     def get_tf(
         self,
@@ -232,7 +234,7 @@ class InvertedIndex(Singleton):
     def bm25_search(
         self,
         query: str,
-        limit: int,
+        limit: int = SEARCH_LIMIT,
     ) -> list[tuple[int, float]]:
         """Return the top documents ranked by cumulative BM25 score.
 
@@ -251,12 +253,12 @@ class InvertedIndex(Singleton):
             for doc_id in doc_ids:
                 scores[doc_id] += self.bm25(doc_id, query_token)
 
-        scores_dsc = sorted(
+        top_scores: list[tuple[int, float]] = sorted(
             scores.items(),
             key=lambda item: item[1],
             reverse=True,
         )
-        return scores_dsc[:limit]
+        return top_scores[:limit]
 
     def build(self, movies: list[Document]) -> None:
         """Build the index and document map from a list of movie dicts using threads.

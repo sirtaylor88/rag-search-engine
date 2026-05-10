@@ -66,6 +66,8 @@ class TermCommand(BaseCommand):
 class BaseSearchCommand(BaseCommand):
     """Base command that registers `query` and `--limit` arguments."""
 
+    search_limit = SEARCH_LIMIT
+
     def add_arguments(self, parser: ArgumentParser) -> None:
         """Register query and --limit arguments with the search subparser.
 
@@ -80,6 +82,6 @@ class BaseSearchCommand(BaseCommand):
         parser.add_argument(
             "--limit",
             type=int,
-            default=SEARCH_LIMIT,
+            default=self.search_limit,
             help="Top N documents.",
         )

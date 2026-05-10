@@ -5,7 +5,7 @@ from typing import override
 
 from cli.commands.base import BaseCommand
 from cli.schemas import Request, TermPayload
-from cli.utils import get_movies
+from cli.utils import load_movies
 
 
 class BuildCommand(BaseCommand[TermPayload]):
@@ -32,7 +32,7 @@ class BuildCommand(BaseCommand[TermPayload]):
         Args:
             request (Request[TermPayload]): Contains the path to the movies JSON file.
         """
-        movies = get_movies(data_path=request.payload.term)
+        movies = load_movies(data_path=request.payload.term)
 
         print("Building inverted index for", len(movies), "movies...")
 
