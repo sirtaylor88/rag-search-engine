@@ -6,7 +6,7 @@
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 ![Ruff](https://img.shields.io/badge/lint-ruff-orange?logo=ruff)
 
-A search engine built with **Retrieval Augmented Generation (RAG)**. The current focus is keyword search over a movie dataset using an inverted index with [Okapi BM25](https://en.wikipedia.org/wiki/Okapi_BM25) scoring. RAG-based semantic search is planned for the next phase.
+A search engine built with **Retrieval Augmented Generation (RAG)** over a movie dataset. Supports keyword search via an inverted index with [Okapi BM25](https://en.wikipedia.org/wiki/Okapi_BM25) scoring and semantic search via dense embeddings from the [`all-MiniLM-L6-v2`](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) model, including chunked retrieval that scores documents by their most relevant sentence.
 
 ---
 
@@ -83,7 +83,7 @@ uv run python cli/keyword_search_cli.py build --data-path examples/movies.json
 
 ### Keyword search
 
-Returns documents whose tokens overlap with the query (unranked):
+Returns documents whose tokens overlap with the query (unranked). Query terms are stemmed with the [Porter stemmer](https://www.nltk.org/api/nltk.stem.porter.html) via [NLTK](https://www.nltk.org/) and stop words are filtered before matching:
 
 ```bash
 uv run python cli/keyword_search_cli.py search "<query>"
@@ -98,7 +98,7 @@ Searching for: the dark knight
 
 ### BM25 search
 
-Returns documents ranked by cumulative [Okapi BM25](https://en.wikipedia.org/wiki/Okapi_BM25) score:
+Returns documents ranked by cumulative [Okapi BM25](https://en.wikipedia.org/wiki/Okapi_BM25) score. Query terms are stemmed and stop words are filtered before scoring:
 
 ```bash
 uv run python cli/keyword_search_cli.py bm25search "<query>"
