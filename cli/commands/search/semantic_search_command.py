@@ -41,9 +41,9 @@ class BaseSemanticSearchCommand(BaseSearchCommand):
     def _search(self, query: str, limit: int) -> list[dict[str, Any]]:
         """Run the search and return ranked results."""
 
-    @abstractmethod
     def _get_excerpt(self, result: dict[str, Any]) -> str:
         """Return the text excerpt for a result."""
+        return result["document"]
 
 
 class SemanticSearchCommand(BaseSemanticSearchCommand):
@@ -54,9 +54,6 @@ class SemanticSearchCommand(BaseSemanticSearchCommand):
 
     def _search(self, query: str, limit: int) -> list[dict[str, Any]]:
         return SemanticSearch().search(query, limit)
-
-    def _get_excerpt(self, result: dict[str, Any]) -> str:
-        return result["document"]
 
 
 class SearchChunkedCommand(BaseSemanticSearchCommand):
@@ -69,6 +66,3 @@ class SearchChunkedCommand(BaseSemanticSearchCommand):
 
     def _search(self, query: str, limit: int) -> list[dict[str, Any]]:
         return ChunkedSemanticSearch().search_chunks(query, limit)
-
-    def _get_excerpt(self, result: dict[str, Any]) -> str:
-        return result["document"]
