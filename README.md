@@ -27,7 +27,9 @@ A search engine built with **Retrieval Augmented Generation (RAG)**. The current
   - [Verify embeddings](#verify-embeddings)
   - [Embed text](#embed-text)
   - [Embed query](#embed-query)
+  - [Embed corpus chunks](#embed-corpus-chunks)
   - [Semantic search](#semantic-search)
+  - [Chunked semantic search](#chunked-semantic-search)
   - [Chunk text](#chunk-text)
   - [Semantic chunk text](#semantic-chunk-text)
 - [Documentation](#documentation)
@@ -192,7 +194,7 @@ Max sequence length: 256
 
 ### Verify embeddings
 
-Load or create dense embeddings for the full movie corpus and print their shape. Embeddings are cached to `cache/movie_embeddings.np` on first run:
+Load or create dense embeddings for the full movie corpus and print their shape. Embeddings are cached to `cache/movie_embeddings.npy` on first run:
 
 ```bash
 uv run python cli/semantic_search_cli.py verify_embeddings
@@ -234,6 +236,19 @@ First 3 dimensions: [-0.0123  0.0456 -0.0789]
 Shape: (384,)
 ```
 
+### Embed corpus chunks
+
+Split each movie description into overlapping sentence-level chunks and encode them. Chunk embeddings are cached to `cache/chunk_embeddings.npy` and metadata to `cache/chunk_metadata.json` on first run:
+
+```bash
+uv run python cli/semantic_search_cli.py embed_chunks
+```
+
+```
+$ uv run python cli/semantic_search_cli.py embed_chunks
+Generated 72909 chunked embeddings
+```
+
 ### Semantic search
 
 Search the movie corpus using dense embeddings ranked by [cosine similarity](https://en.wikipedia.org/wiki/Cosine_similarity). The [`all-MiniLM-L6-v2`](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) model encodes both the query and corpus. Embeddings are loaded from cache or built on first run:
@@ -249,6 +264,28 @@ Searching for: superhero battles villain
   Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon...
 2. Spider-Man (score: 0.7541)
   When bitten by a genetically altered spider, nerdy high school student Peter...
+```
+
+### Chunked semantic search
+
+Search the movie corpus using sentence-level chunk embeddings. Each document is scored by the maximum [cosine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) of its chunks to the query, so a highly relevant passage in a long description can surface the document even if the rest is off-topic. Chunk embeddings are loaded from cache or built on first run:
+
+```bash
+uv run python cli/semantic_search_cli.py search_chunked "<query>" [--limit N]
+```
+
+```
+$ uv run python cli/semantic_search_cli.py search_chunked "superhero action movie" --limit 3
+Searching for: superhero action movie
+
+1. Kick-Ass (score: 0.6386)
+   Dave Lizewski (Aaron Taylor-Johnson) opens the film with a narration about how superhe...
+
+2. The Incredibles (score: 0.5386)
+   The film opens with a series of short interviews between three famous superheroes incl...
+
+3. Logan (score: 0.528)
+   The film is preceded by a short film:On the streets of New York City, a mugging is ta...
 ```
 
 ### Chunk text
@@ -307,13 +344,13 @@ uv run sphinx-autobuild docs docs/_build/html
 
 | Command | Description |
 |---|---|
-| `uv run pytest` | Run tests |
-| `uv run pytest --cov=cli --cov-report=term-missing` | Run tests with coverage report |
-| `uv run mypy .` | Type check |
-| `uv run ruff check .` | Lint |
-| `uv run ruff format .` | Format |
-| `uv run pylint <file_or_dir>` | Lint with pylint |
-| `uv run bandit -r cli/` | Security scan |
-| `uv run pydocstyle cli/ --convention=google` | Docstring style check |
+| `uv run pytest` | Run tests ([pytest](https://docs.pytest.org/)) |
+| `uv run pytest --cov=cli --cov-report=term-missing` | Run tests with coverage report ([pytest-cov](https://pytest-cov.readthedocs.io/)) |
+| `uv run mypy .` | Type check ([mypy](https://mypy-lang.org/)) |
+| `uv run ruff check .` | Lint ([ruff](https://docs.astral.sh/ruff/)) |
+| `uv run ruff format .` | Format ([ruff](https://docs.astral.sh/ruff/)) |
+| `uv run pylint <file_or_dir>` | Lint with [pylint](https://pylint.readthedocs.io/) |
+| `uv run bandit -r cli/` | Security scan ([bandit](https://bandit.readthedocs.io/)) |
+| `uv run pydocstyle cli/ --convention=google` | Docstring style check ([pydocstyle](https://www.pydocstyle.org/)) |
 
-Pre-commit hooks run `ruff check`, `ruff format`, `pylint`, `mypy`, `pydocstyle`, `bandit`, and `pytest` (with 100% coverage enforcement) automatically on each commit.
+[pre-commit](https://pre-commit.com/) hooks run `ruff check`, `ruff format`, `pylint`, `mypy`, `pydocstyle`, `bandit`, and `pytest` (with 100% coverage enforcement) automatically on each commit.

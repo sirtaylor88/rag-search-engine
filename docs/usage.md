@@ -113,6 +113,12 @@ uv run python cli/semantic_search_cli.py embed_chunks
 uv run python cli/semantic_search_cli.py search "<query>"
 ```
 
+### Chunked semantic search
+
+```bash
+uv run python cli/semantic_search_cli.py search_chunked "<query>" [--limit N]
+```
+
 ### Chunk text (word-based)
 
 ```bash
