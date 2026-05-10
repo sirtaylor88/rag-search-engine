@@ -51,4 +51,4 @@ class WeightedSearchCommand(BaseSearchCommand):
                 f"  BM25: {result['bm25_score']:.4f}"
                 f"  Semantic: {result['semantic_score']:.4f}"
             )
-            print(f"   {result['document']}")
+            print(f"   {result['document'][:100]}...")

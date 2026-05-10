@@ -113,8 +113,8 @@ class HybridSearch(Singleton):
 
         Returns:
             list[dict[str, Any]]: Top results sorted by descending hybrid score, each
-                with ``id``, ``title``, ``document``, ``bm25_score``,
-                ``semantic_score``, and ``hybrid_score`` keys.
+                with ``id``, ``title``, ``document`` (full description),
+                ``bm25_score``, ``semantic_score``, and ``hybrid_score`` keys.
         """
         sample_limit = 500 * limit
 
@@ -139,7 +139,7 @@ class HybridSearch(Singleton):
             )
             doc = self.document_map[doc_id]
             values["title"] = doc["title"]
-            values["document"] = doc["description"][:100]
+            values["document"] = doc["description"]
 
         top_results = sorted(
             doc_scores.items(),

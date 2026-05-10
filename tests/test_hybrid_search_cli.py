@@ -118,6 +118,8 @@ class TestWeightedSearchCommand:
         assert "0.7500" in out
         assert "0.6000" in out
         assert "0.9000" in out
+        assert "Action adventure." in out
+        assert "..." in out
 
     def test_passes_custom_alpha_to_weighted_search(self) -> None:
         """weighted-search --alpha should forward the value to weighted_search."""

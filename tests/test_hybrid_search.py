@@ -193,3 +193,22 @@ class TestHybridSearch:
             results = hs.weighted_search("query", alpha=0.5, limit=5)
 
         assert results[0]["hybrid_score"] == pytest.approx(0.5 * 0.8 + 0.5 * 0.4)
+
+    def test_weighted_search_document_is_full_description(self) -> None:
+        """weighted_search should return the full description untruncated."""
+        docs = _make_docs()
+        hs = _make_hybrid_search(docs)
+
+        bm25_results = [(1, 1.0)]
+        semantic_results = [
+            {"id": 1, "score": 0.5, "title": "Movie A", "document": "..."}
+        ]
+        with (
+            patch.object(hs, "_bm25_search", return_value=bm25_results),
+            patch.object(
+                hs.semantic_search, "search_chunks", return_value=semantic_results
+            ),
+        ):
+            results = hs.weighted_search("action", alpha=0.5, limit=5)
+
+        assert results[0]["document"] == docs[0]["description"]
