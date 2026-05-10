@@ -214,7 +214,7 @@ class SemanticSearch(Singleton):
                 "id": doc["id"],
                 "score": round(score, SCORE_PRECISION),
                 "title": doc["title"],
-                "document": doc["description"][:100],
+                "document": doc["description"],
             }
             for score, doc in top_results[:limit]
         ]
@@ -383,7 +383,7 @@ class ChunkedSemanticSearch(SemanticSearch):
             {
                 "id": self.documents[movies_idx]["id"],
                 "title": self.documents[movies_idx]["title"],
-                "document": self.documents[movies_idx]["description"][:100],
+                "document": self.documents[movies_idx]["description"],
                 "score": round(score, SCORE_PRECISION),
                 "metadata": self.chunk_metadata or {},
             }
