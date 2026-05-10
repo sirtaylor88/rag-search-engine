@@ -85,3 +85,24 @@ class BaseSearchCommand(BaseCommand):
             default=self.search_limit,
             help="Top N documents.",
         )
+
+
+class BaseListCommand(BaseCommand):
+    """Base command that registers a variadic positional list argument."""
+
+    args_type = float
+    args_help = "A list of float numbers"
+
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        """Register the variadic positional list argument with the subparser.
+
+        Args:
+            parser (ArgumentParser): The subparser for this command.
+        """
+        parser.add_argument(
+            "args",
+            type=self.args_type,
+            nargs="*",
+            default=[],
+            help=self.args_help,
+        )

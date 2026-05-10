@@ -8,6 +8,7 @@ from cli.schemas.payloads import (
     BM25Payload,
     ChunkPayload,
     EmptyPayload,
+    ScoreListPayload,
     SearchPayload,
     SemanticChunkPayload,
     TermPayload,
@@ -71,3 +72,9 @@ class BM25Request(Request[BM25Payload]):
     """
 
     payload: BM25Payload
+
+
+class ScoreListRequest(Request[ScoreListPayload]):
+    """Request carrying a list of positive float scores."""
+
+    payload: ScoreListPayload

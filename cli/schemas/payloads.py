@@ -1,8 +1,12 @@
 """Pydantic payload models for CLI commands."""
 
+from typing import Annotated
+
 from pydantic import BaseModel, Field
 
 from cli.constants import BM25_B, BM25_K1, CHUNK_SIZE, SEARCH_LIMIT, SEMANTIC_CHUNK_SIZE
+
+PositiveFloat = Annotated[float, Field(gt=0)]
 
 
 class EmptyPayload(BaseModel):
@@ -51,3 +55,9 @@ class BM25Payload(TermWithDocIDPayload):
 
     k1: float = Field(default=BM25_K1, gt=0)
     b: float = Field(default=BM25_B, ge=0, le=1)
+
+
+class ScoreListPayload(BaseModel):
+    """Payload carrying a list of positive float scores for normalisation."""
+
+    scores: list[PositiveFloat] = Field(default_factory=list)

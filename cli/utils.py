@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 import json
-import logging
 import re
 import string
 import sys
@@ -23,7 +22,6 @@ if TYPE_CHECKING:
     from cli.core.keyword_search import Document
 
 STEMMER = PorterStemmer()
-logger = logging.getLogger(__name__)
 
 
 @contextmanager

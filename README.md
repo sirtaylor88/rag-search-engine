@@ -32,6 +32,8 @@ A search engine built with **Retrieval Augmented Generation (RAG)** over a movie
   - [Chunked semantic search](#chunked-semantic-search)
   - [Chunk text](#chunk-text)
   - [Semantic chunk text](#semantic-chunk-text)
+- [Hybrid Search CLI](#hybrid-search-cli)
+  - [Normalize scores](#normalize-scores)
 - [Documentation](#documentation)
 - [Development](#development)
 
@@ -321,6 +323,25 @@ Semantically chunking 85 characters.
 ```
 
 The optional `--max-chunk-size` parameter (default: `4`) controls the maximum number of sentences per chunk. The optional `--overlap` parameter (default: `0`) controls how many sentences are shared between consecutive chunks.
+
+---
+
+## Hybrid Search CLI
+
+### Normalize scores
+
+Apply [min-max normalisation](https://en.wikipedia.org/wiki/Feature_scaling#Rescaling_(min-max_normalization)) to scale a list of positive scores to [0, 1]. Scores must be positive; when all scores are equal the result is `1.0000`:
+
+```bash
+uv run python cli/hybrid_search_cli.py normalize <score1> <score2> ...
+```
+
+```
+$ uv run python cli/hybrid_search_cli.py normalize 0.3 0.6 0.9
+* 0.0000
+* 0.5000
+* 1.0000
+```
 
 ---
 

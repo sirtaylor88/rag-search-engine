@@ -3,6 +3,7 @@
 from cli.commands.build_command import BuildCommand
 from cli.commands.compute.chunk_commands import ChunkCommand, SemanticChunkCommand
 from cli.commands.compute.idf_commands import ComputeBM25IDFCommand, ComputeIDFCommand
+from cli.commands.compute.normalize_command import NormalizeCommand
 from cli.commands.compute.tf_commands import (
     ComputeBM25TFCommand,
     ComputeTFCommand,
@@ -32,6 +33,7 @@ __all__ = [
     "EmbedChunksCommand",
     "EmbedQueryCommand",
     "EmbedTextCommand",
+    "NormalizeCommand",
     "SearchChunkedCommand",
     "SearchCommand",
     "SemanticChunkCommand",
