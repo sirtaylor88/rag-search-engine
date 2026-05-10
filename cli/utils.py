@@ -175,7 +175,11 @@ def get_overlapping_chunks(
         raise ValueError("Overlap value must be smaller than chunk size.")
 
     step = chunk_size - overlap
-    return [text_parts[i : i + chunk_size] for i in range(0, len(text_parts), step)]
+    return [
+        text_parts[i : i + chunk_size]
+        for i in range(0, len(text_parts), step)
+        if i == 0 or i + overlap < len(text_parts)
+    ]
 
 
 def get_sentences(text: str) -> list[str]:
