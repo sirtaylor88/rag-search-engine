@@ -161,6 +161,12 @@ class TestGetOverlappingChunks:
         result = get_overlapping_chunks(words, chunk_size=3, overlap=0)
         assert result[-1] == ["d", "e"]
 
+    def test_degenerate_trailing_chunk_is_omitted(self) -> None:
+        """A trailing chunk fully covered by the previous overlap should be dropped."""
+        words = ["a", "b", "c", "d"]
+        result = get_overlapping_chunks(words, chunk_size=4, overlap=1)
+        assert result == [["a", "b", "c", "d"]]
+
     def test_overlap_equal_to_chunk_size_raises(self) -> None:
         """overlap >= chunk_size should raise ValueError."""
         with pytest.raises(ValueError, match="Overlap"):

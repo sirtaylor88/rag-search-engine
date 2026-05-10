@@ -166,7 +166,9 @@ def get_overlapping_chunks(
         overlap (int): Number of text part shared between consecutive chunks.
 
     Returns:
-        list[list[str]]: List of word-list chunks; the last chunk may be shorter.
+        list[list[str]]: List of word-list chunks. The last chunk may be shorter,
+            but a trailing chunk whose elements are entirely covered by the previous
+            chunk's overlap is omitted.
 
     Raises:
         ValueError: If overlap is greater than or equal to chunk_size.
