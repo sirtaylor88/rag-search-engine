@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A search engine built with Retrieval Augmented Generation (RAG). The current focus is keyword search (BM25) over a movie dataset, with RAG-based semantic search planned as the next phase.
+A search engine built with Retrieval Augmented Generation (RAG) over a movie dataset. Implements keyword search via an inverted index with Okapi BM25 scoring and semantic search via dense sentence embeddings, including chunked retrieval that scores documents by their most relevant sentence.
 
 ## Setup
 
@@ -19,7 +19,7 @@ uv run pre-commit install  # set up git hooks
 
 ```bash
 # Lint and format
-uv run ruff check .
+uv run ruff check .          # lint (includes isort; use --fix to auto-sort imports)
 uv run ruff format .
 uv run pylint <file_or_dir>
 uv run mypy .
@@ -111,7 +111,7 @@ The project is in early development. Current structure:
 - `cli/commands/` — Command classes following an instance-based pattern.
   - `base.py` — Abstract command infrastructure. **`BaseCommand[PayloadT]`**: abstract base with `__init__(parser)`, abstract `add_arguments(parser)`, abstract `run(request: Request[PayloadT])`, concrete `load_cache()` (shared OSError handling), and `inverted_index` property returning the `InvertedIndex` singleton. Concrete bases: `TermCommand` (registers `term` positional arg), `BaseSearchCommand` (registers `query` positional arg and `--limit` optional arg).
   - `build_command.py` — `BuildCommand`: registers `--data-path` and builds/saves the index.
-  - `embed_commands.py` — `BaseEmbedCommand(TermCommand)`: abstract base whose `run()` delegates to `_embed(term)`; subclasses implement `_embed`. `EmbedTextCommand(BaseEmbedCommand)`: calls `embed_text()` to encode the input term and print its embedding info. `EmbedQueryCommand(BaseEmbedCommand)`: calls `embed_query_text()` to encode a query string and print its full embedding shape.
+  - `embed_commands.py` — `BaseEmbedCommand(TermCommand)`: abstract base whose `run()` delegates to `_embed(term)`; subclasses implement `_embed`. `EmbedTextCommand(BaseEmbedCommand)`: calls `embed_text()` to encode the input term and print its embedding info. `EmbedQueryCommand(BaseEmbedCommand)`: calls `embed_query_text()` to encode a query string and print its full embedding shape. `EmbedChunksCommand(BaseCommand[EmptyPayload])`: no-arg command; `run()` calls `embed_chunks()` to load or create chunk embeddings for the corpus and print the count.
   - `verify_commands.py` — `BaseVerifyCommand(BaseCommand[EmptyPayload])`: abstract base whose `run()` delegates to `_verify()`; `add_arguments` is a no-op (no args needed). `VerifyCommand(BaseVerifyCommand)`: calls `verify_model()`. `VerifyEmbeddingsCommand(BaseVerifyCommand)`: calls `verify_embeddings()` to load or build corpus embeddings and print their shape.
   - `compute/chunk_commands.py` — `BaseChunkCommand(TermCommand, Generic[P])`: generic abstract base (`P bound OverlapPayload`) that registers `--overlap` (default `0`) and owns the full `run()` loop: prints label, delegates splitting to abstract `_split(term)`, delegates chunk-size lookup to abstract `_get_chunk_size(payload: P)`, then prints each chunk. `ChunkCommand(BaseChunkCommand[ChunkPayload])`: registers `--chunk-size` (default `CHUNK_SIZE`); `_split` returns `term.split()`; `_get_chunk_size` returns `payload.chunk_size`. `SemanticChunkCommand(BaseChunkCommand[SemanticChunkPayload])`: registers `--max-chunk-size` (default `SEMANTIC_CHUNK_SIZE`); `_split` splits by `SENTENCE_SPLIT_PATTERN`; `_get_chunk_size` returns `payload.max_chunk_size`.
   - `search/` — Subpackage for keyword, BM25, and semantic search commands.
@@ -132,4 +132,4 @@ The project is in early development. Current structure:
 - `tests/` — Pytest test suite mirroring the `cli/` package structure. 100% coverage is enforced by the pre-commit hook.
 - `docs/` — Sphinx documentation. `conf.py` configures Furo theme, MyST-Parser (Markdown), autodoc, and typehints. `index.md` is the root; `usage.md` covers setup and CLI usage; `api/` contains per-module autodoc pages. Build output goes to `docs/_build/` (git-ignored).
 
-The planned architecture is a RAG pipeline: keyword retrieval (BM25) as the first stage, followed by embedding-based semantic retrieval or re-ranking, with an LLM generating the final answer.
+The next phase is a full RAG pipeline: keyword retrieval (BM25) and/or chunked semantic retrieval as the first stage, followed by an LLM generating a grounded answer from the retrieved context.

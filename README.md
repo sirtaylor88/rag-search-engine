@@ -347,7 +347,8 @@ uv run sphinx-autobuild docs docs/_build/html
 | `uv run pytest` | Run tests ([pytest](https://docs.pytest.org/)) |
 | `uv run pytest --cov=cli --cov-report=term-missing` | Run tests with coverage report ([pytest-cov](https://pytest-cov.readthedocs.io/)) |
 | `uv run mypy .` | Type check ([mypy](https://mypy-lang.org/)) |
-| `uv run ruff check .` | Lint ([ruff](https://docs.astral.sh/ruff/)) |
+| `uv run ruff check .` | Lint, including import order ([ruff](https://docs.astral.sh/ruff/)) |
+| `uv run ruff check --fix .` | Lint and auto-fix import ordering |
 | `uv run ruff format .` | Format ([ruff](https://docs.astral.sh/ruff/)) |
 | `uv run pylint <file_or_dir>` | Lint with [pylint](https://pylint.readthedocs.io/) |
 | `uv run bandit -r cli/` | Security scan ([bandit](https://bandit.readthedocs.io/)) |
