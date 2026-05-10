@@ -20,9 +20,9 @@ from cli.core.keyword_search import Document
 from cli.singleton import Singleton
 from cli.utils import (
     cosine_similarity,
-    load_movies,
     get_overlapping_chunks,
     get_sentences,
+    load_movies,
 )
 
 

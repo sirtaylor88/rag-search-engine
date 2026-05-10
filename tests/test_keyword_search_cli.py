@@ -9,8 +9,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest import CaptureFixture
 
-from cli.utils import load_movies
 from cli.keyword_search_cli import main
+from cli.utils import load_movies
 
 
 def test_search_command_outputs_results(capsys: CaptureFixture[str]) -> None:

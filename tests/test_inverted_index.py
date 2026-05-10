@@ -3,8 +3,9 @@
 # pylint: disable=redefined-outer-name
 
 import math
-import pickle
 from pathlib import Path
+import pickle
+
 import pytest
 
 from cli.constants import BM25_B, BM25_K1, SEARCH_LIMIT

@@ -1,11 +1,11 @@
 """Inverted index for fast token-based document lookup."""
 
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import math
 import os
-import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import pickle  # nosec B403
-from collections import defaultdict
+import threading
 from typing import Counter, TypedDict
 
 import progressbar

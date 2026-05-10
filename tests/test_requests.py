@@ -1,8 +1,9 @@
 """Tests for payload model validation and request construction."""
 
-import pytest
 from pydantic import ValidationError
+import pytest
 
+from cli.constants import BM25_B, BM25_K1, CHUNK_SIZE, SEMANTIC_CHUNK_SIZE
 from cli.schemas import (
     BM25Payload,
     BM25Request,
@@ -20,7 +21,6 @@ from cli.schemas import (
     TermWithDocIDPayload,
     TermWithDocIDRequest,
 )
-from cli.constants import BM25_B, BM25_K1, CHUNK_SIZE, SEMANTIC_CHUNK_SIZE
 
 
 class TestOverlapPayload:

@@ -30,6 +30,12 @@ ignore_missing_imports = true
 [tool.ruff]
 line-length = 88
 
+[tool.ruff.lint]
+select = ["I"]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+
 [tool.pylint.messages_control]
 disable = ["too-few-public-methods", "duplicate-code"]
 

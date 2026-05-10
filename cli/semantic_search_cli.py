@@ -2,6 +2,15 @@
 
 import argparse
 
+from cli.commands import (
+    ChunkCommand,
+    EmbedChunksCommand,
+    EmbedQueryCommand,
+    EmbedTextCommand,
+    SemanticSearchCommand,
+    VerifyCommand,
+    VerifyEmbeddingsCommand,
+)
 from cli.commands.compute.chunk_commands import SemanticChunkCommand
 from cli.commands.search.semantic_search_command import SearchChunkedCommand
 from cli.schemas import (
@@ -15,15 +24,6 @@ from cli.schemas import (
     SemanticChunkRequest,
     TermPayload,
     TermRequest,
-)
-from cli.commands import (
-    ChunkCommand,
-    EmbedChunksCommand,
-    EmbedQueryCommand,
-    EmbedTextCommand,
-    SemanticSearchCommand,
-    VerifyCommand,
-    VerifyEmbeddingsCommand,
 )
 
 

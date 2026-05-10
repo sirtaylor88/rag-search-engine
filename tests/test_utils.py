@@ -2,11 +2,9 @@
 
 from pathlib import Path
 
-import pytest
-
-from pytest import CaptureFixture
-
 import numpy as np
+import pytest
+from pytest import CaptureFixture
 
 from cli.utils import (
     cosine_similarity,
