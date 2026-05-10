@@ -284,7 +284,7 @@ Searching for: superhero action movie
 2. The Incredibles (score: 0.5386)
    The film opens with a series of short interviews between three famous superheroes incl...
 
-3. Logan (score: 0.528)
+3. Logan (score: 0.5280)
    The film is preceded by a short film:On the streets of New York City, a mugging is ta...
 ```
 

@@ -131,7 +131,7 @@ def test_search_command_prints_ranked_results(capsys: CaptureFixture[str]) -> No
     out = capsys.readouterr().out
     assert "Searching for: batman" in out
     assert "The Dark Knight" in out
-    assert "score:" in out
+    assert "score: 1.0000" in out
 
 
 def test_chunk_command_prints_chunks(capsys: CaptureFixture[str]) -> None:
@@ -250,7 +250,7 @@ def test_search_chunked_command_prints_ranked_results(
     out = capsys.readouterr().out
     assert "Searching for: batman" in out
     assert "The Dark Knight" in out
-    assert "score:" in out
+    assert "score: 0.9900" in out
 
 
 def test_no_command_prints_help(capsys: CaptureFixture[str]) -> None:

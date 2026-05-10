@@ -30,7 +30,7 @@ class BaseSemanticSearchCommand(BaseSearchCommand):
         print("Searching for:", request.payload.query)
         results = self._search(request.payload.query, request.payload.limit)
         for idx, result in enumerate(results, start=1):
-            print(f"\n{idx}. {result['title']} (score: {result['score']})")
+            print(f"\n{idx}. {result['title']} (score: {result['score']:.4f})")
             print(f"   {self._get_excerpt(result)[:100]}...")
 
     @abstractmethod
