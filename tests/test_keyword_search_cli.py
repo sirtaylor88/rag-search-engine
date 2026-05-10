@@ -252,18 +252,3 @@ def test_bm25tf_missing_cache_prints_error_and_exits(
         capsys.readouterr().out
         == "Cannot load cache data. Please run build command first.\n"
     )
-
-
-def test_build_missing_data_prints_error_and_exits(
-    capsys: CaptureFixture[str],
-) -> None:
-    """A missing data file should print an error message and exit with code 1."""
-    with (
-        patch("cli.commands.build_command.get_movies", side_effect=OSError),
-        patch("sys.argv", ["cli", "build", "--data-path", "missing.json"]),
-        pytest.raises(SystemExit) as exc_info,
-    ):
-        main()
-
-    assert exc_info.value.code == 1
-    assert capsys.readouterr().out == "Cannot build movies data.\n"

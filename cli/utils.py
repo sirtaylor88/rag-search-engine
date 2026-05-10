@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 import json
-import string
 import logging
+import re
+import string
 import sys
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
-import numpy as np
 
+import numpy as np
 from nltk.stem import PorterStemmer
+
+from cli.constants import SENTENCE_SPLIT_PATTERN
 
 if TYPE_CHECKING:
     import numpy.typing as npt
@@ -173,3 +176,15 @@ def get_overlapping_chunks(
 
     step = chunk_size - overlap
     return [text_parts[i : i + chunk_size] for i in range(0, len(text_parts), step)]
+
+
+def get_sentences(text: str) -> list[str]:
+    """Split text into sentences at punctuation boundaries.
+
+    Args:
+        text (str): The text to split.
+
+    Returns:
+        list[str]: Sentence strings split at ``!``, ``.``, or ``?`` boundaries.
+    """
+    return re.split(SENTENCE_SPLIT_PATTERN, text)

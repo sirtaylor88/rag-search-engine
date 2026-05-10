@@ -1,6 +1,7 @@
 """Tests for cli.core.semantic_search."""
 
-from unittest.mock import MagicMock, patch
+import json
+from unittest.mock import MagicMock, mock_open, patch
 
 import numpy as np
 import pytest
@@ -8,7 +9,9 @@ from pytest import CaptureFixture
 
 from cli.constants import DEFAULT_EMBEDDING_MODEL
 from cli.core.semantic_search import (
+    ChunkedSemanticSearch,
     SemanticSearch,
+    embed_chunks,
     embed_query_text,
     embed_text,
     verify_embeddings,
@@ -18,8 +21,9 @@ from cli.core.semantic_search import (
 
 @pytest.fixture(autouse=True)
 def _reset_singleton(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reset the SemanticSearch singleton before each test."""
+    """Reset SemanticSearch and ChunkedSemanticSearch singletons before each test."""
     monkeypatch.setattr(SemanticSearch, "_instance", None)
+    monkeypatch.setattr(ChunkedSemanticSearch, "_instance", None)
 
 
 class TestSemanticSearch:
@@ -322,3 +326,148 @@ class TestEmbedQueryText:
         assert "Query: dark knight" in out
         assert "First 3 dimensions:" in out
         assert "Shape:" in out
+
+
+class TestChunkedSemanticSearch:
+    """Tests for the ChunkedSemanticSearch class."""
+
+    def test_initializes_chunk_state(self) -> None:
+        """ChunkedSemanticSearch sets chunk_embeddings and chunk_metadata to None."""
+        mock_model = MagicMock()
+        with patch(
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+        ):
+            css = ChunkedSemanticSearch()
+        assert css.chunk_embeddings is None
+        assert css.chunk_metadata is None
+
+    def test_returns_same_instance_on_multiple_calls(self) -> None:
+        """Two ChunkedSemanticSearch() calls should return the identical object."""
+        mock_model = MagicMock()
+        with patch(
+            "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+        ):
+            assert ChunkedSemanticSearch() is ChunkedSemanticSearch()
+
+    def test_build_chunk_embeddings_skips_docs_without_description(self) -> None:
+        """build_chunk_embeddings should skip docs that have an empty description."""
+        docs = [
+            {"id": 1, "title": "A", "description": ""},
+            {"id": 2, "title": "B", "description": "A real sentence."},
+        ]
+        mock_embeddings = np.zeros((1, 3))
+        mock_model = MagicMock()
+        mock_model.encode.return_value = mock_embeddings
+        with (
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch("cli.core.semantic_search.np.save"),
+            patch("builtins.open", mock_open()),
+        ):
+            css = ChunkedSemanticSearch()
+            css.build_chunk_embeddings(docs)  # type: ignore[arg-type]
+
+        encoded_chunks = mock_model.encode.call_args[0][0]
+        assert all(chunk.strip() for chunk in encoded_chunks)
+
+    def test_build_chunk_embeddings_encodes_and_saves(self) -> None:
+        """build_chunk_embeddings should encode all chunks and persist to disk."""
+        docs = [
+            {"id": 1, "title": "A", "description": "First sentence. Second sentence."}
+        ]
+        mock_chunk_embeddings = np.zeros((2, 3))
+        mock_model = MagicMock()
+        mock_model.encode.return_value = mock_chunk_embeddings
+        with (
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch("cli.core.semantic_search.np.save"),
+            patch("builtins.open", mock_open()),
+        ):
+            css = ChunkedSemanticSearch()
+            result = css.build_chunk_embeddings(docs)  # type: ignore[arg-type]
+
+        mock_model.encode.assert_called_once()
+        assert np.array_equal(result, mock_chunk_embeddings)
+
+    def test_load_or_create_chunk_embeddings_returns_cached(self) -> None:
+        """load_or_create_chunk_embeddings returns cached when both files exist."""
+        docs = [{"id": 1, "title": "A", "description": "desc"}]
+        cached_embeddings = np.zeros((1, 3))
+        mock_model = MagicMock()
+        metadata_json = json.dumps(
+            {"chunks": [{"doc_id": 1, "chunk_idx": 0, "total_chunks": 1}]}
+        )
+        mock_emb_path = MagicMock()
+        mock_emb_path.is_file.return_value = True
+        mock_meta_path = MagicMock()
+        mock_meta_path.is_file.return_value = True
+        with (
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch.object(ChunkedSemanticSearch, "EMBEDDINGS_FILE_PATH", mock_emb_path),
+            patch.object(
+                ChunkedSemanticSearch, "CHUNK_METADATA_FILE_PATH", mock_meta_path
+            ),
+            patch("cli.core.semantic_search.np.load", return_value=cached_embeddings),
+            patch("builtins.open", mock_open(read_data=metadata_json)),
+        ):
+            css = ChunkedSemanticSearch()
+            result = css.load_or_create_chunk_embeddings(docs)  # type: ignore[arg-type]
+
+        assert np.array_equal(result, cached_embeddings)
+
+    def test_load_or_create_chunk_embeddings_builds_when_no_cache(self) -> None:
+        """load_or_create_chunk_embeddings builds embeddings when no cache exists."""
+        docs = [{"id": 1, "title": "A", "description": "First. Second."}]
+        built_embeddings = np.zeros((2, 3))
+        mock_model = MagicMock()
+        mock_model.encode.return_value = built_embeddings
+        mock_emb_path = MagicMock()
+        mock_emb_path.is_file.return_value = False
+        mock_meta_path = MagicMock()
+        mock_meta_path.is_file.return_value = False
+        with (
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch.object(ChunkedSemanticSearch, "EMBEDDINGS_FILE_PATH", mock_emb_path),
+            patch.object(
+                ChunkedSemanticSearch, "CHUNK_METADATA_FILE_PATH", mock_meta_path
+            ),
+            patch("cli.core.semantic_search.np.save"),
+            patch("builtins.open", mock_open()),
+        ):
+            css = ChunkedSemanticSearch()
+            result = css.load_or_create_chunk_embeddings(docs)  # type: ignore[arg-type]
+
+        assert np.array_equal(result, built_embeddings)
+
+
+class TestEmbedChunks:
+    """Tests for the embed_chunks function."""
+
+    def test_prints_chunk_count(self, capsys: CaptureFixture[str]) -> None:
+        """embed_chunks should print the number of chunk embeddings generated."""
+        mock_embeddings = np.zeros((5, 3))
+        mock_docs = [{"id": 1, "title": "A", "description": "desc"}]
+        mock_model = MagicMock()
+        with (
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch("cli.core.semantic_search.get_movies", return_value=mock_docs),
+            patch.object(
+                ChunkedSemanticSearch,
+                "load_or_create_chunk_embeddings",
+                return_value=mock_embeddings,
+            ),
+        ):
+            embed_chunks()
+
+        out = capsys.readouterr().out
+        assert "5" in out
+        assert "chunked embeddings" in out

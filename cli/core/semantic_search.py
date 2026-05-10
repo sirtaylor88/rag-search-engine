@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any, Optional
 
 import numpy as np
@@ -11,7 +12,12 @@ from sentence_transformers import SentenceTransformer
 from cli.constants import CACHE_DIR_PATH, DEFAULT_EMBEDDING_MODEL
 from cli.core.keyword_search import Document
 from cli.singleton import Singleton
-from cli.utils import cosine_similarity, get_movies
+from cli.utils import (
+    cosine_similarity,
+    get_movies,
+    get_overlapping_chunks,
+    get_sentences,
+)
 
 
 def verify_model() -> None:
@@ -62,10 +68,18 @@ def embed_query_text(query: str) -> None:
     print(f"Shape: {embedding.shape}")
 
 
+def embed_chunks() -> None:
+    """Load or create chunk embeddings for the full corpus and print the count."""
+    chunked_sem_search = ChunkedSemanticSearch()
+    documents = get_movies()
+    embeddings = chunked_sem_search.load_or_create_chunk_embeddings(documents)
+    print(f"Generated {len(embeddings)} chunked embeddings")
+
+
 class SemanticSearch(Singleton):
     """Wraps SentenceTransformer to encode text into dense embedding vectors."""
 
-    EMBEDDINGS_FILE_PATH = CACHE_DIR_PATH / "movie_embeddings.np"
+    EMBEDDINGS_FILE_PATH = CACHE_DIR_PATH / "movie_embeddings.npy"
 
     def __init__(self, model_name: str = DEFAULT_EMBEDDING_MODEL) -> None:
         """Load the all-MiniLM-L6-v2 model (downloads automatically on first use)."""
@@ -179,3 +193,96 @@ class SemanticSearch(Singleton):
             }
             for score, doc in sorted_score_doc_pair[:limit]
         ]
+
+
+class ChunkedSemanticSearch(SemanticSearch):
+    """Extends SemanticSearch to encode sentence-level chunks instead of full docs."""
+
+    EMBEDDINGS_FILE_PATH = CACHE_DIR_PATH / "chunk_embeddings.npy"
+    CHUNK_METADATA_FILE_PATH = CACHE_DIR_PATH / "chunk_metadata.json"
+
+    def __init__(self, model_name: str = DEFAULT_EMBEDDING_MODEL) -> None:
+        """Load the embedding model and initialise chunk-level state.
+
+        Args:
+            model_name (str): Sentence-transformers model identifier.
+        """
+        if self._initialized:
+            return
+        super().__init__(model_name)
+        self.chunk_embeddings: Optional[npt.NDArray[Any]] = None
+        self.chunk_metadata: Optional[list[dict[str, Any]]] = None
+
+    def build_chunk_embeddings(self, documents: list[Document]) -> npt.NDArray[Any]:
+        """Encode sentence chunks for all documents and persist to disk.
+
+        Args:
+            documents (list[Document]): Documents whose descriptions are chunked.
+
+        Returns:
+            npt.NDArray[Any]: 2-D array of shape (num_chunks, embedding_dim).
+        """
+        self._populate_docs(documents)
+
+        all_chunks: list[str] = []
+        chunk_metadata: list[dict[str, Any]] = []
+
+        for doc in documents:
+            if not doc["description"]:
+                continue
+
+            sentences = get_sentences(doc["description"])
+            overlapping_chunks = get_overlapping_chunks(
+                sentences, chunk_size=4, overlap=1
+            )
+            total_chunks = len(overlapping_chunks)
+
+            for idx, chunk in enumerate(overlapping_chunks):
+                all_chunks.append(" ".join(chunk))
+                chunk_metadata.append(
+                    {
+                        "doc_id": doc["id"],
+                        "chunk_idx": idx,
+                        "total_chunks": total_chunks,
+                    }
+                )
+
+        embeddings = np.asarray(self.model.encode(all_chunks, show_progress_bar=True))
+        self.chunk_embeddings = embeddings
+        self.chunk_metadata = chunk_metadata
+
+        np.save(self.EMBEDDINGS_FILE_PATH, embeddings)
+        with open(self.CHUNK_METADATA_FILE_PATH, "w", encoding="utf-8") as fh:
+            json.dump(
+                {"chunks": chunk_metadata, "total_chunks": len(all_chunks)},
+                fh,
+                indent=2,
+            )
+
+        return embeddings
+
+    def load_or_create_chunk_embeddings(
+        self, documents: list[Document]
+    ) -> npt.NDArray[Any]:
+        """Load chunk embeddings from disk when available, else build them.
+
+        Args:
+            documents (list[Document]): Documents to encode if building is needed.
+
+        Returns:
+            npt.NDArray[Any]: 2-D array of shape (num_chunks, embedding_dim).
+        """
+        self._populate_docs(documents)
+
+        both_cached = (
+            self.EMBEDDINGS_FILE_PATH.is_file()
+            and self.CHUNK_METADATA_FILE_PATH.is_file()
+        )
+        if both_cached:
+            chunk_embeddings = np.load(self.EMBEDDINGS_FILE_PATH)
+            self.chunk_embeddings = chunk_embeddings
+            with open(self.CHUNK_METADATA_FILE_PATH, encoding="utf-8") as fh:
+                self.chunk_metadata = json.load(fh)["chunks"]
+            return chunk_embeddings
+
+        return self.build_chunk_embeddings(documents)

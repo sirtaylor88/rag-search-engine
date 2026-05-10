@@ -1,7 +1,6 @@
 """Build command: loads movies from JSON and constructs the inverted index."""
 
 from argparse import ArgumentParser
-import sys
 from typing import override
 
 from cli.commands.base import BaseCommand
@@ -33,11 +32,7 @@ class BuildCommand(BaseCommand[TermPayload]):
         Args:
             request (Request[TermPayload]): Contains the path to the movies JSON file.
         """
-        try:
-            movies = get_movies(data_path=request.payload.term)
-        except OSError:
-            print("Cannot build movies data.")
-            sys.exit(1)
+        movies = get_movies(data_path=request.payload.term)
 
         print("Building inverted index for", len(movies), "movies...")
 

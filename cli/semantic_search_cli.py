@@ -17,9 +17,10 @@ from cli.schemas import (
 )
 from cli.commands import (
     ChunkCommand,
-    SemanticSearchCommand,
+    EmbedChunksCommand,
     EmbedQueryCommand,
     EmbedTextCommand,
+    SemanticSearchCommand,
     VerifyCommand,
     VerifyEmbeddingsCommand,
 )
@@ -42,6 +43,9 @@ def main() -> None:
     embed_query_cmd = EmbedQueryCommand(
         subparsers.add_parser("embed_query", help="Embed a query string")
     )
+    embed_chunks_cmd = EmbedChunksCommand(
+        subparsers.add_parser("embed_chunks", help="Embed chunks")
+    )
     search_cmd = SemanticSearchCommand(
         subparsers.add_parser("search", help="Search string")
     )
@@ -63,6 +67,8 @@ def main() -> None:
             embed_text_cmd.run(TermRequest(payload=TermPayload(term=args.term)))
         case "embed_query":
             embed_query_cmd.run(TermRequest(payload=TermPayload(term=args.term)))
+        case "embed_chunks":
+            embed_chunks_cmd.run(EmptyRequest(payload=EmptyPayload()))
         case "search":
             search_cmd.run(
                 SearchRequest(payload=SearchPayload(query=args.query, limit=args.limit))

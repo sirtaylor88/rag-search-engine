@@ -3,10 +3,18 @@
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+import pytest
 from pytest import CaptureFixture
 
-from cli.core.semantic_search import SemanticSearch
+from cli.core.semantic_search import ChunkedSemanticSearch, SemanticSearch
 from cli.semantic_search_cli import main
+
+
+@pytest.fixture(autouse=True)
+def _reset_singletons(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reset SemanticSearch and ChunkedSemanticSearch singletons before each test."""
+    monkeypatch.setattr(SemanticSearch, "_instance", None)
+    monkeypatch.setattr(ChunkedSemanticSearch, "_instance", None)
 
 
 def test_verify_command_calls_verify_model(capsys: CaptureFixture[str]) -> None:
@@ -187,6 +195,28 @@ def test_semantic_chunk_command_with_overlap(capsys: CaptureFixture[str]) -> Non
     assert "1." in out
     assert "2." in out
     assert "3." in out
+
+
+def test_embed_chunks_command_prints_chunk_count(capsys: CaptureFixture[str]) -> None:
+    """The embed_chunks command should print the number of chunk embeddings."""
+    mock_embeddings = np.zeros((5, 3))
+    mock_docs = [{"id": 1, "title": "A", "description": "desc"}]
+    mock_model = MagicMock()
+    with (
+        patch("sys.argv", ["cli", "embed_chunks"]),
+        patch("cli.core.semantic_search.SentenceTransformer", return_value=mock_model),
+        patch("cli.core.semantic_search.get_movies", return_value=mock_docs),
+        patch.object(
+            ChunkedSemanticSearch,
+            "load_or_create_chunk_embeddings",
+            return_value=mock_embeddings,
+        ),
+    ):
+        main()
+
+    out = capsys.readouterr().out
+    assert "5" in out
+    assert "chunked embeddings" in out
 
 
 def test_no_command_prints_help(capsys: CaptureFixture[str]) -> None:

@@ -1,14 +1,13 @@
 """Chunk commands: split text into fixed-size word or sentence chunks."""
 
-import re
 from abc import abstractmethod
 from argparse import ArgumentParser
 from typing import Generic, TypeVar, override
 
 from cli.commands.base import TermCommand
-from cli.constants import CHUNK_SIZE, SEMANTIC_CHUNK_SIZE, SENTENCE_SPLIT_PATTERN
+from cli.constants import CHUNK_SIZE, SEMANTIC_CHUNK_SIZE
 from cli.schemas import ChunkPayload, OverlapPayload, Request, SemanticChunkPayload
-from cli.utils import get_overlapping_chunks
+from cli.utils import get_overlapping_chunks, get_sentences
 
 P = TypeVar("P", bound=OverlapPayload)
 
@@ -115,7 +114,7 @@ class SemanticChunkCommand(BaseChunkCommand[SemanticChunkPayload]):
 
     @override
     def _split(self, term: str) -> list[str]:
-        return re.split(SENTENCE_SPLIT_PATTERN, term)
+        return get_sentences(term)
 
     @override
     def _get_chunk_size(self, payload: SemanticChunkPayload) -> int:
