@@ -9,4 +9,5 @@ tfidf
 bm25_tf
 bm25_idf
 chunk
+normalize
 ```

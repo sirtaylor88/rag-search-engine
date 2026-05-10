@@ -9,5 +9,6 @@ semantic_search
 utils
 constants
 schemas
+hybrid_search_cli
 commands/index
 ```
