@@ -101,6 +101,12 @@ uv run python cli/semantic_search_cli.py embed_text "<text>"
 uv run python cli/semantic_search_cli.py embed_query "<query>"
 ```
 
+### Embed corpus chunks
+
+```bash
+uv run python cli/semantic_search_cli.py embed_chunks
+```
+
 ### Semantic search
 
 ```bash
