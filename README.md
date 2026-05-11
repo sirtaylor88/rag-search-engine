@@ -13,6 +13,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)** over a movie
 ## Table of Contents
 
 - [Setup](#setup)
+  - [Environment variables](#environment-variables)
 - [Dataset](#dataset)
 - [Usage](#usage)
   - [Build the inverted index](#build-the-inverted-index)
@@ -49,6 +50,16 @@ A search engine built with **Retrieval Augmented Generation (RAG)** over a movie
 uv sync
 uv run pre-commit install
 ```
+
+### Environment variables
+
+Query enhancement via `--enhance spell` requires a [Google Gemini API key](https://ai.google.dev/). Create a `.env` file in the project root:
+
+```
+GEMINI_API_KEY=your_api_key_here
+```
+
+The application loads this file automatically using `python-dotenv`. The key is only needed when running `rrf-search` with `--enhance spell`; all other commands work without it.
 
 ---
 
