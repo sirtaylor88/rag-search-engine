@@ -1,6 +1,6 @@
 """Pydantic payload models for CLI commands."""
 
-from typing import Annotated
+from typing import Annotated, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -35,9 +35,10 @@ class WeightedSearchPayload(SearchPayload):
 
 
 class RRFSearchPayload(SearchPayload):
-    """Payload for reciprocal rank fusion search: query, limit, and k parameter."""
+    """Payload for RRF search: query, limit, k parameter, and optional enhancement."""
 
     k: int = Field(default=DEFAULT_K, ge=1)
+    enhance: Optional[Literal["spell"]] = None
 
 
 class TermPayload(BaseModel):

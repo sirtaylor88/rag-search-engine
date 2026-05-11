@@ -4,6 +4,7 @@ from abc import abstractmethod
 from argparse import ArgumentParser
 from typing import Any, Generic, TypeVar, override
 
+from cli.api.gemini_agent import enhance_query
 from cli.commands.base import BaseSearchCommand
 from cli.constants import DEFAULT_ALPHA, DEFAULT_K
 from cli.core.hybrid_search import HybridSearch
@@ -119,9 +120,17 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
             default=DEFAULT_K,
             help="K coefficient to control the weighting between the two scores",
         )
+        parser.add_argument(
+            "--enhance",
+            type=str,
+            choices=["spell"],
+            help="Query enhancement method",
+        )
 
     def _search(
-        self, hs: HybridSearch, payload: RRFSearchPayload
+        self,
+        hs: HybridSearch,
+        payload: RRFSearchPayload,
     ) -> list[dict[str, Any]]:
         """Run Reciprocal Rank Fusion search.
 
@@ -132,7 +141,11 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
         Returns:
             list[dict[str, Any]]: Results ranked by RRF score.
         """
-        return hs.rrf_search(payload.query, payload.k, payload.limit)
+        query = payload.query
+        if payload.enhance is not None:
+            query = enhance_query(query, method=payload.enhance)
+
+        return hs.rrf_search(query, payload.k, payload.limit)
 
     def _format_scores(self, result: dict[str, Any]) -> str:
         """Format RRF score, BM25 rank, and semantic rank for display.

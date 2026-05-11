@@ -28,3 +28,7 @@ DEFAULT_EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 
 # * Score
 SCORE_PRECISION = 4
+
+# * AI Agent
+GEMINI_MODEL = "gemma-4-31b-it"
+DEFAULT_ENHANCE_METHOD = "spell"

@@ -366,16 +366,20 @@ Results for: "superhero family"
 
 Rank movies using [Reciprocal Rank Fusion](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf): each document receives a score of `1 / (k + rank)` from each retriever, and the scores are summed. The `--k` parameter (default `60`) controls how much top-ranked positions are rewarded relative to lower-ranked ones.
 
+Pass `--enhance spell` to send the query through the Gemini API for spelling correction before retrieval. Requires `GEMINI_API_KEY` set in `.env`.
+
 ```bash
-uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N]
+uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance spell]
 ```
 
 ```
-$ uv run python cli/hybrid_search_cli.py rrf-search "superhero family"
+$ uv run python cli/hybrid_search_cli.py rrf-search "superhero famly" --enhance spell
+Enhanced query (spell): 'superhero famly' -> 'superhero family'
+
 Results for: "superhero family"
 
 1. The Incredibles
-   RFF Score: 0.032  BM25 Rank: 1  Semantic Rank: 2
+   RRF Score: 0.032  BM25 Rank: 1  Semantic Rank: 2
    ...
 ```
 

@@ -56,6 +56,7 @@ def main() -> None:
                         query=args.query,
                         k=args.k,
                         limit=args.limit,
+                        enhance=args.enhance,
                     )
                 )
             )

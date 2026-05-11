@@ -246,3 +246,31 @@ class TestRRFSearchCommand:
 
         call_args, _ = mock_rrf.call_args
         assert call_args[1] == 30
+
+    def test_enhance_flag_calls_enhance_query(self) -> None:
+        """rrf-search --enhance spell should call enhance_query before searching."""
+        mock_model = MagicMock()
+        with (
+            patch("sys.argv", ["cli", "rrf-search", "acton", "--enhance", "spell"]),
+            patch(
+                "cli.commands.search.hybrid_search_commands.load_movies",
+                return_value=self._mock_docs,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(
+                InvertedIndex,
+                "index_path",
+                MagicMock(exists=lambda: True),
+            ),
+            patch.object(HybridSearch, "rrf_search", return_value=self._mock_results),
+            patch(
+                "cli.commands.search.hybrid_search_commands.enhance_query",
+                return_value="action",
+            ) as mock_enhance,
+        ):
+            main()
+
+        mock_enhance.assert_called_once_with("acton", method="spell")
