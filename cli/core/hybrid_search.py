@@ -107,6 +107,28 @@ class HybridSearch(Singleton):
         self.idx.load()
         return self.idx.bm25_search(query, limit)
 
+    def _fetch_candidates(
+        self, query: str, sample_limit: int
+    ) -> tuple[dict[int, float], dict[int, float], list[int]]:
+        """Retrieve raw candidate sets from both retrievers.
+
+        Args:
+            query (str): The search query string.
+            sample_limit (int): Maximum candidates to fetch from each retriever.
+
+        Returns:
+            tuple[dict[int, float], dict[int, float], list[int]]: A triple of
+                ``(raw_bm25, raw_semantic, doc_ids)`` where ``raw_bm25`` and
+                ``raw_semantic`` map doc_id to raw score, and ``doc_ids`` is the
+                sorted union of both candidate sets.
+        """
+        raw_bm25: dict[int, float] = dict(self._bm25_search(query, sample_limit))
+        raw_semantic: dict[int, float] = {
+            r["id"]: r["score"]
+            for r in self.semantic_search.search_chunks(query, sample_limit)
+        }
+        return raw_bm25, raw_semantic, sorted(set(raw_bm25) | set(raw_semantic))
+
     def weighted_search(
         self,
         query: str,
@@ -130,20 +152,12 @@ class HybridSearch(Singleton):
                 ``bm25_score``, ``semantic_score``, and ``hybrid_score`` keys
                 (scores are min-max normalised to [0, 1]).
         """
-        sample_limit = 500 * limit
+        raw_bm25, raw_semantic, doc_ids = self._fetch_candidates(query, 500 * limit)
 
-        bm25_results = self._bm25_search(query, sample_limit)
-        semantic_results = self.semantic_search.search_chunks(query, sample_limit)
-
-        raw_bm25: dict[int, float] = dict(bm25_results)
-        raw_semantic: dict[int, float] = {r["id"]: r["score"] for r in semantic_results}
-
-        doc_ids = sorted(set(raw_bm25) | set(raw_semantic))
-        bm25_scores = [raw_bm25.get(doc_id, 0.0) for doc_id in doc_ids]
-        semantic_scores = [raw_semantic.get(doc_id, 0.0) for doc_id in doc_ids]
-
-        norm_bm25 = normalize_scores(bm25_scores)
-        norm_semantic = normalize_scores(semantic_scores)
+        norm_bm25 = normalize_scores([raw_bm25.get(doc_id, 0.0) for doc_id in doc_ids])
+        norm_semantic = normalize_scores(
+            [raw_semantic.get(doc_id, 0.0) for doc_id in doc_ids]
+        )
 
         results: list[dict[str, Any]] = []
         for idx, doc_id in enumerate(doc_ids):
@@ -163,12 +177,7 @@ class HybridSearch(Singleton):
                 }
             )
 
-        top_results = sorted(
-            results,
-            key=lambda r: r["hybrid_score"],
-            reverse=True,
-        )[:limit]
-        return top_results
+        return sorted(results, key=lambda r: r["hybrid_score"], reverse=True)[:limit]
 
     def rrf_search(
         self,
@@ -193,15 +202,8 @@ class HybridSearch(Singleton):
                 with ``id``, ``title``, ``document`` (full description),
                 ``bm25_rank``, ``semantic_rank``, and ``rrf_score`` keys.
         """
-        sample_limit = 500 * limit
+        raw_bm25, raw_semantic, doc_ids = self._fetch_candidates(query, 500 * limit)
 
-        bm25_results = self._bm25_search(query, sample_limit)
-        semantic_results = self.semantic_search.search_chunks(query, sample_limit)
-
-        raw_bm25: dict[int, float] = dict(bm25_results)
-        raw_semantic: dict[int, float] = {r["id"]: r["score"] for r in semantic_results}
-
-        doc_ids = sorted(set(raw_bm25) | set(raw_semantic))
         bm25_ranks: dict[int, dict[str, Any]] = {
             doc_id: {"rank": rank, "rrf_score": rrf_score(rank, k=k)}
             for rank, doc_id in enumerate(raw_bm25.keys(), start=1)
@@ -228,8 +230,4 @@ class HybridSearch(Singleton):
                 }
             )
 
-        top_results = sorted(results, key=lambda r: r["rrf_score"], reverse=True)[
-            :limit
-        ]
-
-        return top_results
+        return sorted(results, key=lambda r: r["rrf_score"], reverse=True)[:limit]
