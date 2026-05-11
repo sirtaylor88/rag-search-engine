@@ -4,5 +4,6 @@
         "${workspaceFolder}/.venv/lib/python3.12/site-packages"
     ],
     "python.analysis.autoSearchPaths": true,
-    "python.analysis.importFormat": "absolute"
+    "python.analysis.importFormat": "absolute",
+    "python.terminal.useEnvFile": true
 }
