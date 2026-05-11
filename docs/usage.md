@@ -131,6 +131,29 @@ uv run python cli/semantic_search_cli.py chunk "<text>" [--chunk-size N] [--over
 uv run python cli/semantic_search_cli.py semantic_chunk "<text>" [--max-chunk-size N] [--overlap N]
 ```
 
+## Hybrid Search CLI
+
+### Normalize scores
+
+```bash
+uv run python cli/hybrid_search_cli.py normalize <score1> <score2> ...
+```
+
+### Weighted search
+
+```bash
+uv run python cli/hybrid_search_cli.py weighted-search "<query>" [--alpha A] [--limit N]
+```
+
+### RRF search
+
+```bash
+uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance spell]
+```
+
+Pass `--enhance spell` to correct spelling in the query via the Gemini API before
+retrieval. Requires `GEMINI_API_KEY` set in `.env`.
+
 ## Development
 
 ```bash
