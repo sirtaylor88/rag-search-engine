@@ -11,5 +11,6 @@ utils
 constants
 schemas
 hybrid_search_cli
+gemini_agent
 commands/index
 ```
