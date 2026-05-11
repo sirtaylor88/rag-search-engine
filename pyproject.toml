@@ -12,10 +12,12 @@ description = "Keyword search engine over a movie dataset using BM25 and an inve
 readme = "README.md"
 requires-python = ">=3.12.9"
 dependencies = [
+    "google-genai>=2.0.1",
     "nltk==3.9.1",
     "numpy==2.3.3",
     "progressbar>=2.5",
     "pydantic>=2.13.4",
+    "python-dotenv>=1.2.2",
     "sentence-transformers>=5.4.1",
 ]
 
