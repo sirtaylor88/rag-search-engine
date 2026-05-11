@@ -1,17 +1,62 @@
-"""WeightedSearchCommand: hybrid BM25 + semantic search over movies."""
+"""Hybrid search commands: weighted combination and Reciprocal Rank Fusion."""
 
+from abc import abstractmethod
 from argparse import ArgumentParser
-from typing import override
+from typing import Any, Generic, TypeVar, override
 
 from cli.commands.base import BaseSearchCommand
 from cli.constants import DEFAULT_ALPHA, DEFAULT_K
 from cli.core.hybrid_search import HybridSearch
 from cli.schemas import Request
-from cli.schemas.payloads import RRFSearchPayload, WeightedSearchPayload
+from cli.schemas.payloads import RRFSearchPayload, SearchPayload, WeightedSearchPayload
 from cli.utils import load_movies
 
+P = TypeVar("P", bound=SearchPayload)
 
-class WeightedSearchCommand(BaseSearchCommand):
+
+class BaseHybridSearchCommand(BaseSearchCommand, Generic[P]):
+    """Shared load-search-print flow for hybrid retriever commands."""
+
+    @abstractmethod
+    def _search(self, hs: HybridSearch, payload: P) -> list[dict[str, Any]]:
+        """Run the retrieval and return ranked results.
+
+        Args:
+            hs (HybridSearch): The hybrid search instance to query.
+            payload (P): The parsed request payload.
+
+        Returns:
+            list[dict[str, Any]]: Ranked result dicts.
+        """
+
+    @abstractmethod
+    def _format_scores(self, result: dict[str, Any]) -> str:
+        """Format the score line for a single result.
+
+        Args:
+            result (dict[str, Any]): A result dict from the search method.
+
+        Returns:
+            str: The formatted score string to print.
+        """
+
+    @override
+    def run(self, request: Request[P]) -> None:
+        """Load movies, run search, and print ranked results.
+
+        Args:
+            request (Request[P]): The parsed request containing the payload.
+        """
+        documents = load_movies()
+        results = self._search(HybridSearch(documents), request.payload)
+        print(f'\nResults for: "{request.payload.query}"\n')
+        for idx, result in enumerate(results, start=1):
+            print(f"{idx}. {result['title']}")
+            print(f"   {self._format_scores(result)}")
+            print(f"   {result['document'][:100]}...")
+
+
+class WeightedSearchCommand(BaseHybridSearchCommand[WeightedSearchPayload]):
     """Ranks movies by a weighted combination of BM25 and semantic scores."""
 
     def add_arguments(self, parser: ArgumentParser) -> None:
@@ -28,37 +73,41 @@ class WeightedSearchCommand(BaseSearchCommand):
             help="Alpha coefficient to control the weighting between the two scores",
         )
 
-    @override
-    def run(self, request: Request[WeightedSearchPayload]) -> None:
-        """Print ranked results with hybrid, BM25, and semantic scores.
+    def _search(
+        self, hs: HybridSearch, payload: WeightedSearchPayload
+    ) -> list[dict[str, Any]]:
+        """Run weighted hybrid search.
 
         Args:
-            request (Request[WeightedSearchPayload]): Contains the search query,
-                result limit, and alpha weighting coefficient.
+            hs (HybridSearch): The hybrid search instance to query.
+            payload (WeightedSearchPayload): Contains query, alpha, and limit.
+
+        Returns:
+            list[dict[str, Any]]: Results ranked by hybrid score.
         """
-        documents = load_movies()
-        results = HybridSearch(documents).weighted_search(
-            request.payload.query,
-            request.payload.alpha,
-            request.payload.limit,
+        return hs.weighted_search(payload.query, payload.alpha, payload.limit)
+
+    def _format_scores(self, result: dict[str, Any]) -> str:
+        """Format hybrid, BM25, and semantic scores for display.
+
+        Args:
+            result (dict[str, Any]): A result dict from weighted_search.
+
+        Returns:
+            str: Formatted score string.
+        """
+        return (
+            f"Hybrid: {result['hybrid_score']:.4f}"
+            f"  BM25: {result['bm25_score']:.4f}"
+            f"  Semantic: {result['semantic_score']:.4f}"
         )
 
-        print(f'\nResults for: "{request.payload.query}"\n')
-        for idx, result in enumerate(results, start=1):
-            print(f"{idx}. {result['title']}")
-            print(
-                f"   Hybrid: {result['hybrid_score']:.4f}"
-                f"  BM25: {result['bm25_score']:.4f}"
-                f"  Semantic: {result['semantic_score']:.4f}"
-            )
-            print(f"   {result['document'][:100]}...")
 
-
-class RRFSearchCommand(BaseSearchCommand):
+class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
     """Ranks movies using Reciprocal Rank Fusion of BM25 and semantic rankings."""
 
     def add_arguments(self, parser: ArgumentParser) -> None:
-        """Register query, --limit, and --alpha arguments with the subparser.
+        """Register query, --limit, and --k arguments with the subparser.
 
         Args:
             parser (ArgumentParser): The subparser for this command.
@@ -71,27 +120,31 @@ class RRFSearchCommand(BaseSearchCommand):
             help="K coefficient to control the weighting between the two scores",
         )
 
-    @override
-    def run(self, request: Request[RRFSearchPayload]) -> None:
-        """Print ranked results with RRF score, BM25 rank, and semantic rank.
+    def _search(
+        self, hs: HybridSearch, payload: RRFSearchPayload
+    ) -> list[dict[str, Any]]:
+        """Run Reciprocal Rank Fusion search.
 
         Args:
-            request (Request[RRFSearchPayload]): Contains the search query,
-                result limit, and k smoothing coefficient.
-        """
-        documents = load_movies()
-        results = HybridSearch(documents).rrf_search(
-            request.payload.query,
-            request.payload.k,
-            request.payload.limit,
-        )
+            hs (HybridSearch): The hybrid search instance to query.
+            payload (RRFSearchPayload): Contains query, k, and limit.
 
-        print(f'\nResults for: "{request.payload.query}"\n')
-        for idx, result in enumerate(results, start=1):
-            print(f"{idx}. {result['title']}")
-            print(
-                f"   RFF Score: {result['rrf_score']:.3f}"
-                f"  BM25 Rank: {result['bm25_rank']}"
-                f"  Semantic Rank: {result['semantic_rank']}"
-            )
-            print(f"   {result['document'][:100]}...")
+        Returns:
+            list[dict[str, Any]]: Results ranked by RRF score.
+        """
+        return hs.rrf_search(payload.query, payload.k, payload.limit)
+
+    def _format_scores(self, result: dict[str, Any]) -> str:
+        """Format RRF score, BM25 rank, and semantic rank for display.
+
+        Args:
+            result (dict[str, Any]): A result dict from rrf_search.
+
+        Returns:
+            str: Formatted score string.
+        """
+        return (
+            f"RRF Score: {result['rrf_score']:.3f}"
+            f"  BM25 Rank: {result['bm25_rank']}"
+            f"  Semantic Rank: {result['semantic_rank']}"
+        )
