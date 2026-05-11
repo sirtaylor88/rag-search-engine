@@ -95,7 +95,7 @@ class TestWeightedSearchCommand:
         with (
             patch("sys.argv", ["cli", "weighted-search", "action"]),
             patch(
-                "cli.commands.search.hybrid_search_command.load_movies",
+                "cli.commands.search.hybrid_search_commands.load_movies",
                 return_value=self._mock_docs,
             ),
             patch(
@@ -127,7 +127,7 @@ class TestWeightedSearchCommand:
         with (
             patch("sys.argv", ["cli", "weighted-search", "action", "--alpha", "0.3"]),
             patch(
-                "cli.commands.search.hybrid_search_command.load_movies",
+                "cli.commands.search.hybrid_search_commands.load_movies",
                 return_value=self._mock_docs,
             ),
             patch(
@@ -156,7 +156,7 @@ class TestWeightedSearchCommand:
         with (
             patch("sys.argv", ["cli", "weighted-search", "xyzzy"]),
             patch(
-                "cli.commands.search.hybrid_search_command.load_movies",
+                "cli.commands.search.hybrid_search_commands.load_movies",
                 return_value=self._mock_docs,
             ),
             patch(
@@ -174,3 +174,75 @@ class TestWeightedSearchCommand:
 
         out = capsys.readouterr().out
         assert "xyzzy" in out
+
+
+class TestRRFSearchCommand:
+    """Tests for the rrf-search subcommand in hybrid_search_cli."""
+
+    _mock_results = [
+        {
+            "id": 1,
+            "title": "Movie A",
+            "document": "Action adventure.",
+            "rrf_score": 0.032,
+            "bm25_rank": 1,
+            "semantic_rank": 2,
+        }
+    ]
+    _mock_docs = [{"id": 1, "title": "Movie A", "description": "Action adventure."}]
+
+    def test_prints_results_for_query(self, capsys: CaptureFixture[str]) -> None:
+        """rrf-search should print title, RRF score, and ranks for each result."""
+        mock_model = MagicMock()
+        with (
+            patch("sys.argv", ["cli", "rrf-search", "action"]),
+            patch(
+                "cli.commands.search.hybrid_search_commands.load_movies",
+                return_value=self._mock_docs,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(
+                InvertedIndex,
+                "index_path",
+                MagicMock(exists=lambda: True),
+            ),
+            patch.object(HybridSearch, "rrf_search", return_value=self._mock_results),
+        ):
+            main()
+
+        out = capsys.readouterr().out
+        assert "Movie A" in out
+        assert "0.032" in out
+        assert "BM25 Rank: 1" in out
+        assert "Semantic Rank: 2" in out
+        assert "Action adventure." in out
+
+    def test_passes_custom_k_to_rrf_search(self) -> None:
+        """rrf-search --k should forward the value to rrf_search."""
+        mock_model = MagicMock()
+        with (
+            patch("sys.argv", ["cli", "rrf-search", "action", "--k", "30"]),
+            patch(
+                "cli.commands.search.hybrid_search_commands.load_movies",
+                return_value=self._mock_docs,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(
+                InvertedIndex,
+                "index_path",
+                MagicMock(exists=lambda: True),
+            ),
+            patch.object(
+                HybridSearch, "rrf_search", return_value=self._mock_results
+            ) as mock_rrf,
+        ):
+            main()
+
+        call_args, _ = mock_rrf.call_args
+        assert call_args[1] == 30

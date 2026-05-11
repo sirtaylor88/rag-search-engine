@@ -1,9 +1,8 @@
 """Hybrid search: combines BM25 keyword scoring and chunked semantic scoring."""
 
-from collections import defaultdict
 from typing import Any
 
-from cli.constants import DEFAULT_ALPHA, SEARCH_LIMIT
+from cli.constants import CHUNKED_SEARCH_LIMIT, DEFAULT_ALPHA, DEFAULT_K, SEARCH_LIMIT
 from cli.core.keyword_search import Document, InvertedIndex
 from cli.core.semantic_search import ChunkedSemanticSearch
 from cli.singleton import Singleton
@@ -51,6 +50,19 @@ def hybrid_score(
         float: The combined hybrid score.
     """
     return alpha * bm25_score + (1 - alpha) * semantic_score
+
+
+def rrf_score(rank: int, k: int = DEFAULT_K) -> float:
+    """Compute the Reciprocal Rank Fusion score for a given rank.
+
+    Args:
+        rank (int): The 1-based rank position of the document.
+        k (int): Smoothing constant that prevents high scores for top-ranked items.
+
+    Returns:
+        float: The RRF score ``1 / (k + rank)``.
+    """
+    return 1 / (k + rank)
 
 
 class HybridSearch(Singleton):
@@ -103,58 +115,121 @@ class HybridSearch(Singleton):
     ) -> list[dict[str, Any]]:
         """Rank documents by a weighted combination of BM25 and semantic scores.
 
-        Retrieves a large candidate set from both retrievers, merges scores per
-        document, computes a hybrid score, and returns the top ``limit`` results.
+        Retrieves a large candidate set from both retrievers, normalises each
+        score list to [0, 1] via min-max scaling so the two signals contribute
+        equally at the chosen alpha, then returns the top ``limit`` results.
 
         Args:
             query (str): The search query string.
-            alpha (float): Weight for BM25 (``1 - alpha`` weights semantics).
+            alpha (float): Weight for normalised BM25 (``1 - alpha`` weights semantics).
             limit (int): Maximum number of results to return.
 
         Returns:
             list[dict[str, Any]]: Top results sorted by descending hybrid score, each
                 with ``id``, ``title``, ``document`` (full description),
-                ``bm25_score``, ``semantic_score``, and ``hybrid_score`` keys.
+                ``bm25_score``, ``semantic_score``, and ``hybrid_score`` keys
+                (scores are min-max normalised to [0, 1]).
         """
         sample_limit = 500 * limit
 
         bm25_results = self._bm25_search(query, sample_limit)
         semantic_results = self.semantic_search.search_chunks(query, sample_limit)
 
-        doc_scores: defaultdict[int, dict[str, Any]] = defaultdict(
-            lambda: {"bm25_score": 0.0, "semantic_score": 0.0}
-        )
+        raw_bm25: dict[int, float] = dict(bm25_results)
+        raw_semantic: dict[int, float] = {r["id"]: r["score"] for r in semantic_results}
 
-        for doc_id, bm25 in bm25_results:
-            doc_scores[doc_id]["bm25_score"] = bm25
+        doc_ids = sorted(set(raw_bm25) | set(raw_semantic))
+        bm25_scores = [raw_bm25.get(doc_id, 0.0) for doc_id in doc_ids]
+        semantic_scores = [raw_semantic.get(doc_id, 0.0) for doc_id in doc_ids]
 
-        for result in semantic_results:
-            doc_scores[result["id"]]["semantic_score"] = result["score"]
+        norm_bm25 = normalize_scores(bm25_scores)
+        norm_semantic = normalize_scores(semantic_scores)
 
-        for doc_id, values in doc_scores.items():
-            values["hybrid_score"] = hybrid_score(
-                bm25_score=values["bm25_score"],
-                semantic_score=values["semantic_score"],
-                alpha=alpha,
-            )
+        results: list[dict[str, Any]] = []
+        for idx, doc_id in enumerate(doc_ids):
             doc = self.document_map[doc_id]
-            values["title"] = doc["title"]
-            values["document"] = doc["description"]
+            results.append(
+                {
+                    "id": doc_id,
+                    "title": doc["title"],
+                    "document": doc["description"],
+                    "bm25_score": norm_bm25[idx],
+                    "semantic_score": norm_semantic[idx],
+                    "hybrid_score": hybrid_score(
+                        bm25_score=norm_bm25[idx],
+                        semantic_score=norm_semantic[idx],
+                        alpha=alpha,
+                    ),
+                }
+            )
 
         top_results = sorted(
-            doc_scores.items(),
-            key=lambda item: item[1]["hybrid_score"],
+            results,
+            key=lambda r: r["hybrid_score"],
             reverse=True,
         )[:limit]
+        return top_results
 
-        return [
-            {
-                "id": doc_id,
-                "title": values["title"],
-                "document": values["document"],
-                "bm25_score": values["bm25_score"],
-                "semantic_score": values["semantic_score"],
-                "hybrid_score": values["hybrid_score"],
-            }
-            for doc_id, values in top_results
+    def rrf_search(
+        self,
+        query: str,
+        k: int,
+        limit: int = CHUNKED_SEARCH_LIMIT,
+    ) -> list[dict[str, Any]]:
+        """Rank documents by Reciprocal Rank Fusion of BM25 and semantic rankings.
+
+        Retrieves a large candidate set from both retrievers, assigns each document
+        an RRF score based on its rank in each list, then returns the top ``limit``
+        results sorted by combined RRF score.
+
+        Args:
+            query (str): The search query string.
+            k (int): Smoothing constant for RRF scoring (higher values reduce the
+                impact of top-ranked items).
+            limit (int): Maximum number of results to return.
+
+        Returns:
+            list[dict[str, Any]]: Top results sorted by descending RRF score, each
+                with ``id``, ``title``, ``document`` (full description),
+                ``bm25_rank``, ``semantic_rank``, and ``rrf_score`` keys.
+        """
+        sample_limit = 500 * limit
+
+        bm25_results = self._bm25_search(query, sample_limit)
+        semantic_results = self.semantic_search.search_chunks(query, sample_limit)
+
+        raw_bm25: dict[int, float] = dict(bm25_results)
+        raw_semantic: dict[int, float] = {r["id"]: r["score"] for r in semantic_results}
+
+        doc_ids = sorted(set(raw_bm25) | set(raw_semantic))
+        bm25_ranks: dict[int, dict[str, Any]] = {
+            doc_id: {"rank": rank, "rrf_score": rrf_score(rank, k=k)}
+            for rank, doc_id in enumerate(raw_bm25.keys(), start=1)
+        }
+        semantic_ranks: dict[int, dict[str, Any]] = {
+            doc_id: {"rank": rank, "rrf_score": rrf_score(rank, k=k)}
+            for rank, doc_id in enumerate(raw_semantic.keys(), start=1)
+        }
+
+        results: list[dict[str, Any]] = []
+        for doc_id in doc_ids:
+            doc = self.document_map[doc_id]
+            bm25_entry = bm25_ranks.get(doc_id)
+            semantic_entry = semantic_ranks.get(doc_id)
+            results.append(
+                {
+                    "id": doc_id,
+                    "title": doc["title"],
+                    "document": doc["description"],
+                    "bm25_rank": bm25_entry["rank"] if bm25_entry else None,
+                    "semantic_rank": semantic_entry["rank"] if semantic_entry else None,
+                    "rrf_score": (bm25_entry["rrf_score"] if bm25_entry else 0)
+                    + (semantic_entry["rrf_score"] if semantic_entry else 0),
+                }
+            )
+
+        top_results = sorted(results, key=lambda r: r["rrf_score"], reverse=True)[
+            :limit
         ]
+
+        return top_results

@@ -35,6 +35,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)** over a movie
 - [Hybrid Search CLI](#hybrid-search-cli)
   - [Normalize scores](#normalize-scores)
   - [Weighted search](#weighted-search)
+  - [RRF search](#rrf-search)
 - [Documentation](#documentation)
 - [Development](#development)
 
@@ -346,7 +347,7 @@ $ uv run python cli/hybrid_search_cli.py normalize 0.3 0.6 0.9
 
 ### Weighted search
 
-Rank movies using a weighted combination of [Okapi BM25](https://en.wikipedia.org/wiki/Okapi_BM25) keyword scoring and chunked [semantic similarity](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2). The `--alpha` parameter (default `0.5`) controls how much weight is given to BM25 vs. semantic: `score = alpha × BM25 + (1 − alpha) × semantic`.
+Rank movies using a weighted combination of [Okapi BM25](https://en.wikipedia.org/wiki/Okapi_BM25) keyword scoring and chunked [semantic similarity](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2). Both score lists are min-max normalized to [0, 1] before combining, so `--alpha` (default `0.5`) is a true balance control: `score = alpha × norm(BM25) + (1 − alpha) × norm(semantic)`.
 
 ```bash
 uv run python cli/hybrid_search_cli.py weighted-search "<query>" [--alpha A] [--limit N]
@@ -358,6 +359,23 @@ Results for: "superhero family"
 
 1. The Incredibles
    Hybrid: 0.3521  BM25: 0.1234  Semantic: 0.5808
+   ...
+```
+
+### RRF search
+
+Rank movies using [Reciprocal Rank Fusion](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf): each document receives a score of `1 / (k + rank)` from each retriever, and the scores are summed. The `--k` parameter (default `60`) controls how much top-ranked positions are rewarded relative to lower-ranked ones.
+
+```bash
+uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N]
+```
+
+```
+$ uv run python cli/hybrid_search_cli.py rrf-search "superhero family"
+Results for: "superhero family"
+
+1. The Incredibles
+   RFF Score: 0.032  BM25 Rank: 1  Semantic Rank: 2
    ...
 ```
 

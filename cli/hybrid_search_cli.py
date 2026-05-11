@@ -2,8 +2,10 @@
 
 from argparse import ArgumentParser
 
-from cli.commands import NormalizeCommand, WeightedSearchCommand
+from cli.commands import NormalizeCommand, RRFSearchCommand, WeightedSearchCommand
 from cli.schemas import (
+    RRFSearchPayload,
+    RRFSearchRequest,
     ScoreListPayload,
     ScoreListRequest,
     WeightedSearchPayload,
@@ -24,6 +26,11 @@ def main() -> None:
             "weighted-search", help="Search movies using weighted search"
         ),
     )
+    rrf_search_cmd = RRFSearchCommand(
+        subparsers.add_parser(
+            "rrf-search", help="Search movies using Reciprocal Rank Fusion"
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -38,6 +45,16 @@ def main() -> None:
                     payload=WeightedSearchPayload(
                         query=args.query,
                         alpha=args.alpha,
+                        limit=args.limit,
+                    )
+                )
+            )
+        case "rrf-search":
+            rrf_search_cmd.run(
+                RRFSearchRequest(
+                    payload=RRFSearchPayload(
+                        query=args.query,
+                        k=args.k,
                         limit=args.limit,
                     )
                 )

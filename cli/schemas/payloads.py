@@ -9,6 +9,7 @@ from cli.constants import (
     BM25_K1,
     CHUNK_SIZE,
     DEFAULT_ALPHA,
+    DEFAULT_K,
     SEARCH_LIMIT,
     SEMANTIC_CHUNK_SIZE,
 )
@@ -31,6 +32,12 @@ class WeightedSearchPayload(SearchPayload):
     """Payload for weighted search: query, limit, and BM25/semantic alpha weight."""
 
     alpha: float = Field(default=DEFAULT_ALPHA, ge=0, le=1)
+
+
+class RRFSearchPayload(SearchPayload):
+    """Payload for reciprocal rank fusion search: query, limit, and k parameter."""
+
+    k: int = Field(default=DEFAULT_K, ge=1)
 
 
 class TermPayload(BaseModel):

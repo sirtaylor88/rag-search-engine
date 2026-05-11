@@ -8,6 +8,7 @@ from cli.schemas.payloads import (
     BM25Payload,
     ChunkPayload,
     EmptyPayload,
+    RRFSearchPayload,
     ScoreListPayload,
     SearchPayload,
     SemanticChunkPayload,
@@ -46,6 +47,12 @@ class WeightedSearchRequest(Request[WeightedSearchPayload]):
     """Request carrying a search query, result limit, and alpha weight."""
 
     payload: WeightedSearchPayload
+
+
+class RRFSearchRequest(Request[RRFSearchPayload]):
+    """Request carrying a search query, result limit, and RRF k parameter."""
+
+    payload: RRFSearchPayload
 
 
 class TermRequest(Request[TermPayload]):

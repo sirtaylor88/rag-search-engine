@@ -39,6 +39,9 @@ force-sort-within-sections = true
 [tool.pylint.messages_control]
 disable = ["too-few-public-methods", "duplicate-code"]
 
+[tool.pylint.design]
+max-locals = 20
+
 [tool.pylint.typecheck]
 ignored-modules = ["numpy", "sentence_transformers", "torch"]
 
