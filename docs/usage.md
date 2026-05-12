@@ -148,11 +148,17 @@ uv run python cli/hybrid_search_cli.py weighted-search "<query>" [--alpha A] [--
 ### RRF search
 
 ```bash
-uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance spell]
+uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual}]
 ```
 
-Pass `--enhance spell` to correct spelling in the query via the Gemini API before
-retrieval. Requires `GEMINI_API_KEY` set in `.env`.
+Pass `--enhance` to send the query through the Gemini API before retrieval.
+Three methods are available: `spell` (typo correction), `rewrite` (Google-style
+query rewrite), and `expand` (synonym/related-term expansion). Requires
+`GEMINI_API_KEY` set in `.env`.
+
+Pass `--rerank-method individual` to score each of the top `5 × limit`
+candidates against the query using Gemini and re-sort by that score. Requires
+`GEMINI_API_KEY` set in `.env`.
 
 ## Development
 

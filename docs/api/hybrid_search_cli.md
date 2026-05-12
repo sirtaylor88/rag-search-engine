@@ -15,7 +15,7 @@ to the appropriate command class.
 
    :doc:`/api/commands/search/hybrid_search_command` — ``WeightedSearchCommand`` and ``RRFSearchCommand``
 
-   :doc:`/api/gemini_agent` — Gemini-powered query enhancement (``--enhance``)
+   :doc:`/api/gemini_agent` — Gemini-powered query enhancement (``--enhance``) and re-ranking (``--rerank-method``)
 
    :doc:`/api/schemas` — ``WeightedSearchPayload``, ``RRFSearchPayload``, and request envelopes
 ```
