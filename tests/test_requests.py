@@ -130,6 +130,11 @@ class TestRRFSearchPayload:
         payload = RRFSearchPayload(query="batman", rerank_method="batch")
         assert payload.rerank_method == "batch"
 
+    def test_rerank_method_cross_encoder(self) -> None:
+        """'cross_encoder' should be accepted as a rerank_method value."""
+        payload = RRFSearchPayload(query="batman", rerank_method="cross_encoder")
+        assert payload.rerank_method == "cross_encoder"
+
     def test_invalid_rerank_method_raises(self) -> None:
         """An unrecognised rerank_method should raise ValidationError."""
         with pytest.raises(ValidationError):

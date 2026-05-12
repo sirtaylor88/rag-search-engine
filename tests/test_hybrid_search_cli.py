@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 from pytest import CaptureFixture
 
@@ -416,3 +417,76 @@ class TestRRFSearchCommand:
 
         out = capsys.readouterr().out
         assert "Movie A" in out
+
+    def test_cross_encoder_rerank_calls_predict_and_prints_score(
+        self, capsys: CaptureFixture[str]
+    ) -> None:
+        """--rerank-method cross_encoder should call predict and show the score."""
+        mock_model = MagicMock()
+        mock_cross_encoder = MagicMock()
+        mock_cross_encoder.predict.return_value = np.array([7.2])
+        with (
+            patch(
+                "sys.argv",
+                ["cli", "rrf-search", "action", "--rerank-method", "cross_encoder"],
+            ),
+            patch(
+                "cli.commands.search.hybrid_search_commands.load_movies",
+                return_value=self._mock_docs,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(
+                InvertedIndex,
+                "index_path",
+                MagicMock(exists=lambda: True),
+            ),
+            patch.object(HybridSearch, "rrf_search", return_value=self._mock_results),
+            patch(
+                "cli.commands.search.hybrid_search_commands.CrossEncoder",
+                return_value=mock_cross_encoder,
+            ),
+        ):
+            main()
+
+        mock_cross_encoder.predict.assert_called_once()
+        out = capsys.readouterr().out
+        assert "Cross Encoder Score" in out
+
+    def test_rerank_method_prints_reranking_banner(
+        self, capsys: CaptureFixture[str]
+    ) -> None:
+        """Any --rerank-method should print the re-ranking banner, not plain banner."""
+        mock_model = MagicMock()
+        with (
+            patch(
+                "sys.argv",
+                ["cli", "rrf-search", "action", "--rerank-method", "individual"],
+            ),
+            patch(
+                "cli.commands.search.hybrid_search_commands.load_movies",
+                return_value=self._mock_docs,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(
+                InvertedIndex,
+                "index_path",
+                MagicMock(exists=lambda: True),
+            ),
+            patch.object(HybridSearch, "rrf_search", return_value=self._mock_results),
+            patch(
+                "cli.commands.search.hybrid_search_commands.rerank_query",
+                return_value="8.0",
+            ),
+            patch("cli.commands.search.hybrid_search_commands.sleep"),
+        ):
+            main()
+
+        out = capsys.readouterr().out
+        assert "Re-ranking top" in out
+        assert "individual method" in out

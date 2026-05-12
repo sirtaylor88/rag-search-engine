@@ -59,7 +59,7 @@ Query enhancement via `--enhance` requires a [Google Gemini API key](https://ai.
 GEMINI_API_KEY=your_api_key_here
 ```
 
-The application loads this file automatically using `python-dotenv`. The key is only needed when running `rrf-search` with `--enhance` or `--rerank-method`; all other commands work without it.
+The application loads this file automatically using `python-dotenv`. The key is only needed when running `rrf-search` with `--enhance` or `--rerank-method individual`/`batch`; `--rerank-method cross_encoder` and all other commands work without it.
 
 ---
 
@@ -383,13 +383,14 @@ Pass `--enhance` to send the query through the Gemini API before retrieval. Requ
 - `rewrite` — expand the query into a more specific Google-style search phrase.
 - `expand` — append synonyms and related concepts to improve recall.
 
-Pass `--rerank-method` to re-rank the top `5 × limit` candidates using Gemini before returning the top `limit`. Requires `GEMINI_API_KEY`. Two methods are available:
+Pass `--rerank-method` to re-rank the top `5 × limit` candidates before returning the top `limit`. Three methods are available:
 
-- `individual` — scores each candidate separately on a 0–10 scale (one API call per result, with a 3 s delay between calls) and re-sorts by that score.
-- `batch` — sends all candidates in a single API call and asks Gemini to return a JSON-ordered list of IDs; falls back to the original RRF order if the response is empty.
+- `individual` — scores each candidate separately on a 0–10 scale via Gemini (one API call per result, with a 3 s delay between calls). Requires `GEMINI_API_KEY`.
+- `batch` — sends all candidates in a single Gemini API call and returns a JSON-ordered list of IDs; falls back to the original RRF order on empty response. Requires `GEMINI_API_KEY`.
+- `cross_encoder` — scores all query–document pairs locally using [`cross-encoder/ms-marco-TinyBERT-L2-v2`](https://huggingface.co/cross-encoder/ms-marco-TinyBERT-L2-v2) via `sentence-transformers`; no API key required.
 
 ```bash
-uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual,batch}]
+uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual,batch,cross_encoder}]
 ```
 
 ```
@@ -417,10 +418,23 @@ Results for: "bear movie"
 ```
 $ uv run python cli/hybrid_search_cli.py rrf-search "bear movie" --rerank-method batch
 
-Results for: "bear movie"
+Re-ranking top 5 results using batch method...
+Reciprocal Rank Fusion Results for 'bear movie' (k=60)
 
 1. The Revenant
    Re-rank Rank: 1
+   RRF Score: 0.028  BM25 Rank: 2  Semantic Rank: 1
+   ...
+```
+
+```
+$ uv run python cli/hybrid_search_cli.py rrf-search "bear movie" --rerank-method cross_encoder
+
+Re-ranking top 5 results using cross_encoder method...
+Reciprocal Rank Fusion Results for 'bear movie' (k=60)
+
+1. The Revenant
+   Cross Encoder Score: 8.23
    RRF Score: 0.028  BM25 Rank: 2  Semantic Rank: 1
    ...
 ```

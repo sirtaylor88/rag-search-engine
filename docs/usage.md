@@ -156,17 +156,21 @@ Three methods are available: `spell` (typo correction), `rewrite` (Google-style
 query rewrite), and `expand` (synonym/related-term expansion). Requires
 `GEMINI_API_KEY` set in `.env`.
 
-Pass `--rerank-method` to re-rank the top `5 × limit` RRF candidates using
-Gemini before returning the top `limit`. Two methods are available:
+Pass `--rerank-method` to re-rank the top `5 × limit` RRF candidates before
+returning the top `limit`. Three methods are available:
 
-- `individual` — scores each candidate separately on a 0–10 scale (one API
-  call per result, with a 3 s delay between calls) and re-sorts by that score.
-- `batch` — sends all candidates in a single API call and asks Gemini to
-  return a JSON-ordered list of IDs; falls back to the original RRF order if
-  the response is empty.
+- `individual` — scores each candidate separately on a 0–10 scale via Gemini
+  (one API call per result, with a 3 s delay between calls) and re-sorts by
+  that score. Requires `GEMINI_API_KEY`.
+- `batch` — sends all candidates in a single Gemini API call and asks the
+  model to return a JSON-ordered list of IDs; falls back to the original RRF
+  order if the response is empty. Requires `GEMINI_API_KEY`.
+- `cross_encoder` — scores all query–document pairs locally using a
+  `CrossEncoder` model (`cross-encoder/ms-marco-TinyBERT-L2-v2`) via
+  `sentence-transformers`; no API key required.
 
-Both methods require `GEMINI_API_KEY` set in `.env`. See
-{doc}`/api/gemini_agent` for details on the underlying prompts.
+See {doc}`/api/gemini_agent` for details on the Gemini-based prompts and
+{doc}`/api/commands/search/hybrid_search_command` for implementation details.
 
 ## Development
 

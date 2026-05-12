@@ -6,11 +6,15 @@ Top-level type aliases used across payload models and CLI argument parsers:
 
 - **`EnhanceMethod`** — `Literal["spell", "rewrite", "expand"]`. Selects the
   query-enhancement prompt in {func}`~cli.api.gemini_agent.enhance_query`.
-- **`ReRankeMethod`** — `Literal["individual", "batch"]`. Selects the
-  re-ranking prompt in {func}`~cli.api.gemini_agent.rerank_query`.
-  - `individual` — one API call per candidate, returns a 0–10 score string.
-  - `batch` — single API call for all candidates, returns a JSON-ordered list
-    of document IDs.
+- **`ReRankeMethod`** — `Literal["individual", "batch", "cross_encoder"]`.
+  Selects the re-ranking strategy in
+  {class}`~cli.commands.search.hybrid_search_commands.RRFSearchCommand`.
+  - `individual` — one Gemini API call per candidate via
+    {func}`~cli.api.gemini_agent.rerank_query`, returns a 0–10 score string.
+  - `batch` — single Gemini API call for all candidates, returns a
+    JSON-ordered list of document IDs.
+  - `cross_encoder` — local `CrossEncoder` model (`DEFAULT_CROSS_ENCODER_MODEL`),
+    no API key required.
 - **`PositiveFloat`** — `Annotated[float, Field(gt=0)]`. Used by
   `ScoreListPayload`.
 

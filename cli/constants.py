@@ -26,6 +26,9 @@ SENTENCE_SPLIT_PATTERN = r"(?<=[.!?])\s+"
 # * Embedding model
 DEFAULT_EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 
+# * Cross encoder model
+DEFAULT_CROSS_ENCODER_MODEL = "cross-encoder/ms-marco-TinyBERT-L2-v2"
+
 # * Score
 SCORE_PRECISION = 4
 

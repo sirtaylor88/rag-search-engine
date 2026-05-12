@@ -11,9 +11,10 @@ load → search → print loop via three hooks:
 `RRFSearchCommand` accepts three optional flags beyond `--k` and `--limit`:
 
 - `--enhance {spell,rewrite,expand}` — query enhancement via `enhance_query` before retrieval.
-- `--rerank-method {individual,batch}` — re-ranks the top `5 × limit` candidates using Gemini and returns the top `limit`:
-  - `individual` — scores each document separately (one API call per result, with a 3 s sleep between calls) then sorts descending by score.
-  - `batch` — sends all candidates in a single API call and asks Gemini to return a JSON-ordered list of IDs; falls back to original RRF order if the response is empty.
+- `--rerank-method {individual,batch,cross_encoder}` — re-ranks the top `5 × limit` candidates and returns the top `limit`:
+  - `individual` — scores each document separately via {func}`~cli.api.gemini_agent.rerank_query` (one API call per result, with a 3 s sleep between calls) then sorts descending by score.
+  - `batch` — sends all candidates in a single {func}`~cli.api.gemini_agent.rerank_query` call and asks Gemini to return a JSON-ordered list of IDs; falls back to original RRF order if the response is empty.
+  - `cross_encoder` — scores all query–document pairs locally using a `CrossEncoder` model (`DEFAULT_CROSS_ENCODER_MODEL`) via `sentence-transformers`; no API key required.
 
 ```{eval-rst}
 .. automodule:: cli.commands.search.hybrid_search_commands
