@@ -2,14 +2,19 @@
 
 from abc import abstractmethod
 from argparse import ArgumentParser
-from typing import Any, Generic, TypeVar, override
+from typing import Any, Generic, TypeVar, get_args, override
 
 from cli.api.gemini_agent import enhance_query
 from cli.commands.base import BaseSearchCommand
 from cli.constants import DEFAULT_ALPHA, DEFAULT_K
 from cli.core.hybrid_search import HybridSearch
 from cli.schemas import Request
-from cli.schemas.payloads import RRFSearchPayload, SearchPayload, WeightedSearchPayload
+from cli.schemas.payloads import (
+    EnhanceMethod,
+    RRFSearchPayload,
+    SearchPayload,
+    WeightedSearchPayload,
+)
 from cli.utils import load_movies
 
 P = TypeVar("P", bound=SearchPayload)
@@ -122,8 +127,8 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
         )
         parser.add_argument(
             "--enhance",
-            type=str,
-            choices=["spell"],
+            type=str.lower,
+            choices=get_args(EnhanceMethod),
             help="Query enhancement method",
         )
 

@@ -53,13 +53,13 @@ uv run pre-commit install
 
 ### Environment variables
 
-Query enhancement via `--enhance spell` requires a [Google Gemini API key](https://ai.google.dev/). Create a `.env` file in the project root:
+Query enhancement via `--enhance` requires a [Google Gemini API key](https://ai.google.dev/). Create a `.env` file in the project root:
 
 ```
 GEMINI_API_KEY=your_api_key_here
 ```
 
-The application loads this file automatically using `python-dotenv`. The key is only needed when running `rrf-search` with `--enhance spell`; all other commands work without it.
+The application loads this file automatically using `python-dotenv`. The key is only needed when running `rrf-search` with `--enhance`; all other commands work without it.
 
 ---
 
@@ -377,10 +377,13 @@ Results for: "superhero family"
 
 Rank movies using [Reciprocal Rank Fusion](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf): each document receives a score of `1 / (k + rank)` from each retriever, and the scores are summed. The `--k` parameter (default `60`) controls how much top-ranked positions are rewarded relative to lower-ranked ones.
 
-Pass `--enhance spell` to send the query through the Gemini API for spelling correction before retrieval. Requires `GEMINI_API_KEY` set in `.env`.
+Pass `--enhance` to send the query through the Gemini API before retrieval. Requires `GEMINI_API_KEY` set in `.env`. Two methods are available:
+
+- `spell` — correct high-confidence typos, leaving the rest of the query unchanged.
+- `rewrite` — expand the query into a more specific Google-style search phrase.
 
 ```bash
-uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance spell]
+uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite}]
 ```
 
 ```

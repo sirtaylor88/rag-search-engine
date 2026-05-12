@@ -43,6 +43,15 @@ class TestGetGeminiClient:
 class TestEnhanceQuery:
     """Tests for enhance_query."""
 
+    def test_returns_original_when_method_is_none(self) -> None:
+        """Should return the original query immediately without calling the LLM."""
+        mock_client = MagicMock()
+        with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
+            result = enhance_query("action movie")
+
+        mock_client.models.generate_content.assert_not_called()
+        assert result == "action movie"
+
     def test_returns_enhanced_text_when_response_available(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
@@ -52,7 +61,7 @@ class TestEnhanceQuery:
             "Jurassic Park"
         )
         with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
-            result = enhance_query("Jurrasic Park")
+            result = enhance_query("Jurrasic Park", method="spell")
 
         assert result == "Jurassic Park"
         out = capsys.readouterr().out
@@ -64,9 +73,29 @@ class TestEnhanceQuery:
         mock_client = MagicMock()
         mock_client.models.generate_content.return_value = _make_response(None)
         with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
-            result = enhance_query("action movie")
+            result = enhance_query("action movie", method="spell")
 
         assert result == "action movie"
+
+    def test_rewrite_method_returns_enhanced_text(self) -> None:
+        """Should call generate_content and return its text when method='rewrite'."""
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = _make_response(
+            "The Revenant bear attack"
+        )
+        with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
+            result = enhance_query("bear leo movie", method="rewrite")
+
+        assert result == "The Revenant bear attack"
+
+    def test_raises_for_invalid_method(self) -> None:
+        """Should raise ValueError for an unrecognised enhancement method."""
+        mock_client = MagicMock()
+        with (
+            patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client),
+            pytest.raises(ValueError, match="Invalid enhance method"),
+        ):
+            enhance_query("action", method="unknown")  # type: ignore[arg-type]
 
     def test_logs_token_counts(self, caplog: pytest.LogCaptureFixture) -> None:
         """Should log prompt and response token counts at INFO level."""
@@ -76,7 +105,7 @@ class TestEnhanceQuery:
             patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client),
             caplog.at_level("INFO", logger="cli.api.gemini_agent"),
         ):
-            enhance_query("action")
+            enhance_query("action", method="spell")
 
         messages = [r.message for r in caplog.records]
         assert any("10" in m for m in messages)

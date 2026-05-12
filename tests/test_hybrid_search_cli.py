@@ -274,3 +274,33 @@ class TestRRFSearchCommand:
             main()
 
         mock_enhance.assert_called_once_with("acton", method="spell")
+
+    def test_enhance_rewrite_flag_calls_enhance_query(self) -> None:
+        """--enhance rewrite should call enhance_query with method='rewrite'."""
+        mock_model = MagicMock()
+        with (
+            patch(
+                "sys.argv", ["cli", "rrf-search", "bear moovie", "--enhance", "rewrite"]
+            ),
+            patch(
+                "cli.commands.search.hybrid_search_commands.load_movies",
+                return_value=self._mock_docs,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(
+                InvertedIndex,
+                "index_path",
+                MagicMock(exists=lambda: True),
+            ),
+            patch.object(HybridSearch, "rrf_search", return_value=self._mock_results),
+            patch(
+                "cli.commands.search.hybrid_search_commands.enhance_query",
+                return_value="bear movie",
+            ) as mock_enhance,
+        ):
+            main()
+
+        mock_enhance.assert_called_once_with("bear moovie", method="rewrite")

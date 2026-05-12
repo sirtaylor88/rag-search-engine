@@ -1,8 +1,8 @@
 """Pydantic payload models for CLI commands."""
 
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Any, Literal, Optional, TypeAlias, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from cli.constants import (
     BM25_B,
@@ -15,6 +15,7 @@ from cli.constants import (
 )
 
 PositiveFloat = Annotated[float, Field(gt=0)]
+EnhanceMethod: TypeAlias = Literal["spell", "rewrite"]
 
 
 class EmptyPayload(BaseModel):
@@ -38,7 +39,15 @@ class RRFSearchPayload(SearchPayload):
     """Payload for RRF search: query, limit, k parameter, and optional enhancement."""
 
     k: int = Field(default=DEFAULT_K, ge=1)
-    enhance: Optional[Literal["spell"]] = None
+    enhance: Optional[EnhanceMethod] = None
+
+    @field_validator("enhance", mode="before")
+    @classmethod
+    def lowercase_name(cls, value: Any) -> Union[str, Any]:
+        """Normalise the enhance value to lowercase before validation."""
+        if isinstance(value, str):
+            return value.lower()
+        return value
 
 
 class TermPayload(BaseModel):

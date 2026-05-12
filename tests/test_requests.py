@@ -3,7 +3,7 @@
 from pydantic import ValidationError
 import pytest
 
-from cli.constants import BM25_B, BM25_K1, CHUNK_SIZE, SEMANTIC_CHUNK_SIZE
+from cli.constants import BM25_B, BM25_K1, CHUNK_SIZE, DEFAULT_K, SEMANTIC_CHUNK_SIZE
 from cli.schemas import (
     BM25Payload,
     BM25Request,
@@ -12,6 +12,8 @@ from cli.schemas import (
     EmptyPayload,
     EmptyRequest,
     OverlapPayload,
+    RRFSearchPayload,
+    RRFSearchRequest,
     SearchPayload,
     SearchRequest,
     SemanticChunkPayload,
@@ -80,6 +82,39 @@ class TestSemanticChunkPayload:
         """An empty term should raise ValidationError."""
         with pytest.raises(ValidationError):
             SemanticChunkPayload(term="")
+
+
+class TestRRFSearchPayload:
+    """Validation tests for RRFSearchPayload."""
+
+    def test_valid_defaults(self) -> None:
+        """Default k should be DEFAULT_K and enhance should be None."""
+        payload = RRFSearchPayload(query="batman")
+        assert payload.k == DEFAULT_K
+        assert payload.enhance is None
+
+    def test_spell_enhance(self) -> None:
+        """'spell' should be accepted as an enhance value."""
+        payload = RRFSearchPayload(query="batman", enhance="spell")
+        assert payload.enhance == "spell"
+
+    def test_rewrite_enhance(self) -> None:
+        """'rewrite' should be accepted as an enhance value."""
+        payload = RRFSearchPayload(query="batman", enhance="rewrite")
+        assert payload.enhance == "rewrite"
+
+    def test_invalid_enhance_raises(self) -> None:
+        """An unrecognised enhance method should raise ValidationError."""
+        with pytest.raises(ValidationError):
+            RRFSearchPayload(
+                query="batman",
+                enhance="unknown",  # type: ignore[arg-type]
+            )
+
+    def test_zero_k_raises(self) -> None:
+        """A k of zero should raise ValidationError."""
+        with pytest.raises(ValidationError):
+            RRFSearchPayload(query="batman", k=0)
 
 
 class TestSearchPayload:
@@ -257,3 +292,12 @@ class TestRequestConstruction:
         )
         assert req.payload.term == "Hello world."
         assert req.payload.max_chunk_size == 3
+
+    def test_rrf_search_request(self) -> None:
+        """RRFSearchRequest should expose query, k, and enhance fields."""
+        req = RRFSearchRequest(
+            payload=RRFSearchPayload(query="batman", k=30, enhance="rewrite")
+        )
+        assert req.payload.query == "batman"
+        assert req.payload.k == 30
+        assert req.payload.enhance == "rewrite"
