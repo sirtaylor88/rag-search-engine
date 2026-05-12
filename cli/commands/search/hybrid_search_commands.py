@@ -92,12 +92,14 @@ class BaseHybridSearchCommand(BaseSearchCommand, Generic[P]):
 
         for idx, result in enumerate(results, start=1):
             print(f"{idx}. {result['title']}")
+
             if rerank_method == "individual":
                 print(f"   Re-rank Score: {result['new_score']:.3f}/10")
             elif rerank_method == "batch":
                 print(f"   Re-rank Rank: {idx}")
             elif rerank_method == "cross_encoder":
                 print(f"   Cross Encoder Score: {result['cross_encoder_score']}")
+
             print(f"   {self._format_scores(result)}")
             print(f"   {result['document'][:100]}...")
 
@@ -233,9 +235,12 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
                 res = rerank_query(query, doc_input, payload.rerank_method)
                 result["new_score"] = float(res) if res is not None else 0.0
                 sleep(3)
-            return sorted(top_results, key=lambda r: r["new_score"], reverse=True)[
-                :limit
-            ]
+
+            return sorted(
+                top_results,
+                key=lambda r: r["new_score"],
+                reverse=True,
+            )[:limit]
 
         if payload.rerank_method == "batch":
             doc_input = "\n".join(
@@ -249,7 +254,7 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
                 top_results.sort(key=lambda r: order_map[r["id"]])
             return top_results[:limit]
 
-        # cross_encoder is the only remaining ReRankeMethod value
+        # * Cross_encoder is the only remaining ReRankeMethod value
         cross_encoder = CrossEncoder(DEFAULT_CROSS_ENCODER_MODEL)
         pairs = [
             [query, f"{r.get('title', '')} - {r.get('document', '')}"]
@@ -258,8 +263,11 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
         scores: npt.NDArray = cross_encoder.predict(pairs)
         for result, score in zip(top_results, scores):
             result["cross_encoder_score"] = score
+
         return sorted(
-            top_results, key=lambda r: r["cross_encoder_score"], reverse=True
+            top_results,
+            key=lambda r: r["cross_encoder_score"],
+            reverse=True,
         )[:limit]
 
     def _format_scores(self, result: dict[str, Any]) -> str:
