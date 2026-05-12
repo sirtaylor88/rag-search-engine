@@ -23,13 +23,25 @@ P = TypeVar("P", bound=SearchPayload)
 class BaseHybridSearchCommand(BaseSearchCommand, Generic[P]):
     """Shared load-search-print flow for hybrid retriever commands."""
 
+    def _get_query(self, payload: P) -> str:
+        """Return the query string to search with and display in the banner.
+
+        Args:
+            payload (P): The parsed request payload.
+
+        Returns:
+            str: The query string.
+        """
+        return payload.query
+
     @abstractmethod
-    def _search(self, hs: HybridSearch, payload: P) -> list[dict[str, Any]]:
+    def _search(self, hs: HybridSearch, payload: P, query: str) -> list[dict[str, Any]]:
         """Run the retrieval and return ranked results.
 
         Args:
             hs (HybridSearch): The hybrid search instance to query.
             payload (P): The parsed request payload.
+            query (str): The final query string to search with.
 
         Returns:
             list[dict[str, Any]]: Ranked result dicts.
@@ -53,9 +65,11 @@ class BaseHybridSearchCommand(BaseSearchCommand, Generic[P]):
         Args:
             request (Request[P]): The parsed request containing the payload.
         """
+        payload = request.payload
+        query = self._get_query(payload)
         documents = load_movies()
-        results = self._search(HybridSearch(documents), request.payload)
-        print(f'\nResults for: "{request.payload.query}"\n')
+        results = self._search(HybridSearch(documents), payload, query)
+        print(f'\nResults for: "{query}"\n')
         for idx, result in enumerate(results, start=1):
             print(f"{idx}. {result['title']}")
             print(f"   {self._format_scores(result)}")
@@ -80,18 +94,22 @@ class WeightedSearchCommand(BaseHybridSearchCommand[WeightedSearchPayload]):
         )
 
     def _search(
-        self, hs: HybridSearch, payload: WeightedSearchPayload
+        self,
+        hs: HybridSearch,
+        payload: WeightedSearchPayload,
+        query: str,
     ) -> list[dict[str, Any]]:
         """Run weighted hybrid search.
 
         Args:
             hs (HybridSearch): The hybrid search instance to query.
-            payload (WeightedSearchPayload): Contains query, alpha, and limit.
+            payload (WeightedSearchPayload): Contains alpha and limit.
+            query (str): The query string to search with.
 
         Returns:
             list[dict[str, Any]]: Results ranked by hybrid score.
         """
-        return hs.weighted_search(payload.query, payload.alpha, payload.limit)
+        return hs.weighted_search(query, payload.alpha, payload.limit)
 
     def _format_scores(self, result: dict[str, Any]) -> str:
         """Format hybrid, BM25, and semantic scores for display.
@@ -132,24 +150,33 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
             help="Query enhancement method",
         )
 
+    def _get_query(self, payload: RRFSearchPayload) -> str:
+        """Return the enhanced query when ``--enhance`` is set, else the original.
+
+        Args:
+            payload (RRFSearchPayload): The parsed RRF search payload.
+
+        Returns:
+            str: The final query string to search with and display.
+        """
+        return enhance_query(payload.query, method=payload.enhance)
+
     def _search(
         self,
         hs: HybridSearch,
         payload: RRFSearchPayload,
+        query: str,
     ) -> list[dict[str, Any]]:
         """Run Reciprocal Rank Fusion search.
 
         Args:
             hs (HybridSearch): The hybrid search instance to query.
-            payload (RRFSearchPayload): Contains query, k, and limit.
+            payload (RRFSearchPayload): Contains k and limit.
+            query (str): The (possibly enhanced) query string to search with.
 
         Returns:
             list[dict[str, Any]]: Results ranked by RRF score.
         """
-        query = payload.query
-        if payload.enhance is not None:
-            query = enhance_query(query, method=payload.enhance)
-
         return hs.rrf_search(query, payload.k, payload.limit)
 
     def _format_scores(self, result: dict[str, Any]) -> str:

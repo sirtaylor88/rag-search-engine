@@ -247,7 +247,9 @@ class TestRRFSearchCommand:
         call_args, _ = mock_rrf.call_args
         assert call_args[1] == 30
 
-    def test_enhance_flag_calls_enhance_query(self) -> None:
+    def test_enhance_flag_calls_enhance_query(
+        self, capsys: CaptureFixture[str]
+    ) -> None:
         """rrf-search --enhance spell should call enhance_query before searching."""
         mock_model = MagicMock()
         with (
@@ -274,8 +276,11 @@ class TestRRFSearchCommand:
             main()
 
         mock_enhance.assert_called_once_with("acton", method="spell")
+        assert 'Results for: "action"' in capsys.readouterr().out
 
-    def test_enhance_rewrite_flag_calls_enhance_query(self) -> None:
+    def test_enhance_rewrite_flag_calls_enhance_query(
+        self, capsys: CaptureFixture[str]
+    ) -> None:
         """--enhance rewrite should call enhance_query with method='rewrite'."""
         mock_model = MagicMock()
         with (
@@ -304,3 +309,4 @@ class TestRRFSearchCommand:
             main()
 
         mock_enhance.assert_called_once_with("bear moovie", method="rewrite")
+        assert 'Results for: "bear movie"' in capsys.readouterr().out

@@ -44,12 +44,11 @@ class TestEnhanceQuery:
     """Tests for enhance_query."""
 
     def test_returns_original_when_method_is_none(self) -> None:
-        """Should return the original query immediately without calling the LLM."""
-        mock_client = MagicMock()
-        with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
+        """Should return the original query immediately without creating a client."""
+        with patch("cli.api.gemini_agent.get_gemini_client") as mock_get_client:
             result = enhance_query("action movie")
 
-        mock_client.models.generate_content.assert_not_called()
+        mock_get_client.assert_not_called()
         assert result == "action movie"
 
     def test_returns_enhanced_text_when_response_available(

@@ -83,10 +83,10 @@ def enhance_query(
     Returns:
         str: The corrected query, or the original if no changes were needed.
     """
-    client = get_gemini_client()
-
     if method is None:
         return query
+
+    client = get_gemini_client()
 
     try:
         prompt_pattern = PromptPattern[method.upper()]
