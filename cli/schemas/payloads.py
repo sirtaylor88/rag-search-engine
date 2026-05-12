@@ -16,7 +16,7 @@ from cli.constants import (
 
 PositiveFloat = Annotated[float, Field(gt=0)]
 EnhanceMethod: TypeAlias = Literal["spell", "rewrite", "expand"]
-ReRankeMethod: TypeAlias = Literal["individual"]
+ReRankeMethod: TypeAlias = Literal["individual", "batch"]
 
 
 class EmptyPayload(BaseModel):

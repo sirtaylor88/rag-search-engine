@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 from argparse import ArgumentParser
+import json
 from time import sleep
 from typing import Any, Generic, TypeVar, get_args, override
 
@@ -76,6 +77,8 @@ class BaseHybridSearchCommand(BaseSearchCommand, Generic[P]):
             print(f"{idx}. {result['title']}")
             if getattr(payload, "rerank_method", None) == "individual":
                 print(f"   Re-rank Score: {result['new_score']:.3f}/10")
+            elif getattr(payload, "rerank_method", None) == "batch":
+                print(f"   Re-rank Rank: {idx}")
             print(f"   {self._format_scores(result)}")
             print(f"   {result['document'][:100]}...")
 
@@ -192,11 +195,12 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
             top_results = hs.rrf_search(query, payload.k, 5 * limit)
             for result in top_results:
                 doc_input = f"{result.get('title', '')} - {result.get('document', '')}"
-                result["new_score"] = rerank_query(
+                res = rerank_query(
                     query,
                     doc_input,
                     payload.rerank_method,
                 )
+                result["new_score"] = float(res) if res is not None else 0.0
                 sleep(3)
 
             return sorted(
@@ -204,6 +208,24 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
                 key=lambda r: r["new_score"],
                 reverse=True,
             )[:limit]
+        if payload.rerank_method == "batch":
+            top_results = hs.rrf_search(query, payload.k, 5 * limit)
+            doc_input = ""
+            for result in top_results:
+                doc_input += (
+                    f"{result['id']} - {result.get('title', '')} "
+                    f"- {result.get('document', '')}\n"
+                )
+            res = rerank_query(
+                query,
+                doc_input,
+                payload.rerank_method,
+            )
+            ordered_doc_ids = json.loads(res) if res else []
+            if ordered_doc_ids:
+                order_map = {doc_id: idx for idx, doc_id in enumerate(ordered_doc_ids)}
+                top_results.sort(key=lambda r: order_map[r["id"]])
+            return top_results[:limit]
 
         return hs.rrf_search(query, payload.k, limit)
 

@@ -136,16 +136,16 @@ class TestEnhanceQuery:
 class TestReRankQuery:
     """Tests for rerank_query."""
 
-    def test_returns_zero_when_method_is_none(self) -> None:
-        """Should return 0.0 immediately without creating a client."""
+    def test_returns_none_when_method_is_none(self) -> None:
+        """Should return None immediately without creating a client."""
         with patch("cli.api.gemini_agent.get_gemini_client") as mock_get_client:
             result = rerank_query("action", "Movie A - description")
 
         mock_get_client.assert_not_called()
-        assert result == pytest.approx(0.0)
+        assert result is None
 
-    def test_returns_float_score_when_response_available(self) -> None:
-        """Should return float(response.text) when the model returns a score."""
+    def test_returns_text_when_response_available(self) -> None:
+        """Should return raw response text when the model returns a score."""
         mock_client = MagicMock()
         mock_client.models.generate_content.return_value = _make_response("7.5")
         with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
@@ -153,10 +153,10 @@ class TestReRankQuery:
                 "action", "Movie A - description", method="individual"
             )
 
-        assert result == pytest.approx(7.5)
+        assert result == "7.5"
 
-    def test_returns_zero_when_no_response_text(self) -> None:
-        """Should return 0.0 when the model returns no text."""
+    def test_returns_none_when_no_response_text(self) -> None:
+        """Should return None when the model returns no text."""
         mock_client = MagicMock()
         mock_client.models.generate_content.return_value = _make_response(None)
         with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
@@ -164,7 +164,16 @@ class TestReRankQuery:
                 "action", "Movie A - description", method="individual"
             )
 
-        assert result == pytest.approx(0.0)
+        assert result is None
+
+    def test_batch_method_returns_text(self) -> None:
+        """Should return raw response text when method='batch'."""
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = _make_response("[1, 2, 3]")
+        with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
+            result = rerank_query("action", "1 - Movie A\n2 - Movie B", method="batch")
+
+        assert result == "[1, 2, 3]"
 
     def test_raises_for_invalid_method(self) -> None:
         """Should raise ValueError for an unrecognised re-rank method."""

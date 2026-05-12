@@ -5,13 +5,15 @@ inherit from `BaseHybridSearchCommand[P]`, which owns the shared
 load → search → print loop via three hooks:
 
 - `_get_query(payload)` — resolves the final query string (default: `payload.query`; overridden by `RRFSearchCommand` to call `enhance_query`).
-- `_search(hs, payload, query)` — calls the appropriate {class}`~cli.core.hybrid_search.HybridSearch` method; `RRFSearchCommand` optionally re-ranks results via `rerank_query` when `--rerank-method individual` is set.
+- `_search(hs, payload, query)` — calls the appropriate {class}`~cli.core.hybrid_search.HybridSearch` method; `RRFSearchCommand` optionally re-ranks results via `rerank_query` when `--rerank-method` is set.
 - `_format_scores(result)` — formats the per-result score line.
 
 `RRFSearchCommand` accepts three optional flags beyond `--k` and `--limit`:
 
 - `--enhance {spell,rewrite,expand}` — query enhancement via `enhance_query` before retrieval.
-- `--rerank-method {individual}` — re-ranks the top `5 × limit` candidates by Gemini relevance score and returns the top `limit`.
+- `--rerank-method {individual,batch}` — re-ranks the top `5 × limit` candidates using Gemini and returns the top `limit`:
+  - `individual` — scores each document separately (one API call per result, with a 3 s sleep between calls) then sorts descending by score.
+  - `batch` — sends all candidates in a single API call and asks Gemini to return a JSON-ordered list of IDs; falls back to original RRF order if the response is empty.
 
 ```{eval-rst}
 .. automodule:: cli.commands.search.hybrid_search_commands

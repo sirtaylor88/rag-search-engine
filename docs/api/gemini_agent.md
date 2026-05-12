@@ -20,12 +20,18 @@ without any API call.
 ## Result re-ranking
 
 `rerank_query` selects a prompt from `ReRankPromptPattern` and asks Gemini
-to score a single document's relevance to the query on a 0–10 scale.
-Currently one method is available:
+to score or rank documents against the query. Two methods are available:
 
-- **`individual`** — rates each document independently against the query.
+- **`individual`** — rates each document independently on a 0–10 scale and
+  returns the raw score string.
+- **`batch`** — sends all candidate documents in one request and asks Gemini
+  to return a JSON-ordered list of document IDs by relevance.
 
-Passing `method=None` returns `0.0` immediately without any API call.
+The return type is `Optional[str]` (the raw model response text) in both
+cases. Callers are responsible for parsing the value — `float()` for
+`individual`, `json.loads()` for `batch`.
+
+Passing `method=None` returns `None` immediately without any API call.
 
 ```{eval-rst}
 .. note::

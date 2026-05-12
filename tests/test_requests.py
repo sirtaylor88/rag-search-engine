@@ -125,6 +125,11 @@ class TestRRFSearchPayload:
         payload = RRFSearchPayload(query="batman", rerank_method="individual")
         assert payload.rerank_method == "individual"
 
+    def test_rerank_method_batch(self) -> None:
+        """'batch' should be accepted as a rerank_method value."""
+        payload = RRFSearchPayload(query="batman", rerank_method="batch")
+        assert payload.rerank_method == "batch"
+
     def test_invalid_rerank_method_raises(self) -> None:
         """An unrecognised rerank_method should raise ValidationError."""
         with pytest.raises(ValidationError):

@@ -81,6 +81,21 @@ class ReRankPromptPattern(StrEnum):
 
     Score:"""
 
+    BATCH = """Rank the movies listed below by relevance to the following search query.
+
+    Query: "{query}"
+
+    Movies:
+    {doc_input}
+
+    Return ONLY the movie IDs in order of relevance (best match first).
+    Return a valid JSON list, nothing else.
+
+    For example:
+    [75, 12, 34, 2, 1]
+
+    Ranking:"""
+
 
 def get_gemini_client() -> genai.Client:
     """Create a Gemini API client authenticated with GEMINI_API_KEY.
@@ -149,24 +164,25 @@ def rerank_query(
     query: str,
     doc_input: str,
     method: Optional[str] = None,
-) -> float:
-    """Score how well a document matches a query using a Gemini language model.
+) -> Optional[str]:
+    """Score or rank documents against a query using a Gemini language model.
 
-    Sends the query and document to Gemini using the prompt template selected
-    by ``method``. Returns ``0.0`` when ``method`` is ``None`` or the model
-    returns no text.
+    Sends the query and document(s) to Gemini using the prompt template
+    selected by ``method``. Returns ``None`` when ``method`` is ``None``
+    or the model returns no text.
 
     Args:
         query (str): The search query.
-        doc_input (str): The document text to score against the query.
-        method (str, optional): Re-ranking method — ``"individual"``.
-            Defaults to ``None`` (returns ``0.0`` immediately).
+        doc_input (str): The document text (or batch of documents) to score.
+        method (str, optional): Re-ranking method — ``"individual"`` or
+            ``"batch"``. Defaults to ``None`` (returns ``None`` immediately).
 
     Returns:
-        float: A relevance score in the range 0–10, or ``0.0`` on failure.
+        Optional[str]: The raw model response text, or ``None`` if ``method``
+            is ``None`` or the model returns nothing.
     """
     if method is None:
-        return 0.0
+        return None
 
     client = get_gemini_client()
 
@@ -199,7 +215,4 @@ def rerank_query(
             "Response tokens: %d", response.usage_metadata.candidates_token_count
         )
 
-    if response.text:
-        return float(response.text)
-
-    return 0.0
+    return response.text

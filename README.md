@@ -59,7 +59,7 @@ Query enhancement via `--enhance` requires a [Google Gemini API key](https://ai.
 GEMINI_API_KEY=your_api_key_here
 ```
 
-The application loads this file automatically using `python-dotenv`. The key is only needed when running `rrf-search` with `--enhance`; all other commands work without it.
+The application loads this file automatically using `python-dotenv`. The key is only needed when running `rrf-search` with `--enhance` or `--rerank-method`; all other commands work without it.
 
 ---
 
@@ -383,10 +383,13 @@ Pass `--enhance` to send the query through the Gemini API before retrieval. Requ
 - `rewrite` — expand the query into a more specific Google-style search phrase.
 - `expand` — append synonyms and related concepts to improve recall.
 
-Pass `--rerank-method individual` to score each retrieved result against the query using Gemini and re-sort by that score. The search fetches `5 × limit` candidates before re-ranking and returns the top `limit`. Requires `GEMINI_API_KEY`.
+Pass `--rerank-method` to re-rank the top `5 × limit` candidates using Gemini before returning the top `limit`. Requires `GEMINI_API_KEY`. Two methods are available:
+
+- `individual` — scores each candidate separately on a 0–10 scale (one API call per result, with a 3 s delay between calls) and re-sorts by that score.
+- `batch` — sends all candidates in a single API call and asks Gemini to return a JSON-ordered list of IDs; falls back to the original RRF order if the response is empty.
 
 ```bash
-uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual}]
+uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual,batch}]
 ```
 
 ```
@@ -407,6 +410,17 @@ Results for: "bear movie"
 
 1. The Revenant
    Re-rank Score: 9.000/10
+   RRF Score: 0.028  BM25 Rank: 2  Semantic Rank: 1
+   ...
+```
+
+```
+$ uv run python cli/hybrid_search_cli.py rrf-search "bear movie" --rerank-method batch
+
+Results for: "bear movie"
+
+1. The Revenant
+   Re-rank Rank: 1
    RRF Score: 0.028  BM25 Rank: 2  Semantic Rank: 1
    ...
 ```

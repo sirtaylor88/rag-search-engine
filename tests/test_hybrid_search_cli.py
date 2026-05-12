@@ -337,7 +337,7 @@ class TestRRFSearchCommand:
             patch.object(HybridSearch, "rrf_search", return_value=self._mock_results),
             patch(
                 "cli.commands.search.hybrid_search_commands.rerank_query",
-                return_value=8.5,
+                return_value="8.5",
             ) as mock_rerank,
             patch("cli.commands.search.hybrid_search_commands.sleep"),
         ):
@@ -347,3 +347,72 @@ class TestRRFSearchCommand:
         out = capsys.readouterr().out
         assert "Re-rank Score" in out
         assert "8.500" in out
+
+    def test_batch_rerank_method_calls_rerank_query_once_and_prints_rank(
+        self, capsys: CaptureFixture[str]
+    ) -> None:
+        """--rerank-method batch should call rerank_query once and show rank."""
+        mock_model = MagicMock()
+        with (
+            patch(
+                "sys.argv",
+                ["cli", "rrf-search", "action", "--rerank-method", "batch"],
+            ),
+            patch(
+                "cli.commands.search.hybrid_search_commands.load_movies",
+                return_value=self._mock_docs,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(
+                InvertedIndex,
+                "index_path",
+                MagicMock(exists=lambda: True),
+            ),
+            patch.object(HybridSearch, "rrf_search", return_value=self._mock_results),
+            patch(
+                "cli.commands.search.hybrid_search_commands.rerank_query",
+                return_value="[1]",
+            ) as mock_rerank,
+        ):
+            main()
+
+        mock_rerank.assert_called_once()
+        out = capsys.readouterr().out
+        assert "Re-rank Rank" in out
+
+    def test_batch_rerank_empty_response_preserves_original_order(
+        self, capsys: CaptureFixture[str]
+    ) -> None:
+        """Batch rerank with empty response should keep original RRF order."""
+        mock_model = MagicMock()
+        with (
+            patch(
+                "sys.argv",
+                ["cli", "rrf-search", "action", "--rerank-method", "batch"],
+            ),
+            patch(
+                "cli.commands.search.hybrid_search_commands.load_movies",
+                return_value=self._mock_docs,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(
+                InvertedIndex,
+                "index_path",
+                MagicMock(exists=lambda: True),
+            ),
+            patch.object(HybridSearch, "rrf_search", return_value=self._mock_results),
+            patch(
+                "cli.commands.search.hybrid_search_commands.rerank_query",
+                return_value="",
+            ),
+        ):
+            main()
+
+        out = capsys.readouterr().out
+        assert "Movie A" in out

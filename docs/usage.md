@@ -148,7 +148,7 @@ uv run python cli/hybrid_search_cli.py weighted-search "<query>" [--alpha A] [--
 ### RRF search
 
 ```bash
-uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual}]
+uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual,batch}]
 ```
 
 Pass `--enhance` to send the query through the Gemini API before retrieval.
@@ -156,9 +156,17 @@ Three methods are available: `spell` (typo correction), `rewrite` (Google-style
 query rewrite), and `expand` (synonym/related-term expansion). Requires
 `GEMINI_API_KEY` set in `.env`.
 
-Pass `--rerank-method individual` to score each of the top `5 × limit`
-candidates against the query using Gemini and re-sort by that score. Requires
-`GEMINI_API_KEY` set in `.env`.
+Pass `--rerank-method` to re-rank the top `5 × limit` RRF candidates using
+Gemini before returning the top `limit`. Two methods are available:
+
+- `individual` — scores each candidate separately on a 0–10 scale (one API
+  call per result, with a 3 s delay between calls) and re-sorts by that score.
+- `batch` — sends all candidates in a single API call and asks Gemini to
+  return a JSON-ordered list of IDs; falls back to the original RRF order if
+  the response is empty.
+
+Both methods require `GEMINI_API_KEY` set in `.env`. See
+{doc}`/api/gemini_agent` for details on the underlying prompts.
 
 ## Development
 
