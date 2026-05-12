@@ -1,9 +1,16 @@
 # Gemini Agent
 
 Thin wrapper around the [Google Gemini API](https://ai.google.dev/) for
-query-enhancement tasks. Currently supports spell-correction (`method="spell"`),
-which sends the raw query to Gemini with a strict prompt that corrects only
-high-confidence typos.
+query-enhancement tasks. Two enhancement methods are available, each backed by
+a `PromptPattern` template:
+
+- **`spell`** — corrects only high-confidence typos, leaving the rest of the
+  query unchanged.
+- **`rewrite`** — expands a vague query into a concise, Google-style search
+  phrase using common movie knowledge and genre conventions.
+
+Passing `method=None` (the default) returns the original query immediately
+without making any API call.
 
 ```{eval-rst}
 .. note::
