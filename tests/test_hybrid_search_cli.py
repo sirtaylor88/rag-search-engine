@@ -310,3 +310,40 @@ class TestRRFSearchCommand:
 
         mock_enhance.assert_called_once_with("bear moovie", method="rewrite")
         assert 'Results for: "bear movie"' in capsys.readouterr().out
+
+    def test_rerank_method_calls_rerank_query_and_prints_score(
+        self, capsys: CaptureFixture[str]
+    ) -> None:
+        """--rerank-method individual should call rerank_query and show the score."""
+        mock_model = MagicMock()
+        with (
+            patch(
+                "sys.argv",
+                ["cli", "rrf-search", "action", "--rerank-method", "individual"],
+            ),
+            patch(
+                "cli.commands.search.hybrid_search_commands.load_movies",
+                return_value=self._mock_docs,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(
+                InvertedIndex,
+                "index_path",
+                MagicMock(exists=lambda: True),
+            ),
+            patch.object(HybridSearch, "rrf_search", return_value=self._mock_results),
+            patch(
+                "cli.commands.search.hybrid_search_commands.rerank_query",
+                return_value=8.5,
+            ) as mock_rerank,
+            patch("cli.commands.search.hybrid_search_commands.sleep"),
+        ):
+            main()
+
+        mock_rerank.assert_called_once()
+        out = capsys.readouterr().out
+        assert "Re-rank Score" in out
+        assert "8.500" in out

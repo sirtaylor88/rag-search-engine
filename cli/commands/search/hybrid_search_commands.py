@@ -2,15 +2,17 @@
 
 from abc import abstractmethod
 from argparse import ArgumentParser
+from time import sleep
 from typing import Any, Generic, TypeVar, get_args, override
 
-from cli.api.gemini_agent import enhance_query
+from cli.api.gemini_agent import enhance_query, rerank_query
 from cli.commands.base import BaseSearchCommand
 from cli.constants import DEFAULT_ALPHA, DEFAULT_K
 from cli.core.hybrid_search import HybridSearch
 from cli.schemas import Request
 from cli.schemas.payloads import (
     EnhanceMethod,
+    ReRankeMethod,
     RRFSearchPayload,
     SearchPayload,
     WeightedSearchPayload,
@@ -72,6 +74,8 @@ class BaseHybridSearchCommand(BaseSearchCommand, Generic[P]):
         print(f'\nResults for: "{query}"\n')
         for idx, result in enumerate(results, start=1):
             print(f"{idx}. {result['title']}")
+            if getattr(payload, "rerank_method", None) == "individual":
+                print(f"   Re-rank Score: {result['new_score']:.3f}/10")
             print(f"   {self._format_scores(result)}")
             print(f"   {result['document'][:100]}...")
 
@@ -149,6 +153,12 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
             choices=get_args(EnhanceMethod),
             help="Query enhancement method",
         )
+        parser.add_argument(
+            "--rerank-method",
+            type=str.lower,
+            choices=get_args(ReRankeMethod),
+            help="Query re-ranking method",
+        )
 
     def _get_query(self, payload: RRFSearchPayload) -> str:
         """Return the enhanced query when ``--enhance`` is set, else the original.
@@ -177,7 +187,25 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
         Returns:
             list[dict[str, Any]]: Results ranked by RRF score.
         """
-        return hs.rrf_search(query, payload.k, payload.limit)
+        limit = payload.limit
+        if payload.rerank_method == "individual":
+            top_results = hs.rrf_search(query, payload.k, 5 * limit)
+            for result in top_results:
+                doc_input = f"{result.get('title', '')} - {result.get('document', '')}"
+                result["new_score"] = rerank_query(
+                    query,
+                    doc_input,
+                    payload.rerank_method,
+                )
+                sleep(3)
+
+            return sorted(
+                top_results,
+                key=lambda r: r["new_score"],
+                reverse=True,
+            )[:limit]
+
+        return hs.rrf_search(query, payload.k, limit)
 
     def _format_scores(self, result: dict[str, Any]) -> str:
         """Format RRF score, BM25 rank, and semantic rank for display.

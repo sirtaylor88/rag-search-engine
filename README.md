@@ -377,13 +377,16 @@ Results for: "superhero family"
 
 Rank movies using [Reciprocal Rank Fusion](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf): each document receives a score of `1 / (k + rank)` from each retriever, and the scores are summed. The `--k` parameter (default `60`) controls how much top-ranked positions are rewarded relative to lower-ranked ones.
 
-Pass `--enhance` to send the query through the Gemini API before retrieval. Requires `GEMINI_API_KEY` set in `.env`. Two methods are available:
+Pass `--enhance` to send the query through the Gemini API before retrieval. Requires `GEMINI_API_KEY` set in `.env`. Three methods are available:
 
 - `spell` — correct high-confidence typos, leaving the rest of the query unchanged.
 - `rewrite` — expand the query into a more specific Google-style search phrase.
+- `expand` — append synonyms and related concepts to improve recall.
+
+Pass `--rerank-method individual` to score each retrieved result against the query using Gemini and re-sort by that score. The search fetches `5 × limit` candidates before re-ranking and returns the top `limit`. Requires `GEMINI_API_KEY`.
 
 ```bash
-uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite}]
+uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual}]
 ```
 
 ```
@@ -394,6 +397,17 @@ Results for: "superhero family"
 
 1. The Incredibles
    RRF Score: 0.032  BM25 Rank: 1  Semantic Rank: 2
+   ...
+```
+
+```
+$ uv run python cli/hybrid_search_cli.py rrf-search "bear movie" --rerank-method individual
+
+Results for: "bear movie"
+
+1. The Revenant
+   Re-rank Score: 9.000/10
+   RRF Score: 0.028  BM25 Rank: 2  Semantic Rank: 1
    ...
 ```
 

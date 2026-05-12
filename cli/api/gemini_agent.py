@@ -8,6 +8,7 @@ from typing import Optional
 
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 
 from cli.constants import GEMINI_MODEL
 from cli.schemas.payloads import EnhanceMethod
@@ -17,7 +18,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
-class PromptPattern(StrEnum):
+class EnhancePromptPattern(StrEnum):
     """Prompt templates for each query enhancement method."""
 
     SPELL = """Fix any spelling errors in the user-provided movie search query below.
@@ -49,6 +50,37 @@ class PromptPattern(StrEnum):
     Output only the rewritten query text, nothing else.
     """
 
+    EXPAND = """Expand the user-provided movie search query below with related terms.
+
+    Add synonyms and related concepts that might appear in movie descriptions.
+    Keep expansions relevant and focused.
+    Output only the additional terms; they will be appended to the original query.
+
+    Examples:
+    - "scary bear movie" -> "scary horror grizzly bear movie terrifying film"
+    - "action movie with bear" -> "action thriller bear chase fight adventure"
+    - "comedy with bear" -> "comedy funny bear humor lighthearted"
+    """
+
+
+class ReRankPromptPattern(StrEnum):
+    """Prompt templates for each re-ranking method."""
+
+    INDIVIDUAL = """Rate how well this movie matches the search query.
+
+    Query: "{query}"
+    Movie: {doc_input}
+
+    Consider:
+    - Direct relevance to query
+    - User intent (what they're looking for)
+    - Content appropriateness
+
+    Rate 0-10 (10 = perfect match).
+    Output ONLY the number in your response, no other text or explanation.
+
+    Score:"""
+
 
 def get_gemini_client() -> genai.Client:
     """Create a Gemini API client authenticated with GEMINI_API_KEY.
@@ -70,18 +102,19 @@ def enhance_query(
     query: str,
     method: Optional[EnhanceMethod] = None,
 ) -> str:
-    """Fix spelling errors in a search query using the Gemini language model.
+    """Enhance a search query using a Gemini language model.
 
-    Sends the query to Gemini with instructions to correct only high-confidence
-    typos, leaving the rest of the text unchanged. If the model returns no text
-    the original query is returned as-is.
+    Sends the query to Gemini using the prompt template selected by ``method``.
+    Returns the original query unchanged when ``method`` is ``None`` or the
+    model returns no text.
 
     Args:
         query (str): The original search query to enhance.
-        method (str): Enhancement method label used for display only.
+        method (EnhanceMethod, optional): Enhancement method — ``"spell"``,
+            ``"rewrite"``, or ``"expand"``. Defaults to ``None`` (no-op).
 
     Returns:
-        str: The corrected query, or the original if no changes were needed.
+        str: The enhanced query, or the original if no changes were made.
     """
     if method is None:
         return query
@@ -89,7 +122,7 @@ def enhance_query(
     client = get_gemini_client()
 
     try:
-        prompt_pattern = PromptPattern[method.upper()]
+        prompt_pattern = EnhancePromptPattern[method.upper()]
     except KeyError as err:
         raise ValueError(f"Invalid enhance method ``{method}``") from err
 
@@ -110,3 +143,63 @@ def enhance_query(
         )
 
     return enhanced_query
+
+
+def rerank_query(
+    query: str,
+    doc_input: str,
+    method: Optional[str] = None,
+) -> float:
+    """Score how well a document matches a query using a Gemini language model.
+
+    Sends the query and document to Gemini using the prompt template selected
+    by ``method``. Returns ``0.0`` when ``method`` is ``None`` or the model
+    returns no text.
+
+    Args:
+        query (str): The search query.
+        doc_input (str): The document text to score against the query.
+        method (str, optional): Re-ranking method — ``"individual"``.
+            Defaults to ``None`` (returns ``0.0`` immediately).
+
+    Returns:
+        float: A relevance score in the range 0–10, or ``0.0`` on failure.
+    """
+    if method is None:
+        return 0.0
+
+    client = get_gemini_client()
+
+    try:
+        prompt_pattern = ReRankPromptPattern[method.upper()]
+    except KeyError as err:
+        raise ValueError(f"Invalid re-rank method ``{method}``") from err
+
+    prompt = dedent(prompt_pattern.value).format(
+        query=query,
+        doc_input=doc_input,
+    )
+
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            safety_settings=[
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                    threshold=types.HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+                ),
+            ]
+        ),
+    )
+
+    if response.usage_metadata:
+        logger.info("Prompt tokens: %d", response.usage_metadata.prompt_token_count)
+        logger.info(
+            "Response tokens: %d", response.usage_metadata.candidates_token_count
+        )
+
+    if response.text:
+        return float(response.text)
+
+    return 0.0

@@ -15,7 +15,8 @@ from cli.constants import (
 )
 
 PositiveFloat = Annotated[float, Field(gt=0)]
-EnhanceMethod: TypeAlias = Literal["spell", "rewrite"]
+EnhanceMethod: TypeAlias = Literal["spell", "rewrite", "expand"]
+ReRankeMethod: TypeAlias = Literal["individual"]
 
 
 class EmptyPayload(BaseModel):
@@ -40,6 +41,7 @@ class RRFSearchPayload(SearchPayload):
 
     k: int = Field(default=DEFAULT_K, ge=1)
     enhance: Optional[EnhanceMethod] = None
+    rerank_method: Optional[ReRankeMethod] = None
 
     @field_validator("enhance", mode="before")
     @classmethod

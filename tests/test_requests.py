@@ -103,12 +103,34 @@ class TestRRFSearchPayload:
         payload = RRFSearchPayload(query="batman", enhance="rewrite")
         assert payload.enhance == "rewrite"
 
+    def test_expand_enhance(self) -> None:
+        """'expand' should be accepted as an enhance value."""
+        payload = RRFSearchPayload(query="batman", enhance="expand")
+        assert payload.enhance == "expand"
+
     def test_invalid_enhance_raises(self) -> None:
         """An unrecognised enhance method should raise ValidationError."""
         with pytest.raises(ValidationError):
             RRFSearchPayload(
                 query="batman",
                 enhance="unknown",  # type: ignore[arg-type]
+            )
+
+    def test_rerank_method_defaults_to_none(self) -> None:
+        """Default rerank_method should be None."""
+        assert RRFSearchPayload(query="batman").rerank_method is None
+
+    def test_rerank_method_individual(self) -> None:
+        """'individual' should be accepted as a rerank_method value."""
+        payload = RRFSearchPayload(query="batman", rerank_method="individual")
+        assert payload.rerank_method == "individual"
+
+    def test_invalid_rerank_method_raises(self) -> None:
+        """An unrecognised rerank_method should raise ValidationError."""
+        with pytest.raises(ValidationError):
+            RRFSearchPayload(
+                query="batman",
+                rerank_method="unknown",  # type: ignore[arg-type]
             )
 
     def test_zero_k_raises(self) -> None:

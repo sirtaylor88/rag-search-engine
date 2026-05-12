@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cli.api.gemini_agent import enhance_query, get_gemini_client
+from cli.api.gemini_agent import enhance_query, get_gemini_client, rerank_query
 
 
 def _make_response(text: str | None) -> MagicMock:
@@ -120,3 +120,71 @@ class TestEnhanceQuery:
             enhance_query("typo", method="spell")
 
         assert "spell" in capsys.readouterr().out
+
+    def test_expand_method_returns_enhanced_text(self) -> None:
+        """Should call generate_content and return its text when method='expand'."""
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = _make_response(
+            "scary horror grizzly bear terrifying film"
+        )
+        with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
+            result = enhance_query("scary bear movie", method="expand")
+
+        assert result == "scary horror grizzly bear terrifying film"
+
+
+class TestReRankQuery:
+    """Tests for rerank_query."""
+
+    def test_returns_zero_when_method_is_none(self) -> None:
+        """Should return 0.0 immediately without creating a client."""
+        with patch("cli.api.gemini_agent.get_gemini_client") as mock_get_client:
+            result = rerank_query("action", "Movie A - description")
+
+        mock_get_client.assert_not_called()
+        assert result == pytest.approx(0.0)
+
+    def test_returns_float_score_when_response_available(self) -> None:
+        """Should return float(response.text) when the model returns a score."""
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = _make_response("7.5")
+        with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
+            result = rerank_query(
+                "action", "Movie A - description", method="individual"
+            )
+
+        assert result == pytest.approx(7.5)
+
+    def test_returns_zero_when_no_response_text(self) -> None:
+        """Should return 0.0 when the model returns no text."""
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = _make_response(None)
+        with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
+            result = rerank_query(
+                "action", "Movie A - description", method="individual"
+            )
+
+        assert result == pytest.approx(0.0)
+
+    def test_raises_for_invalid_method(self) -> None:
+        """Should raise ValueError for an unrecognised re-rank method."""
+        mock_client = MagicMock()
+        with (
+            patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client),
+            pytest.raises(ValueError, match="Invalid re-rank method"),
+        ):
+            rerank_query("action", "doc", method="unknown")
+
+    def test_logs_token_counts(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Should log prompt and response token counts at INFO level."""
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = _make_response("8")
+        with (
+            patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client),
+            caplog.at_level("INFO", logger="cli.api.gemini_agent"),
+        ):
+            rerank_query("action", "Movie A - description", method="individual")
+
+        messages = [r.message for r in caplog.records]
+        assert any("10" in m for m in messages)
+        assert any("5" in m for m in messages)

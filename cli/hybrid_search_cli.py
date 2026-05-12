@@ -57,6 +57,7 @@ def main() -> None:
                         k=args.k,
                         limit=args.limit,
                         enhance=args.enhance,
+                        rerank_method=args.rerank_method,
                     )
                 )
             )

@@ -1,16 +1,31 @@
 # Gemini Agent
 
 Thin wrapper around the [Google Gemini API](https://ai.google.dev/) for
-query-enhancement tasks. Two enhancement methods are available, each backed by
-a `PromptPattern` template:
+query enhancement and result re-ranking.
 
-- **`spell`** — corrects only high-confidence typos, leaving the rest of the
-  query unchanged.
+## Query enhancement
+
+`enhance_query` selects a prompt from `EnhancePromptPattern` based on the
+`method` argument and sends the query to Gemini. Three methods are available:
+
+- **`spell`** — corrects only high-confidence typos, leaving the rest
+  of the query unchanged.
 - **`rewrite`** — expands a vague query into a concise, Google-style search
   phrase using common movie knowledge and genre conventions.
+- **`expand`** — appends synonyms and related concepts to improve recall.
 
 Passing `method=None` (the default) returns the original query immediately
-without making any API call.
+without any API call.
+
+## Result re-ranking
+
+`rerank_query` selects a prompt from `ReRankPromptPattern` and asks Gemini
+to score a single document's relevance to the query on a 0–10 scale.
+Currently one method is available:
+
+- **`individual`** — rates each document independently against the query.
+
+Passing `method=None` returns `0.0` immediately without any API call.
 
 ```{eval-rst}
 .. note::
@@ -25,7 +40,7 @@ without making any API call.
 
 .. seealso::
 
-   :doc:`/api/commands/search/hybrid_search_command` — ``RRFSearchCommand`` that calls ``enhance_query``
+   :doc:`/api/commands/search/hybrid_search_command` — ``RRFSearchCommand`` that calls ``enhance_query`` and ``rerank_query``
 
-   :doc:`/api/constants` — ``GEMINI_MODEL`` and ``DEFAULT_ENHANCE_METHOD``
+   :doc:`/api/constants` — ``GEMINI_MODEL``
 ```
