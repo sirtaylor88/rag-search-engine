@@ -4,7 +4,7 @@ import argparse
 import json
 from typing import Any
 
-from cli.constants import DEFAULT_PRECISION_AT_K
+from cli.constants import DEFAULT_K, DEFAULT_PRECISION_AT_K
 from cli.core.hybrid_search import HybridSearch
 from cli.utils import load_movies
 
@@ -31,7 +31,11 @@ def main() -> None:
     test_cases: list[dict[str, Any]] = data["test_cases"]
 
     for test_case in test_cases:
-        top_results = hs.rrf_search(test_case["query"], k=60, limit=limit)
+        top_results = hs.rrf_search(
+            test_case["query"],
+            k=DEFAULT_K,
+            limit=limit,
+        )
         retrieved: set[str] = {r["title"] for r in top_results}
         relevant_retrieved = retrieved.intersection(test_case["relevant_docs"])
         precision = len(relevant_retrieved) / len(retrieved) if retrieved else 0.0

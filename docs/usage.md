@@ -179,6 +179,18 @@ and final results after re-ranking.
 See {doc}`/api/gemini_agent` for details on the Gemini-based prompts and
 {doc}`/api/commands/search/hybrid_search_command` for implementation details.
 
+## RAG CLI
+
+Retrieve top results via RRF search, then use Gemini to generate a grounded answer from those results. Requires `GEMINI_API_KEY` set in `.env`.
+
+```bash
+uv run python cli/augmented_generation_cli.py rag "<query>" [--limit N]
+```
+
+The `--limit` parameter (default: `5`) controls how many results are retrieved and passed as context to the model.
+
+See {doc}`/api/commands/search/augmented_generation_commands` for implementation details.
+
 ## Evaluation
 
 Measure Precision@k, Recall@k, and F1 of RRF search over a golden dataset.

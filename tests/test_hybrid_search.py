@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from cli.constants import DEFAULT_K
 from cli.core.hybrid_search import (
     HybridSearch,
     hybrid_score,
@@ -373,7 +374,7 @@ class TestRRFSearch:
         semantic_results = [
             {"id": 1, "score": 0.9, "title": "Movie A", "document": "..."}
         ]
-        k = 60
+        k = DEFAULT_K
         with (
             patch.object(hs, "_bm25_search", return_value=bm25_results),
             patch.object(

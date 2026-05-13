@@ -118,6 +118,30 @@ class ReRankPromptPattern(StrEnum):
     """
 
 
+class AugmentedGenerationPromptPattern(StrEnum):
+    """Prompt templates for augmented generation."""
+
+    RAG = """You are a RAG agent for Hoopla, a movie streaming service.
+    Your task is to provide a natural-language answer to the user's query based on
+    documents retrieved during search.
+    Provide a comprehensive answer that addresses the user's query.
+
+    Query: {query}
+
+    Documents:
+    {doc_input}
+
+    Answer:"""
+
+
+def _display_token_usage(response: types.GenerateContentResponse) -> None:
+    if response.usage_metadata:
+        logger.info("Prompt tokens: %d", response.usage_metadata.prompt_token_count)
+        logger.info(
+            "Response tokens: %d", response.usage_metadata.candidates_token_count
+        )
+
+
 def get_gemini_client() -> genai.Client:
     """Create a Gemini API client authenticated with GEMINI_API_KEY.
 
@@ -172,11 +196,7 @@ def enhance_query(
         enhanced_query = response.text
         print(f"Enhanced query ({method}): '{query}' -> '{enhanced_query}'\n")
 
-    if response.usage_metadata:
-        logger.info("Prompt tokens: %d", response.usage_metadata.prompt_token_count)
-        logger.info(
-            "Response tokens: %d", response.usage_metadata.candidates_token_count
-        )
+    _display_token_usage(response)
 
     return enhanced_query
 
@@ -230,11 +250,7 @@ def rerank_query(
         ),
     )
 
-    if response.usage_metadata:
-        logger.info("Prompt tokens: %d", response.usage_metadata.prompt_token_count)
-        logger.info(
-            "Response tokens: %d", response.usage_metadata.candidates_token_count
-        )
+    _display_token_usage(response)
 
     return response.text
 
@@ -268,10 +284,37 @@ def evaluate_query(
         contents=prompt,
     )
 
-    if response.usage_metadata:
-        logger.info("Prompt tokens: %d", response.usage_metadata.prompt_token_count)
-        logger.info(
-            "Response tokens: %d", response.usage_metadata.candidates_token_count
-        )
+    _display_token_usage(response)
+
+    return response.text
+
+
+def augment_query(query: str, results: list[str]) -> Optional[str]:
+    """Generate a grounded natural-language answer using retrieved documents.
+
+    Sends the query and formatted result strings to Gemini using the
+    ``AugmentedGenerationPromptPattern.RAG`` prompt and returns the model's
+    answer text, or ``None`` if the model returns nothing.
+
+    Args:
+        query (str): The original search query.
+        results (list[str]): Formatted result strings (one per retrieved doc).
+
+    Returns:
+        Optional[str]: The generated answer, or ``None`` if the model returns
+            nothing.
+    """
+    client = get_gemini_client()
+    prompt = dedent(AugmentedGenerationPromptPattern.RAG.value).format(
+        query=query,
+        doc_input="\n".join(results),
+    )
+
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=prompt,
+    )
+
+    _display_token_usage(response)
 
     return response.text

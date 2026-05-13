@@ -37,6 +37,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)** over a movie
   - [Normalize scores](#normalize-scores)
   - [Weighted search](#weighted-search)
   - [RRF search](#rrf-search)
+- [RAG CLI](#rag-cli)
 - [Evaluation](#evaluation)
 - [Documentation](#documentation)
 - [Development](#development)
@@ -443,6 +444,30 @@ Reciprocal Rank Fusion Results for 'bear movie' (k=60)
    RRF Score: 0.028  BM25 Rank: 2  Semantic Rank: 1
    ...
 ```
+
+---
+
+## RAG CLI
+
+Retrieve the top results via [Reciprocal Rank Fusion](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf) search, then use Gemini to generate a grounded natural-language answer from those results. Requires `GEMINI_API_KEY` set in `.env`.
+
+```bash
+uv run python cli/augmented_generation_cli.py rag "<query>" [--limit N]
+```
+
+```
+$ uv run python cli/augmented_generation_cli.py rag "bear movie london"
+Search results:
+- Paddington
+- Paddington 2
+- ...
+
+RAG Response:
+Paddington is a 2014 British comedy film about a young Peruvian bear who travels
+to London and is taken in by the Brown family...
+```
+
+The `--limit` parameter (default: `5`) controls how many results are retrieved and passed as context to the model.
 
 ---
 
