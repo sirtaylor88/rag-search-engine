@@ -185,7 +185,18 @@ uv run python cli/evaluation_cli.py [--limit K]
 
 The `--limit` parameter (default: `5`) controls how many results are retrieved
 per query. The golden dataset is read from `data/golden_dataset.json` (already
-in place after the Dataset setup above).
+in place after the Dataset setup above). F1 is `0.0` when both precision and
+recall are zero (no relevant results retrieved).
+
+```
+k=5 (Top results)
+- Query: cute british bear marmalade
+  - Precision@5: 1.0000
+  - Recall@5: 1.0000
+  - F1 score: 1.0000
+  - Retrieved: Paddington, ...
+  - Relevant: Paddington
+```
 
 See {doc}`/api/evaluation_cli` for implementation details.
 
