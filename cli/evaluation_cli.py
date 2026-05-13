@@ -36,7 +36,8 @@ def main() -> None:
         relevant_retrieved = retrieved.intersection(test_case["relevant_docs"])
         precision = len(relevant_retrieved) / len(retrieved)
         recall = len(relevant_retrieved) / len(test_case["relevant_docs"])
-        f1 = 2 * precision * recall / (precision + recall)
+        denom = precision + recall
+        f1 = 2 * precision * recall / denom if denom > 0 else 0.0
         test_case.update(
             {
                 "retrieved": retrieved,

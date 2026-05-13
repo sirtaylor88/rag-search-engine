@@ -71,3 +71,35 @@ class TestEvaluationCLI:
         mock_rrf = _run_main(argv=["eval", "--limit", "3"])
         _, kwargs = mock_rrf.call_args
         assert kwargs["limit"] == 3
+
+    def test_zero_hit_query_prints_f1_zero_without_error(
+        self, capsys: CaptureFixture[str]
+    ) -> None:
+        """A query with no relevant hits should print F1 0.0000, not crash."""
+        golden_json = json.dumps(
+            {"test_cases": [{"query": "no hits", "relevant_docs": ["Missing"]}]}
+        )
+        no_hit_results = [
+            {
+                "id": 99,
+                "title": "Unrelated",
+                "rrf_score": 0.01,
+                "bm25_rank": 1,
+                "semantic_rank": 1,
+            }
+        ]
+        with (
+            patch("sys.argv", ["eval"]),
+            patch("cli.evaluation_cli.load_movies", return_value=_MOCK_DOCS),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer",
+                return_value=MagicMock(),
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(InvertedIndex, "index_path", MagicMock(exists=lambda: True)),
+            patch.object(HybridSearch, "rrf_search", return_value=no_hit_results),
+            patch("builtins.open", mock_open(read_data=golden_json)),
+        ):
+            main()
+        out = capsys.readouterr().out
+        assert "F1 score: 0.0000" in out
