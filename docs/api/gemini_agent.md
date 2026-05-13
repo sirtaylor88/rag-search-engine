@@ -48,6 +48,19 @@ The three scale points:
 - **1** — Marginally relevant
 - **0** — Not relevant
 
+## Augmented generation
+
+`augment_query` uses `AugmentedGenerationPromptPattern.RAG` to generate a
+grounded natural-language answer from retrieved documents. It joins the
+formatted result strings with newlines as the `doc_input` context, sends them
+alongside the query, and returns the model's answer text — or `None` if the
+model returns nothing.
+
+All four public functions (`enhance_query`, `rerank_query`, `evaluate_query`,
+`augment_query`) delegate token-count logging to the private
+`_display_token_usage` helper, which logs prompt and response token counts at
+`INFO` level via `logging.getLogger(__name__)`.
+
 ```{eval-rst}
 .. note::
 
@@ -60,6 +73,8 @@ The three scale points:
    :show-inheritance:
 
 .. seealso::
+
+   :doc:`/api/augmented_generation_cli` — ``augmented_generation_cli`` that calls ``augment_query``
 
    :doc:`/api/commands/search/hybrid_search_command` — ``RRFSearchCommand`` that calls ``enhance_query`` and ``rerank_query``
 
