@@ -63,7 +63,7 @@ class TestEvaluationCLI:
         assert "talking bear" in out
         assert "Precision@5: 1.0000" in out
         assert "Recall@5: 1.0000" in out
-        assert "F1 score: 1.0000" in out
+        assert "F1 Score: 1.0000" in out
         assert "Ted" in out
 
     def test_custom_limit_forwarded_to_rrf_search(self) -> None:
@@ -71,6 +71,31 @@ class TestEvaluationCLI:
         mock_rrf = _run_main(argv=["eval", "--limit", "3"])
         _, kwargs = mock_rrf.call_args
         assert kwargs["limit"] == 3
+
+    def test_empty_retrieved_prints_all_zeros_without_error(
+        self, capsys: CaptureFixture[str]
+    ) -> None:
+        """rrf_search returning [] should print zeros for all metrics, not crash."""
+        with (
+            patch("sys.argv", ["eval"]),
+            patch("cli.evaluation_cli.load_movies", return_value=_MOCK_DOCS),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer",
+                return_value=MagicMock(),
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(InvertedIndex, "index_path", MagicMock(exists=lambda: True)),
+            patch.object(HybridSearch, "rrf_search", return_value=[]),
+            patch(
+                "builtins.open",
+                mock_open(read_data=json.dumps(_GOLDEN_DATA)),
+            ),
+        ):
+            main()
+        out = capsys.readouterr().out
+        assert "Precision@5: 0.0000" in out
+        assert "Recall@5: 0.0000" in out
+        assert "F1 Score: 0.0000" in out
 
     def test_zero_hit_query_prints_f1_zero_without_error(
         self, capsys: CaptureFixture[str]
@@ -102,4 +127,4 @@ class TestEvaluationCLI:
         ):
             main()
         out = capsys.readouterr().out
-        assert "F1 score: 0.0000" in out
+        assert "F1 Score: 0.0000" in out

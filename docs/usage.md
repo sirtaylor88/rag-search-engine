@@ -148,7 +148,7 @@ uv run python cli/hybrid_search_cli.py weighted-search "<query>" [--alpha A] [--
 ### RRF search
 
 ```bash
-uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual,batch,cross_encoder}]
+uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual,batch,cross_encoder}] [-v]
 ```
 
 Pass `--enhance` to send the query through the Gemini API before retrieval.
@@ -168,6 +168,10 @@ returning the top `limit`. Three methods are available:
 - `cross_encoder` — scores all query–document pairs locally using a
   `CrossEncoder` model (`cross-encoder/ms-marco-TinyBERT-L2-v2`) via
   `sentence-transformers`; no API key required.
+
+Pass `-v` / `--verbose` to enable `DEBUG`-level logging for each pipeline stage:
+original query, enhanced query (when `--enhance` is set), RRF candidate list,
+and final results after re-ranking.
 
 See {doc}`/api/gemini_agent` for details on the Gemini-based prompts and
 {doc}`/api/commands/search/hybrid_search_command` for implementation details.
@@ -193,7 +197,7 @@ k=5 (Top results)
 - Query: cute british bear marmalade
   - Precision@5: 1.0000
   - Recall@5: 1.0000
-  - F1 score: 1.0000
+  - F1 Score: 1.0000
   - Retrieved: Paddington, ...
   - Relevant: Paddington
 ```

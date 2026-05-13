@@ -3,6 +3,7 @@
 from abc import abstractmethod
 from argparse import ArgumentParser
 import json
+import logging
 from time import sleep
 from typing import Any, Generic, TypeVar, get_args, override
 
@@ -22,6 +23,8 @@ from cli.schemas.payloads import (
     WeightedSearchPayload,
 )
 from cli.utils import load_movies
+
+logger = logging.getLogger(__name__)
 
 P = TypeVar("P", bound=SearchPayload)
 
@@ -159,7 +162,7 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
     """Ranks movies using Reciprocal Rank Fusion of BM25 and semantic rankings."""
 
     def add_arguments(self, parser: ArgumentParser) -> None:
-        """Register query, --limit, and --k arguments with the subparser.
+        """Register query, --limit, --k, --enhance, --rerank-method, --verbose.
 
         Args:
             parser (ArgumentParser): The subparser for this command.
@@ -183,6 +186,12 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
             choices=get_args(ReRankeMethod),
             help="Query re-ranking method",
         )
+        parser.add_argument(
+            "-v",
+            "--verbose",
+            action="store_true",
+            help="Enable DEBUG logging for each pipeline stage",
+        )
 
     def _get_query(self, payload: RRFSearchPayload) -> str:
         """Return the enhanced query when ``--enhance`` is set, else the original.
@@ -193,7 +202,11 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
         Returns:
             str: The final query string to search with and display.
         """
-        return enhance_query(payload.query, method=payload.enhance)
+        logger.debug("Original query: %s", payload.query)
+        enhanced = enhance_query(payload.query, method=payload.enhance)
+        if payload.enhance:
+            logger.debug("Enhanced query (%s): %s", payload.enhance, enhanced)
+        return enhanced
 
     def _search(
         self,
@@ -225,9 +238,20 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
         limit = payload.limit
 
         if not payload.rerank_method:
-            return hs.rrf_search(query, payload.k, limit)
+            results = hs.rrf_search(query, payload.k, limit)
+            logger.debug(
+                "RRF results (%d): %s",
+                len(results),
+                [r["title"] for r in results],
+            )
+            return results
 
         top_results = hs.rrf_search(query, payload.k, 5 * limit)
+        logger.debug(
+            "RRF candidates (%d): %s",
+            len(top_results),
+            [r["title"] for r in top_results],
+        )
 
         if payload.rerank_method == "individual":
             for result in top_results:
@@ -236,11 +260,17 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
                 result["new_score"] = float(res) if res is not None else 0.0
                 sleep(3)
 
-            return sorted(
+            final = sorted(
                 top_results,
                 key=lambda r: r["new_score"],
                 reverse=True,
             )[:limit]
+            logger.debug(
+                "Re-ranked results (individual, %d): %s",
+                len(final),
+                [r["title"] for r in final],
+            )
+            return final
 
         if payload.rerank_method == "batch":
             doc_input = "\n".join(
@@ -252,7 +282,13 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
             if ordered_doc_ids:
                 order_map = {doc_id: idx for idx, doc_id in enumerate(ordered_doc_ids)}
                 top_results.sort(key=lambda r: order_map[r["id"]])
-            return top_results[:limit]
+            final = top_results[:limit]
+            logger.debug(
+                "Re-ranked results (batch, %d): %s",
+                len(final),
+                [r["title"] for r in final],
+            )
+            return final
 
         # * Cross_encoder is the only remaining ReRankeMethod value
         cross_encoder = CrossEncoder(DEFAULT_CROSS_ENCODER_MODEL)
@@ -264,11 +300,17 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
         for result, score in zip(top_results, scores):
             result["cross_encoder_score"] = score
 
-        return sorted(
+        final = sorted(
             top_results,
             key=lambda r: r["cross_encoder_score"],
             reverse=True,
         )[:limit]
+        logger.debug(
+            "Re-ranked results (cross_encoder, %d): %s",
+            len(final),
+            [r["title"] for r in final],
+        )
+        return final
 
     def _format_scores(self, result: dict[str, Any]) -> str:
         """Format RRF score, BM25 rank, and semantic rank for display.

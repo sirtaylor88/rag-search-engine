@@ -2,10 +2,11 @@
 
 Entry point for `evaluation_cli.py`. Loads the movie corpus and a golden
 dataset from `data/golden_dataset.json`, runs RRF search for each test case,
-computes Precision@k (`|retrieved ∩ relevant| / |retrieved|`), Recall@k
+computes Precision@k (`|retrieved ∩ relevant| / |retrieved|`, clamped to
+`0.0` when `retrieved` is empty), Recall@k
 (`|retrieved ∩ relevant| / |relevant|`), and F1 (`2·P·R / (P+R)`,
 clamped to `0.0` when both P and R are zero), and prints results sorted by
-F1 score (descending).
+F1 Score (descending).
 
 ```{eval-rst}
 .. automodule:: cli.evaluation_cli

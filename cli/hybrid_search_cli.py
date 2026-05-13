@@ -1,6 +1,7 @@
 """CLI for hybrid search utilities (score normalisation)."""
 
 from argparse import ArgumentParser
+import logging
 
 from cli.commands import NormalizeCommand, RRFSearchCommand, WeightedSearchCommand
 from cli.schemas import (
@@ -50,6 +51,8 @@ def main() -> None:
                 )
             )
         case "rrf-search":
+            if args.verbose:
+                logging.basicConfig(level=logging.DEBUG, format="[DEBUG] %(message)s")
             rrf_search_cmd.run(
                 RRFSearchRequest(
                     payload=RRFSearchPayload(

@@ -390,8 +390,10 @@ Pass `--rerank-method` to re-rank the top `5 × limit` candidates before returni
 - `batch` — sends all candidates in a single Gemini API call and returns a JSON-ordered list of IDs; falls back to the original RRF order on empty response. Requires `GEMINI_API_KEY`.
 - `cross_encoder` — scores all query–document pairs locally using [`cross-encoder/ms-marco-TinyBERT-L2-v2`](https://huggingface.co/cross-encoder/ms-marco-TinyBERT-L2-v2) via `sentence-transformers`; no API key required.
 
+Pass `-v` / `--verbose` to print `DEBUG`-level logs at each pipeline stage: original query, enhanced query, RRF candidates, and final results.
+
 ```bash
-uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual,batch,cross_encoder}]
+uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual,batch,cross_encoder}] [-v]
 ```
 
 ```
@@ -444,7 +446,7 @@ Reciprocal Rank Fusion Results for 'bear movie' (k=60)
 
 ## Evaluation
 
-Measure Precision@k of RRF search over a golden dataset. Each test case specifies a query and a set of relevant document titles; the evaluator runs `rrf_search` for each query, computes Precision@k, Recall@k, and F1, and prints results sorted by F1 score (descending):
+Measure Precision@k of RRF search over a golden dataset. Each test case specifies a query and a set of relevant document titles; the evaluator runs `rrf_search` for each query, computes Precision@k, Recall@k, and F1 (all clamp to `0.0` when no results are retrieved), and prints results sorted by F1 Score (descending):
 
 ```bash
 uv run python cli/evaluation_cli.py [--limit K]
@@ -461,7 +463,7 @@ k=5 (Top results)
 - Query: cute british bear marmalade
   - Precision@5: 1.0000
   - Recall@5: 1.0000
-  - F1 score: 1.0000
+  - F1 Score: 1.0000
   - Retrieved: Paddington, ...
   - Relevant: Paddington
 ```

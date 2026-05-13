@@ -1,5 +1,6 @@
 """Tests for cli.hybrid_search_cli, NormalizeCommand, and WeightedSearchCommand."""
 
+import logging
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -454,6 +455,37 @@ class TestRRFSearchCommand:
         mock_cross_encoder.predict.assert_called_once()
         out = capsys.readouterr().out
         assert "Cross Encoder Score" in out
+
+    def test_verbose_flag_emits_debug_logs(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """--verbose should emit DEBUG-level logs for query and RRF results."""
+        mock_model = MagicMock()
+        module = "cli.commands.search.hybrid_search_commands"
+        with (
+            caplog.at_level(logging.DEBUG, logger=module),
+            patch("sys.argv", ["cli", "rrf-search", "action", "--verbose"]),
+            patch(
+                "cli.commands.search.hybrid_search_commands.load_movies",
+                return_value=self._mock_docs,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer",
+                return_value=mock_model,
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(
+                InvertedIndex,
+                "index_path",
+                MagicMock(exists=lambda: True),
+            ),
+            patch.object(HybridSearch, "rrf_search", return_value=self._mock_results),
+        ):
+            main()
+
+        messages = [r.message for r in caplog.records]
+        assert any("Original query" in m for m in messages)
+        assert any("RRF results" in m for m in messages)
 
     def test_rerank_method_prints_reranking_banner(
         self, capsys: CaptureFixture[str]

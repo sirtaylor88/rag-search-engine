@@ -34,7 +34,7 @@ def main() -> None:
         top_results = hs.rrf_search(test_case["query"], k=60, limit=limit)
         retrieved: set[str] = {r["title"] for r in top_results}
         relevant_retrieved = retrieved.intersection(test_case["relevant_docs"])
-        precision = len(relevant_retrieved) / len(retrieved)
+        precision = len(relevant_retrieved) / len(retrieved) if retrieved else 0.0
         recall = len(relevant_retrieved) / len(test_case["relevant_docs"])
         denom = precision + recall
         f1 = 2 * precision * recall / denom if denom > 0 else 0.0
@@ -57,7 +57,7 @@ def main() -> None:
         print(f"- Query: {test_case['query']}")
         print(f"  - Precision@{limit}: {test_case['precision']:.4f}")
         print(f"  - Recall@{limit}: {test_case['recall']:.4f}")
-        print(f"  - F1 score: {test_case['f1_score']:.4f}")
+        print(f"  - F1 Score: {test_case['f1_score']:.4f}")
         print(f"  - Retrieved: {', '.join(test_case['retrieved'])}")
         print(f"  - Relevant: {', '.join(test_case['relevant_docs'])}")
 
