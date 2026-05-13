@@ -444,7 +444,7 @@ Reciprocal Rank Fusion Results for 'bear movie' (k=60)
 
 ## Evaluation
 
-Measure Precision@k of RRF search over a golden dataset. Each test case specifies a query and a set of relevant document titles; the evaluator runs `rrf_search` for each query, computes `|retrieved ∩ relevant| / |retrieved|`, and prints results sorted by precision (descending):
+Measure Precision@k of RRF search over a golden dataset. Each test case specifies a query and a set of relevant document titles; the evaluator runs `rrf_search` for each query, computes Precision@k, Recall@k, and F1, and prints results sorted by F1 score (descending):
 
 ```bash
 uv run python cli/evaluation_cli.py [--limit K]
@@ -461,6 +461,7 @@ k=5 (Top results)
 - Query: cute british bear marmalade
   - Precision@5: 1.0000
   - Recall@5: 1.0000
+  - F1 score: 1.0000
   - Retrieved: Paddington, ...
   - Relevant: Paddington
 ```
