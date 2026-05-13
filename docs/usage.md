@@ -11,11 +11,11 @@ uv run pre-commit install
 
 ## Dataset
 
-Create a `data/` folder and copy the stop words file:
+Create a `data/` folder and copy the files from the `examples/` folder:
 
 ```bash
 mkdir -p data
-cp examples/stopwords.txt data/
+cp examples/* data/
 ```
 
 Download the full movie dataset (~25 MB):
@@ -148,7 +148,7 @@ uv run python cli/hybrid_search_cli.py weighted-search "<query>" [--alpha A] [--
 ### RRF search
 
 ```bash
-uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual,batch}]
+uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual,batch,cross_encoder}]
 ```
 
 Pass `--enhance` to send the query through the Gemini API before retrieval.
@@ -171,6 +171,23 @@ returning the top `limit`. Three methods are available:
 
 See {doc}`/api/gemini_agent` for details on the Gemini-based prompts and
 {doc}`/api/commands/search/hybrid_search_command` for implementation details.
+
+## Evaluation
+
+Measure Precision@k of RRF search over a golden dataset. Each test case
+specifies a query and a set of relevant document titles; the evaluator computes
+`|retrieved ∩ relevant| / |retrieved|` for each case and prints results sorted
+by precision (descending):
+
+```bash
+uv run python cli/evaluation_cli.py [--limit K]
+```
+
+The `--limit` parameter (default: `5`) controls how many results are retrieved
+per query. The golden dataset is read from `data/golden_dataset.json` (already
+in place after the Dataset setup above).
+
+See {doc}`/api/evaluation_cli` for implementation details.
 
 ## Development
 
