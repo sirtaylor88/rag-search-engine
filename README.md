@@ -37,6 +37,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)** over a movie
   - [Normalize scores](#normalize-scores)
   - [Weighted search](#weighted-search)
   - [RRF search](#rrf-search)
+- [Evaluation](#evaluation)
 - [Documentation](#documentation)
 - [Development](#development)
 
@@ -65,11 +66,11 @@ The application loads this file automatically using `python-dotenv`. The key is 
 
 ## Dataset
 
-Create a `data/` folder and copy the stop words file from the `examples/` folder:
+Create a `data/` folder and copy the files from the `examples/` folder:
 
 ```bash
 mkdir -p data
-cp examples/stopwords.txt data/
+cp examples/* data/
 ```
 
 Download the full movie dataset (~25 MB):
@@ -437,6 +438,30 @@ Reciprocal Rank Fusion Results for 'bear movie' (k=60)
    Cross Encoder Score: 8.23
    RRF Score: 0.028  BM25 Rank: 2  Semantic Rank: 1
    ...
+```
+
+---
+
+## Evaluation
+
+Measure Precision@k of RRF search over a golden dataset. Each test case specifies a query and a set of relevant document titles; the evaluator runs `rrf_search` for each query, computes `|retrieved ∩ relevant| / |retrieved|`, and prints results sorted by precision (descending):
+
+```bash
+uv run python cli/evaluation_cli.py [--limit K]
+```
+
+The `--limit` parameter (default: `5`) controls how many results are retrieved per query (k for Precision@k). The golden dataset is read from `data/golden_dataset.json` (copied from `examples/` during [Dataset setup](#dataset)):
+
+```bash
+uv run python cli/evaluation_cli.py
+```
+
+```
+k=5 (Top results)
+- Query: cute british bear marmalade
+  - Precision@5: 1.0000
+  - Retrieved: Paddington, ...
+  - Relevant: Paddington
 ```
 
 ---

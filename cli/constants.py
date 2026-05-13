@@ -34,4 +34,6 @@ SCORE_PRECISION = 4
 
 # * AI Agent
 GEMINI_MODEL = "gemma-4-31b-it"
-DEFAULT_ENHANCE_METHOD = "spell"
+
+# * Precision
+DEFAULT_PRECISION_AT_K = 5
