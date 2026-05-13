@@ -10,7 +10,7 @@ from cli.utils import load_movies
 
 
 def main() -> None:
-    """Run Precision@k evaluation for every test case in the golden dataset."""
+    """Run Precision@k and Recall@k for every test case in the golden dataset."""
     parser = argparse.ArgumentParser(description="Search Evaluation CLI")
     parser.add_argument(
         "--limit",
@@ -33,11 +33,12 @@ def main() -> None:
     for test_case in test_cases:
         top_results = hs.rrf_search(test_case["query"], k=60, limit=limit)
         retrieved: set[str] = {r["title"] for r in top_results}
+        relevant_retrieved = retrieved.intersection(test_case["relevant_docs"])
         test_case.update(
             {
                 "retrieved": retrieved,
-                "precision": len(retrieved.intersection(test_case["relevant_docs"]))
-                / len(retrieved),
+                "precision": len(relevant_retrieved) / len(retrieved),
+                "recall": len(relevant_retrieved) / len(test_case["relevant_docs"]),
             }
         )
 
@@ -50,6 +51,7 @@ def main() -> None:
     ):
         print(f"- Query: {test_case['query']}")
         print(f"  - Precision@{limit}: {test_case['precision']:.4f}")
+        print(f"  - Recall@{limit}: {test_case['recall']:.4f}")
         print(f"  - Retrieved: {', '.join(test_case['retrieved'])}")
         print(f"  - Relevant: {', '.join(test_case['relevant_docs'])}")
 

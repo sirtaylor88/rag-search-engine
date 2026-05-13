@@ -62,6 +62,7 @@ class TestEvaluationCLI:
         assert "k=5 (Top results)" in out
         assert "talking bear" in out
         assert "Precision@5: 1.0000" in out
+        assert "Recall@5: 1.0000" in out
         assert "Ted" in out
 
     def test_custom_limit_forwarded_to_rrf_search(self) -> None:

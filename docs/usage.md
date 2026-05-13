@@ -174,10 +174,10 @@ See {doc}`/api/gemini_agent` for details on the Gemini-based prompts and
 
 ## Evaluation
 
-Measure Precision@k of RRF search over a golden dataset. Each test case
-specifies a query and a set of relevant document titles; the evaluator computes
-`|retrieved ∩ relevant| / |retrieved|` for each case and prints results sorted
-by precision (descending):
+Measure Precision@k and Recall@k of RRF search over a golden dataset. Each
+test case specifies a query and a set of relevant document titles; the
+evaluator computes both metrics and prints results sorted by precision
+(descending):
 
 ```bash
 uv run python cli/evaluation_cli.py [--limit K]

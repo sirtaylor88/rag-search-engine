@@ -460,6 +460,7 @@ uv run python cli/evaluation_cli.py
 k=5 (Top results)
 - Query: cute british bear marmalade
   - Precision@5: 1.0000
+  - Recall@5: 1.0000
   - Retrieved: Paddington, ...
   - Relevant: Paddington
 ```
