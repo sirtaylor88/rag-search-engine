@@ -390,10 +390,12 @@ Pass `--rerank-method` to re-rank the top `5 × limit` candidates before returni
 - `batch` — sends all candidates in a single Gemini API call and returns a JSON-ordered list of IDs; falls back to the original RRF order on empty response. Requires `GEMINI_API_KEY`.
 - `cross_encoder` — scores all query–document pairs locally using [`cross-encoder/ms-marco-TinyBERT-L2-v2`](https://huggingface.co/cross-encoder/ms-marco-TinyBERT-L2-v2) via `sentence-transformers`; no API key required.
 
+Pass `--evaluate` to score each retrieved result on a 0–3 relevance scale via Gemini after printing. Requires `GEMINI_API_KEY`.
+
 Pass `-v` / `--verbose` to print `DEBUG`-level logs at each pipeline stage: original query, enhanced query, RRF candidates, and final results.
 
 ```bash
-uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual,batch,cross_encoder}] [-v]
+uv run python cli/hybrid_search_cli.py rrf-search "<query>" [--k K] [--limit N] [--enhance {spell,rewrite,expand}] [--rerank-method {individual,batch,cross_encoder}] [--evaluate] [-v]
 ```
 
 ```

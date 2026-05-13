@@ -96,6 +96,27 @@ class ReRankPromptPattern(StrEnum):
 
     Ranking:"""
 
+    EVALUATE = """Rate how relevant each result is to this query on a 0-3 scale:
+
+    Query: "{query}"
+
+    Results:
+    {doc_input}
+
+    Scale:
+    - 3: Highly relevant
+    - 2: Relevant
+    - 1: Marginally relevant
+    - 0: Not relevant
+
+    Do NOT give any numbers other than 0, 1, 2, or 3.
+
+    Return ONLY the scores in the same order you were given the documents.
+    Return a valid JSON list, nothing else. For example:
+
+    [2, 0, 3, 2, 0, 1]
+    """
+
 
 def get_gemini_client() -> genai.Client:
     """Create a Gemini API client authenticated with GEMINI_API_KEY.
@@ -207,6 +228,44 @@ def rerank_query(
                 ),
             ]
         ),
+    )
+
+    if response.usage_metadata:
+        logger.info("Prompt tokens: %d", response.usage_metadata.prompt_token_count)
+        logger.info(
+            "Response tokens: %d", response.usage_metadata.candidates_token_count
+        )
+
+    return response.text
+
+
+def evaluate_query(
+    query: str,
+    results: list[str],
+) -> Optional[str]:
+    """Rate the relevance of retrieved results to a query using a Gemini model.
+
+    Sends the query and formatted result strings to Gemini and asks it to score
+    each result on a 0–3 scale. Returns a JSON list of integer scores in the
+    same order as ``results``, or ``None`` if the model returns no text.
+
+    Args:
+        query (str): The original search query.
+        results (list[str]): Formatted result strings (one per retrieved doc).
+
+    Returns:
+        Optional[str]: A JSON list of integer scores (``"[2, 0, 3, ...]"``),
+            or ``None`` if the model returns nothing.
+    """
+    client = get_gemini_client()
+    prompt = dedent(ReRankPromptPattern.EVALUATE.value).format(
+        query=query,
+        doc_input="\n".join(results),
+    )
+
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=prompt,
     )
 
     if response.usage_metadata:

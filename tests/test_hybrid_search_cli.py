@@ -522,3 +522,36 @@ class TestRRFSearchCommand:
         out = capsys.readouterr().out
         assert "Re-ranking top" in out
         assert "individual method" in out
+
+    def test_evaluate_flag_calls_evaluate_query_and_prints_scores(
+        self, capsys: CaptureFixture[str]
+    ) -> None:
+        """--evaluate should call evaluate_query and print per-result scores."""
+        mock_model = MagicMock()
+        with (
+            patch("sys.argv", ["cli", "rrf-search", "action", "--evaluate"]),
+            patch(
+                "cli.commands.search.hybrid_search_commands.load_movies",
+                return_value=self._mock_docs,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer",
+                return_value=mock_model,
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(
+                InvertedIndex,
+                "index_path",
+                MagicMock(exists=lambda: True),
+            ),
+            patch.object(HybridSearch, "rrf_search", return_value=self._mock_results),
+            patch(
+                "cli.commands.search.hybrid_search_commands.evaluate_query",
+                return_value="[3]",
+            ) as mock_evaluate,
+        ):
+            main()
+
+        mock_evaluate.assert_called_once()
+        out = capsys.readouterr().out
+        assert "Movie A: 3/3" in out

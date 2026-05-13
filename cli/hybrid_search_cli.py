@@ -61,6 +61,7 @@ def main() -> None:
                         limit=args.limit,
                         enhance=args.enhance,
                         rerank_method=args.rerank_method,
+                        evaluate=args.evaluate,
                     )
                 )
             )

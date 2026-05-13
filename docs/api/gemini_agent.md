@@ -33,6 +33,21 @@ cases. Callers are responsible for parsing the value — `float()` for
 
 Passing `method=None` returns `None` immediately without any API call.
 
+## Result evaluation
+
+`evaluate_query` uses `ReRankPromptPattern.EVALUATE` to ask Gemini to rate
+each retrieved result on a 0–3 relevance scale. It joins the formatted result
+strings with newlines, sends them alongside the query, and returns a JSON list
+of integer scores — one per result, in the same order — or `None` if the model
+returns nothing. Callers parse the response with `json.loads()`.
+
+The three scale points:
+
+- **3** — Highly relevant
+- **2** — Relevant
+- **1** — Marginally relevant
+- **0** — Not relevant
+
 ```{eval-rst}
 .. note::
 

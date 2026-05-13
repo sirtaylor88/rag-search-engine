@@ -4,7 +4,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cli.api.gemini_agent import enhance_query, get_gemini_client, rerank_query
+from cli.api.gemini_agent import (
+    enhance_query,
+    evaluate_query,
+    get_gemini_client,
+    rerank_query,
+)
 
 
 def _make_response(text: str | None) -> MagicMock:
@@ -197,3 +202,52 @@ class TestReRankQuery:
         messages = [r.message for r in caplog.records]
         assert any("10" in m for m in messages)
         assert any("5" in m for m in messages)
+
+
+class TestEvaluateQuery:
+    """Tests for evaluate_query."""
+
+    def test_returns_json_scores_from_model(self) -> None:
+        """Should return the raw JSON score list from the model response."""
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = _make_response("[3, 1, 0]")
+        with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
+            result = evaluate_query(
+                "bear movie", ["1. Ted\n   ...", "2. Revenant\n   ..."]
+            )
+
+        assert result == "[3, 1, 0]"
+
+    def test_returns_none_when_no_response_text(self) -> None:
+        """Should return None when the model returns no text."""
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = _make_response(None)
+        with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
+            result = evaluate_query("bear movie", ["1. Ted\n   ..."])
+
+        assert result is None
+
+    def test_logs_token_counts(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Should log prompt and response token counts at INFO level."""
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = _make_response("[2]")
+        with (
+            patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client),
+            caplog.at_level("INFO", logger="cli.api.gemini_agent"),
+        ):
+            evaluate_query("action", ["1. Movie A\n   ..."])
+
+        messages = [r.message for r in caplog.records]
+        assert any("10" in m for m in messages)
+        assert any("5" in m for m in messages)
+
+    def test_joins_results_into_prompt(self) -> None:
+        """Should join multiple result strings with newlines in the prompt."""
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = _make_response("[1, 2]")
+        with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
+            evaluate_query("action", ["result A", "result B"])
+
+        call_kwargs = mock_client.models.generate_content.call_args
+        prompt = call_kwargs[1]["contents"]
+        assert "result A\nresult B" in prompt

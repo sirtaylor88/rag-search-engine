@@ -10,7 +10,7 @@ from typing import Any, Generic, TypeVar, get_args, override
 import numpy.typing as npt
 from sentence_transformers import CrossEncoder
 
-from cli.api.gemini_agent import enhance_query, rerank_query
+from cli.api.gemini_agent import enhance_query, evaluate_query, rerank_query
 from cli.commands.base import BaseSearchCommand
 from cli.constants import DEFAULT_ALPHA, DEFAULT_CROSS_ENCODER_MODEL, DEFAULT_K
 from cli.core.hybrid_search import HybridSearch
@@ -67,12 +67,44 @@ class BaseHybridSearchCommand(BaseSearchCommand, Generic[P]):
             str: The formatted score string to print.
         """
 
+    def _format_result(
+        self,
+        idx: int,
+        result: dict[str, Any],
+        rerank_method: str | None,
+    ) -> str:
+        """Build the display block for a single ranked result.
+
+        Args:
+            idx (int): 1-based rank of this result.
+            result (dict[str, Any]): Result dict from the search method.
+            rerank_method (str | None): Active re-ranking method, or ``None``.
+
+        Returns:
+            str: Multi-line display string for this result.
+        """
+        rows = [(f"{idx}. {result['title']}")]
+
+        if rerank_method == "individual":
+            rows.append(f"   Re-rank Score: {result['new_score']:.3f}/10")
+        elif rerank_method == "batch":
+            rows.append(f"   Re-rank Rank: {idx}")
+        elif rerank_method == "cross_encoder":
+            rows.append(f"   Cross Encoder Score: {result['cross_encoder_score']}")
+
+        rows.append(f"   {self._format_scores(result)}")
+        rows.append(f"   {result['document'][:100]}...")
+
+        return "\n".join(rows)
+
     @override
     def run(self, request: Request[P]) -> None:
-        """Load movies, run search, and print ranked results.
+        """Load movies, run search, print results, and optionally evaluate.
 
-        Prints a re-ranking banner (method name, limit, k) when
-        ``payload.rerank_method`` is set, otherwise a plain results banner.
+        Prints a re-ranking banner when ``payload.rerank_method`` is set,
+        otherwise a plain results banner. When ``payload.evaluate`` is ``True``,
+        calls ``evaluate_query`` after printing and shows a 0–3 relevance score
+        per result.
 
         Args:
             request (Request[P]): The parsed request containing the payload.
@@ -93,18 +125,18 @@ class BaseHybridSearchCommand(BaseSearchCommand, Generic[P]):
         else:
             print(f'\nResults for: "{query}"\n')
 
+        formatted_results: list[str] = []
         for idx, result in enumerate(results, start=1):
-            print(f"{idx}. {result['title']}")
+            fmt_result = self._format_result(idx, result, rerank_method)
+            print(fmt_result)
+            formatted_results.append(fmt_result)
 
-            if rerank_method == "individual":
-                print(f"   Re-rank Score: {result['new_score']:.3f}/10")
-            elif rerank_method == "batch":
-                print(f"   Re-rank Rank: {idx}")
-            elif rerank_method == "cross_encoder":
-                print(f"   Cross Encoder Score: {result['cross_encoder_score']}")
-
-            print(f"   {self._format_scores(result)}")
-            print(f"   {result['document'][:100]}...")
+        if getattr(payload, "evaluate", False):
+            eval_result = evaluate_query(query, formatted_results)
+            if eval_result:
+                eval_scores: list[int] = json.loads(eval_result)
+                for idx, (r, score) in enumerate(zip(results, eval_scores), start=1):
+                    print(f"{idx}. {r['title']}: {score}/3")
 
 
 class WeightedSearchCommand(BaseHybridSearchCommand[WeightedSearchPayload]):
@@ -162,7 +194,7 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
     """Ranks movies using Reciprocal Rank Fusion of BM25 and semantic rankings."""
 
     def add_arguments(self, parser: ArgumentParser) -> None:
-        """Register query, --limit, --k, --enhance, --rerank-method, --verbose.
+        """Register --k, --enhance, --rerank-method, --evaluate, and --verbose.
 
         Args:
             parser (ArgumentParser): The subparser for this command.
@@ -185,6 +217,11 @@ class RRFSearchCommand(BaseHybridSearchCommand[RRFSearchPayload]):
             type=str.lower,
             choices=get_args(ReRankeMethod),
             help="Query re-ranking method",
+        )
+        parser.add_argument(
+            "--evaluate",
+            action="store_true",
+            help="Evaluate how relevant each result is to this query",
         )
         parser.add_argument(
             "-v",

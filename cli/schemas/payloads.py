@@ -37,11 +37,12 @@ class WeightedSearchPayload(SearchPayload):
 
 
 class RRFSearchPayload(SearchPayload):
-    """Payload for RRF search: query, limit, k parameter, and optional enhancement."""
+    """Payload for RRF search: query, limit, k, optional enhancement, and evaluate."""
 
     k: int = Field(default=DEFAULT_K, ge=1)
     enhance: Optional[EnhanceMethod] = None
     rerank_method: Optional[ReRankeMethod] = None
+    evaluate: bool = False
 
     @field_validator("enhance", mode="before")
     @classmethod
