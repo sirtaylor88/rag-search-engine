@@ -38,6 +38,8 @@ A search engine built with **Retrieval Augmented Generation (RAG)** over a movie
   - [Weighted search](#weighted-search)
   - [RRF search](#rrf-search)
 - [Multimodal Search CLI](#multimodal-search-cli)
+  - [Verify image embedding](#verify-image-embedding)
+  - [Image search](#image-search)
 - [Describe Image CLI](#describe-image-cli)
 - [RAG CLI](#rag-cli)
   - [RAG](#rag)
@@ -455,7 +457,11 @@ Reciprocal Rank Fusion Results for 'bear movie' (k=60)
 
 ## Multimodal Search CLI
 
-Embed an image using a [CLIP](https://huggingface.co/sentence-transformers/clip-ViT-B-32) sentence-transformer model and print the resulting embedding size. Useful for verifying the multimodal model loads correctly before integrating image search.
+Two subcommands for image-based search using a [CLIP](https://huggingface.co/sentence-transformers/clip-ViT-B-32) sentence-transformer model.
+
+### Verify image embedding
+
+Embed an image and print the resulting embedding size. Useful for verifying the multimodal model loads correctly.
 
 ```bash
 uv run python cli/multimodal_search_cli.py verify_image_embedding <image_path>
@@ -464,6 +470,21 @@ uv run python cli/multimodal_search_cli.py verify_image_embedding <image_path>
 ```
 $ uv run python cli/multimodal_search_cli.py verify_image_embedding examples/paddington.jpeg
 Embedding shape: 512 dimensions
+```
+
+### Image search
+
+Rank movies by cosine similarity between the image embedding and each document's text embedding (title + description).
+
+```bash
+uv run python cli/multimodal_search_cli.py image_search <image_path>
+```
+
+```
+$ uv run python cli/multimodal_search_cli.py image_search examples/paddington.jpeg
+
+1. Paddington (similarity: 0.312)
+   A young Peruvian bear travels to London in search of a home...
 ```
 
 ---

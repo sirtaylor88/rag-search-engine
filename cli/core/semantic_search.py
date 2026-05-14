@@ -216,7 +216,7 @@ class SemanticSearch(Singleton):
                 "title": doc["title"],
                 "document": doc["description"],
             }
-            for score, doc in top_results[:limit]
+            for score, doc in top_results
         ]
 
 

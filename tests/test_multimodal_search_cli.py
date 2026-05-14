@@ -15,32 +15,46 @@ def _reset_singleton(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(MultimodalSearch, "_instance", None)
 
 
-def _run_main(argv: list[str] | None = None) -> MagicMock:
-    """Run main() with I/O mocked; return the verify_image_embedding mock."""
-    mock_verify = MagicMock()
-    with (
-        patch(
-            "sys.argv",
-            argv or ["multimodal-cli", "verify_image_embedding", "img.jpg"],
-        ),
-        patch(
-            "cli.commands.verify_commands.verify_image_embedding",
-            mock_verify,
-        ),
-    ):
-        main()
-    return mock_verify
-
-
 class TestMultimodalSearchCLI:
     """Tests for the multimodal search CLI main function."""
 
     def test_verify_image_embedding_dispatches_with_path(self) -> None:
         """verify_image_embedding subcommand should forward the image path."""
-        mock_verify = _run_main(
-            ["multimodal-cli", "verify_image_embedding", "poster.jpg"]
-        )
+        mock_verify = MagicMock()
+        with (
+            patch(
+                "sys.argv",
+                ["multimodal-cli", "verify_image_embedding", "poster.jpg"],
+            ),
+            patch(
+                "cli.commands.search.multimodal_search_commands.verify_image_embedding",
+                mock_verify,
+            ),
+        ):
+            main()
+
         mock_verify.assert_called_once_with("poster.jpg")
+
+    def test_image_search_dispatches_with_path(
+        self, capsys: CaptureFixture[str]
+    ) -> None:
+        """image_search subcommand should call search_with_image and print results."""
+        results = [{"title": "Movie A", "score": 0.9, "document": "desc"}]
+        with (
+            patch("sys.argv", ["multimodal-cli", "image_search", "poster.jpg"]),
+            patch(
+                "cli.commands.search.multimodal_search_commands.load_movies",
+                return_value=[],
+            ),
+            patch(
+                "cli.commands.search.multimodal_search_commands.MultimodalSearch"
+            ) as mock_ms,
+        ):
+            mock_ms.return_value.search_with_image.return_value = results
+            main()
+
+        out = capsys.readouterr().out
+        assert "Movie A" in out
 
     def test_no_command_prints_help(self, capsys: CaptureFixture[str]) -> None:
         """Running without a subcommand should print the help message."""

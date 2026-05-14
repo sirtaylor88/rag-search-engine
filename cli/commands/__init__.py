@@ -25,6 +25,10 @@ from cli.commands.search.hybrid_search_commands import (
     WeightedSearchCommand,
 )
 from cli.commands.search.keyword_search_commands import BM25SearchCommand, SearchCommand
+from cli.commands.search.multimodal_search_commands import (
+    ImageSearchCommand,
+    VerifyImageEmbeddingCommand,
+)
 from cli.commands.search.semantic_search_command import (
     SearchChunkedCommand,
     SemanticSearchCommand,
@@ -32,7 +36,6 @@ from cli.commands.search.semantic_search_command import (
 from cli.commands.verify_commands import (
     VerifyCommand,
     VerifyEmbeddingsCommand,
-    VerifyImageEmbeddingCommand,
 )
 
 __all__ = [
@@ -48,6 +51,7 @@ __all__ = [
     "EmbedChunksCommand",
     "EmbedQueryCommand",
     "EmbedTextCommand",
+    "ImageSearchCommand",
     "NormalizeCommand",
     "QuestionCommand",
     "RagCommand",

@@ -6,7 +6,13 @@ import numpy as np
 import pytest
 from pytest import CaptureFixture
 
+from cli.core.keyword_search import Document
 from cli.core.multimodal_search import MultimodalSearch, verify_image_embedding
+
+DOCS: list[Document] = [
+    {"id": 1, "title": "Movie A", "description": "A great film about adventure"},
+    {"id": 2, "title": "Movie B", "description": "A romantic comedy"},
+]
 
 
 @pytest.fixture(autouse=True)
@@ -15,10 +21,10 @@ def _reset_singleton(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(MultimodalSearch, "_instance", None)
 
 
-def _make_model(embedding: list[float] | None = None) -> MagicMock:
-    """Build a mock SentenceTransformer that returns a fixed embedding."""
+def _make_model() -> MagicMock:
+    """Build a mock SentenceTransformer returning [[0.1, 0.2, 0.3]] from encode."""
     model = MagicMock()
-    model.encode.return_value = np.array([embedding or [0.1, 0.2, 0.3]])
+    model.encode.return_value = np.array([[0.1, 0.2, 0.3]])
     return model
 
 
@@ -27,32 +33,30 @@ class TestMultimodalSearch:
 
     def test_embed_image_returns_ndarray(self) -> None:
         """embed_image should return a 1-D ndarray from the model output."""
-        mock_model = _make_model([0.1, 0.2, 0.3])
         with (
             patch(
                 "cli.core.multimodal_search.SentenceTransformer",
-                return_value=mock_model,
+                return_value=_make_model(),
             ),
             patch("cli.core.multimodal_search.Image.open", return_value=MagicMock()),
         ):
-            result = MultimodalSearch().embed_image("img.jpg")
+            result = MultimodalSearch(DOCS).embed_image("img.jpg")
 
         assert result.shape == (3,)
         assert np.allclose(result, [0.1, 0.2, 0.3])
 
     def test_embed_image_opens_file_path(self) -> None:
         """embed_image should open the given file path via Image.open."""
-        mock_model = _make_model()
         with (
             patch(
                 "cli.core.multimodal_search.SentenceTransformer",
-                return_value=mock_model,
+                return_value=_make_model(),
             ),
             patch(
                 "cli.core.multimodal_search.Image.open", return_value=MagicMock()
             ) as mock_open,
         ):
-            MultimodalSearch().embed_image("poster.jpg")
+            MultimodalSearch(DOCS).embed_image("poster.jpg")
 
         mock_open.assert_called_once_with("poster.jpg")
 
@@ -61,10 +65,51 @@ class TestMultimodalSearch:
         with patch(
             "cli.core.multimodal_search.SentenceTransformer", return_value=MagicMock()
         ):
-            ms1 = MultimodalSearch()
-            ms2 = MultimodalSearch()
+            ms1 = MultimodalSearch(DOCS)
+            ms2 = MultimodalSearch(DOCS)
 
         assert ms1 is ms2
+
+    def test_search_with_image_returns_ranked_results(self) -> None:
+        """search_with_image should rank documents by cosine similarity to the image."""
+        mock_model = MagicMock()
+        mock_model.encode.side_effect = [
+            np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]),  # text embeddings (init)
+            np.array([[1.0, 0.0, 0.0]]),  # image embedding (embed_image)
+        ]
+
+        with (
+            patch(
+                "cli.core.multimodal_search.SentenceTransformer",
+                return_value=mock_model,
+            ),
+            patch("cli.core.multimodal_search.Image.open", return_value=MagicMock()),
+        ):
+            ms = MultimodalSearch(DOCS)
+            results = ms.search_with_image("img.jpg", limit=2)
+
+        assert len(results) == 2
+        assert results[0]["title"] == "Movie A"
+        assert results[0]["score"] >= results[1]["score"]
+
+    def test_search_with_image_respects_limit(self) -> None:
+        """search_with_image should return at most ``limit`` results."""
+        mock_model = MagicMock()
+        mock_model.encode.side_effect = [
+            np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]),
+            np.array([[1.0, 0.0, 0.0]]),
+        ]
+
+        with (
+            patch(
+                "cli.core.multimodal_search.SentenceTransformer",
+                return_value=mock_model,
+            ),
+            patch("cli.core.multimodal_search.Image.open", return_value=MagicMock()),
+        ):
+            results = MultimodalSearch(DOCS).search_with_image("img.jpg", limit=1)
+
+        assert len(results) == 1
 
 
 class TestVerifyImageEmbedding:
@@ -74,6 +119,7 @@ class TestVerifyImageEmbedding:
         """Should print the number of dimensions in the embedding."""
         embedding = np.zeros(512)
         with (
+            patch("cli.core.multimodal_search.load_movies", return_value=DOCS),
             patch(
                 "cli.core.multimodal_search.SentenceTransformer",
                 return_value=MagicMock(),

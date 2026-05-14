@@ -1,14 +1,18 @@
 # Multimodal Search CLI
 
-Entry point for `multimodal_search_cli.py`. Registers one subcommand:
+Entry point for `multimodal_search_cli.py`. Registers two subcommands:
 
 - **`verify_image_embedding`** via
-  {class}`~cli.commands.verify_commands.VerifyImageEmbeddingCommand` —
+  {class}`~cli.commands.search.multimodal_search_commands.VerifyImageEmbeddingCommand` —
   embeds an image using the CLIP model and prints the embedding size.
+- **`image_search`** via
+  {class}`~cli.commands.search.multimodal_search_commands.ImageSearchCommand` —
+  ranks movies by cosine similarity between the image embedding and each document's
+  text embedding.
 
-The subcommand accepts one positional argument:
+Both subcommands accept one positional argument:
 
-- **`image_path`** — path to the image file to embed.
+- **`image_path`** — path to the image file.
 
 ```{eval-rst}
 .. automodule:: cli.multimodal_search_cli
@@ -17,7 +21,7 @@ The subcommand accepts one positional argument:
 
 .. seealso::
 
-   :doc:`/api/multimodal_search` — ``MultimodalSearch`` and ``verify_image_embedding``
+   :doc:`/api/multimodal_search` — ``MultimodalSearch``, ``search_with_image``, and ``verify_image_embedding``
 
-   :doc:`/api/commands/verify` — ``VerifyImageEmbeddingCommand`` implementation
+   :doc:`/api/commands/search/multimodal_search_commands` — ``VerifyImageEmbeddingCommand`` and ``ImageSearchCommand``
 ```

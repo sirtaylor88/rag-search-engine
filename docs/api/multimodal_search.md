@@ -1,25 +1,34 @@
 # Multimodal Search
 
 `MultimodalSearch` is a singleton wrapper around a CLIP-based
-[sentence-transformers](https://www.sbert.net/) model. It encodes images into
-dense embedding vectors that can be compared against text query embeddings for
-cross-modal retrieval.
+[sentence-transformers](https://www.sbert.net/) model. On first instantiation it
+encodes all document titles and descriptions into `text_embeddings` so that an
+image query can be matched against the corpus in a single pass.
+
+## Initialisation
+
+`__init__(documents, model_name)` loads the CLIP model and encodes every
+document's `"{title}: {description}"` text into `self.text_embeddings`.
+The default model is `clip-ViT-B-32` (512-dimensional embeddings).
 
 ## Image embedding
 
-`embed_image(file_path)` opens the image at `file_path` via
-`PIL.Image.open`, encodes it with the CLIP model using
-`SentenceTransformer.encode`, and returns the result as a 1-D
-`npt.NDArray[Any]` via `np.asarray`. The default model is
-`clip-ViT-B-32` (512-dimensional embeddings).
+`embed_image(image_path)` opens the image via `PIL.Image.open`, encodes it
+with the CLIP model, and returns a 1-D `npt.NDArray[Any]` via `np.asarray`.
+
+## Image search
+
+`search_with_image(image_path, limit)` embeds the image, computes cosine
+similarity against each pre-built text embedding, and returns the top `limit`
+results sorted by descending score. Each result dict contains `id`, `score`,
+`title`, and `document` (full description).
 
 ## Verification helper
 
-`verify_image_embedding(file_path)` is a module-level helper that
-instantiates `MultimodalSearch`, embeds the given image, and prints
-`"Embedding shape: {N} dimensions"`. It is exposed as the
-`verify_image_embedding` subcommand of
-{doc}`/api/multimodal_search_cli`.
+`verify_image_embedding(image_path)` is a module-level helper that calls
+`load_movies()`, instantiates `MultimodalSearch(documents)`, embeds the image,
+and prints `"Embedding shape: {N} dimensions"`. It is exposed as the
+`verify_image_embedding` subcommand of {doc}`/api/multimodal_search_cli`.
 
 ```{eval-rst}
 .. automodule:: cli.core.multimodal_search
@@ -29,9 +38,9 @@ instantiates `MultimodalSearch`, embeds the given image, and prints
 
 .. seealso::
 
-   :doc:`/api/multimodal_search_cli` — CLI that calls ``verify_image_embedding``
+   :doc:`/api/multimodal_search_cli` — CLI that registers ``verify_image_embedding`` and ``image_search``
 
-   :doc:`/api/commands/verify` — ``VerifyImageEmbeddingCommand`` that dispatches to ``verify_image_embedding``
+   :doc:`/api/commands/search/multimodal_search_commands` — ``VerifyImageEmbeddingCommand`` and ``ImageSearchCommand``
 
    :doc:`/api/semantic_search` — ``SemanticSearch`` — the text-only counterpart
 ```
