@@ -17,6 +17,13 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
+DESCRIBE_IMAGE_PATTERN = """Given the included image and text query,
+rewrite the text query to improve search results from a movie database. Make sure to:
+- Synthesize visual and textual information
+- Focus on movie-specific details (actors, scenes, style, etc.)
+- Return only the rewritten query, without any additional commentary
+"""
+
 
 class EnhancePromptPattern(StrEnum):
     """Prompt templates for each query enhancement method."""
@@ -392,3 +399,38 @@ def augment_result(
     _display_token_usage(response)
 
     return response.text
+
+
+def describe_image(
+    img: bytes,
+    mime: str,
+    query: str,
+) -> types.GenerateContentResponse:
+    """Rewrite a text query using an image as additional context via Gemini.
+
+    Sends the image and text query to Gemini using ``DESCRIBE_IMAGE_PATTERN``
+    and returns the raw response so callers can access ``.text`` and
+    ``.usage_metadata``.
+
+    Args:
+        img (bytes): Raw image bytes.
+        mime (str): MIME type of the image (e.g. ``"image/jpeg"``).
+        query (str): The original text query to enrich with image context.
+
+    Returns:
+        types.GenerateContentResponse: The raw Gemini response.
+    """
+    client = get_gemini_client()
+
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=[
+            types.Part.from_text(text=DESCRIBE_IMAGE_PATTERN),
+            types.Part.from_bytes(data=img, mime_type=mime),
+            types.Part.from_text(text=query),
+        ],
+    )
+
+    _display_token_usage(response)
+
+    return response

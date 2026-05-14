@@ -37,6 +37,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)** over a movie
   - [Normalize scores](#normalize-scores)
   - [Weighted search](#weighted-search)
   - [RRF search](#rrf-search)
+- [Describe Image CLI](#describe-image-cli)
 - [RAG CLI](#rag-cli)
   - [RAG](#rag)
   - [Summarize](#summarize)
@@ -447,6 +448,24 @@ Reciprocal Rank Fusion Results for 'bear movie' (k=60)
    Cross Encoder Score: 8.23
    RRF Score: 0.028  BM25 Rank: 2  Semantic Rank: 1
    ...
+```
+
+---
+
+## Describe Image CLI
+
+Rewrite a text search query using an image as additional context. Gemini
+synthesizes visual and textual information to produce a more specific query.
+Requires `GEMINI_API_KEY` set in `.env`.
+
+```bash
+uv run python cli/describe_image_cli.py --image <path> --query "<query>"
+```
+
+```
+$ uv run python cli/describe_image_cli.py --image poster.jpg --query "bear in London"
+Rewritten query: Paddington bear London Brown family marmalade
+Total tokens:    312
 ```
 
 ---

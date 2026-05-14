@@ -3,6 +3,14 @@
 Thin wrapper around the [Google Gemini API](https://ai.google.dev/) for
 query enhancement, result re-ranking, and augmented generation.
 
+## Image-enhanced query rewriting
+
+`describe_image` accepts raw image bytes, a MIME type, and a text query. It
+builds a three-part multimodal prompt from ``DESCRIBE_IMAGE_PATTERN``,
+the image, and the query, sends them to Gemini, and returns the raw
+``types.GenerateContentResponse`` so the caller can access ``.text`` and
+``.usage_metadata``.
+
 ## Query enhancement
 
 `enhance_query` selects a prompt from `EnhancePromptPattern` based on the

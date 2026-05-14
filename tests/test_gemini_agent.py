@@ -6,6 +6,7 @@ import pytest
 
 from cli.api.gemini_agent import (
     augment_result,
+    describe_image,
     enhance_query,
     evaluate_result,
     get_gemini_client,
@@ -302,3 +303,40 @@ class TestAugmentQuery:
         """Should raise ValueError for an unrecognised augmentation method."""
         with pytest.raises(ValueError, match="Invalid augmented generation method"):
             augment_result("query", ["result"], method="unknown")
+
+
+class TestDescribeImage:
+    """Tests for describe_image."""
+
+    def test_returns_raw_response(self) -> None:
+        """Should return the raw Gemini response object."""
+        mock_client = MagicMock()
+        mock_response = _make_response("Paddington London")
+        mock_client.models.generate_content.return_value = mock_response
+        with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
+            result = describe_image(b"fake-image", "image/jpeg", "bear in london")
+
+        assert result is mock_response
+
+    def test_calls_generate_content(self) -> None:
+        """Should call generate_content with the model and a contents list."""
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = _make_response("result")
+        with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
+            describe_image(b"img", "image/png", "query")
+
+        assert mock_client.models.generate_content.called
+
+    def test_logs_token_counts(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Should log prompt and response token counts at INFO level."""
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = _make_response("result")
+        with (
+            patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client),
+            caplog.at_level("INFO", logger="cli.api.gemini_agent"),
+        ):
+            describe_image(b"img", "image/jpeg", "query")
+
+        messages = [r.message for r in caplog.records]
+        assert any("10" in m for m in messages)
+        assert any("5" in m for m in messages)
