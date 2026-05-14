@@ -27,6 +27,8 @@ load → search → print loop via three hooks:
 
 .. seealso::
 
+   :doc:`/api/hybrid_search_cli` — CLI entry point that registers ``weighted-search`` and ``rrf-search``
+
    :doc:`/api/hybrid_search` — ``HybridSearch`` singleton called by both commands
 
    :doc:`/api/gemini_agent` — ``enhance_query`` and ``rerank_query`` used by ``RRFSearchCommand``

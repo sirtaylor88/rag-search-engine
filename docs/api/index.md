@@ -11,6 +11,8 @@ hybrid_search
 utils
 constants
 schemas
+keyword_search_cli
+semantic_search_cli
 hybrid_search_cli
 evaluation_cli
 augmented_generation_cli
