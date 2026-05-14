@@ -45,7 +45,7 @@ def _run_main(argv: list[str] | None = None) -> None:
         patch.object(InvertedIndex, "index_path", MagicMock(exists=lambda: True)),
         patch.object(HybridSearch, "rrf_search", return_value=_MOCK_RESULTS),
         patch(
-            "cli.commands.search.augmented_generation_commands.augment_query",
+            "cli.commands.search.augmented_generation_commands.augment_result",
             return_value="Paddington is a movie about a bear.",
         ),
     ):
@@ -75,7 +75,7 @@ class TestAugmentedGenerationCLI:
     def test_rag_answer_none_prints_empty_string(
         self, capsys: CaptureFixture[str]
     ) -> None:
-        """When augment_query returns None the response block should be empty."""
+        """When augment_result returns None the response block should be empty."""
         with (
             patch("sys.argv", ["rag-cli", "rag", "bear london"]),
             patch(
@@ -90,10 +90,51 @@ class TestAugmentedGenerationCLI:
             patch.object(InvertedIndex, "index_path", MagicMock(exists=lambda: True)),
             patch.object(HybridSearch, "rrf_search", return_value=_MOCK_RESULTS),
             patch(
-                "cli.commands.search.augmented_generation_commands.augment_query",
+                "cli.commands.search.augmented_generation_commands.augment_result",
                 return_value=None,
             ),
         ):
             main()
         out = capsys.readouterr().out
         assert "RAG Response:" in out
+
+
+class TestSummarizeCLI:
+    """Tests for the summarize subcommand."""
+
+    def test_prints_search_results_and_llm_summary(
+        self, capsys: CaptureFixture[str]
+    ) -> None:
+        """summarize command should print retrieved titles and the LLM summary."""
+        _run_main(argv=["rag-cli", "summarize", "bear london"])
+        out = capsys.readouterr().out
+        assert "Search results:" in out
+        assert "Paddington" in out
+        assert "LLM Summary:" in out
+        assert "Paddington is a movie about a bear." in out
+
+    def test_summarize_answer_none_prints_empty_string(
+        self, capsys: CaptureFixture[str]
+    ) -> None:
+        """When augment_result returns None the response block should be empty."""
+        with (
+            patch("sys.argv", ["rag-cli", "summarize", "bear london"]),
+            patch(
+                "cli.commands.search.augmented_generation_commands.load_movies",
+                return_value=_MOCK_DOCS,
+            ),
+            patch(
+                "cli.core.semantic_search.SentenceTransformer",
+                return_value=MagicMock(),
+            ),
+            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
+            patch.object(InvertedIndex, "index_path", MagicMock(exists=lambda: True)),
+            patch.object(HybridSearch, "rrf_search", return_value=_MOCK_RESULTS),
+            patch(
+                "cli.commands.search.augmented_generation_commands.augment_result",
+                return_value=None,
+            ),
+        ):
+            main()
+        out = capsys.readouterr().out
+        assert "LLM Summary:" in out

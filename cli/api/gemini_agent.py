@@ -63,7 +63,7 @@ class EnhancePromptPattern(StrEnum):
     """
 
 
-class ReRankPromptPattern(StrEnum):
+class RankingPromptPattern(StrEnum):
     """Prompt templates for each re-ranking method."""
 
     INDIVIDUAL = """Rate how well this movie matches the search query.
@@ -132,6 +132,25 @@ class AugmentedGenerationPromptPattern(StrEnum):
     {doc_input}
 
     Answer:"""
+
+    SUMMARIZE = """Provide information useful to the query below by synthesizing data
+    from multiple search results in detail.
+
+    The goal is to provide comprehensive information so that users know
+    what their options are.
+    Your response should be information-dense and concise, with several key pieces
+    of information about the genre, plot, etc. of each movie.
+
+    This should be tailored to Hoopla users. Hoopla is a movie streaming service.
+
+    Query: {query}
+
+    Search results:
+    {doc_input}
+
+    Provide a comprehensive 3–4 sentence answer that combines information
+    from multiple sources:
+    """
 
 
 def _display_token_usage(response: types.GenerateContentResponse) -> None:
@@ -228,7 +247,7 @@ def rerank_query(
     client = get_gemini_client()
 
     try:
-        prompt_pattern = ReRankPromptPattern[method.upper()]
+        prompt_pattern = RankingPromptPattern[method.upper()]
     except KeyError as err:
         raise ValueError(f"Invalid re-rank method ``{method}``") from err
 
@@ -255,7 +274,7 @@ def rerank_query(
     return response.text
 
 
-def evaluate_query(
+def evaluate_result(
     query: str,
     results: list[str],
 ) -> Optional[str]:
@@ -274,7 +293,7 @@ def evaluate_query(
             or ``None`` if the model returns nothing.
     """
     client = get_gemini_client()
-    prompt = dedent(ReRankPromptPattern.EVALUATE.value).format(
+    prompt = dedent(RankingPromptPattern.EVALUATE.value).format(
         query=query,
         doc_input="\n".join(results),
     )
@@ -289,7 +308,11 @@ def evaluate_query(
     return response.text
 
 
-def augment_query(query: str, results: list[str]) -> Optional[str]:
+def augment_result(
+    query: str,
+    results: list[str],
+    method: str,
+) -> Optional[str]:
     """Generate a grounded natural-language answer using retrieved documents.
 
     Sends the query and formatted result strings to Gemini using the
@@ -305,7 +328,13 @@ def augment_query(query: str, results: list[str]) -> Optional[str]:
             nothing.
     """
     client = get_gemini_client()
-    prompt = dedent(AugmentedGenerationPromptPattern.RAG.value).format(
+
+    try:
+        prompt_pattern = AugmentedGenerationPromptPattern[method.upper()]
+    except KeyError as err:
+        raise ValueError(f"Invalid augmented generation method ``{method}``") from err
+
+    prompt = dedent(prompt_pattern.value).format(
         query=query,
         doc_input="\n".join(results),
     )

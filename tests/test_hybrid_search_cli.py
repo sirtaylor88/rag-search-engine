@@ -523,10 +523,10 @@ class TestRRFSearchCommand:
         assert "Re-ranking top" in out
         assert "individual method" in out
 
-    def test_evaluate_flag_calls_evaluate_query_and_prints_scores(
+    def test_evaluate_flag_calls_evaluate_result_and_prints_scores(
         self, capsys: CaptureFixture[str]
     ) -> None:
-        """--evaluate should call evaluate_query and print per-result scores."""
+        """--evaluate should call evaluate_result and print per-result scores."""
         mock_model = MagicMock()
         with (
             patch("sys.argv", ["cli", "rrf-search", "action", "--evaluate"]),
@@ -546,7 +546,7 @@ class TestRRFSearchCommand:
             ),
             patch.object(HybridSearch, "rrf_search", return_value=self._mock_results),
             patch(
-                "cli.commands.search.hybrid_search_commands.evaluate_query",
+                "cli.commands.search.hybrid_search_commands.evaluate_result",
                 return_value="[3]",
             ) as mock_evaluate,
         ):

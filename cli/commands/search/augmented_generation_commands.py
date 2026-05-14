@@ -1,21 +1,28 @@
 """RAG command: retrieve documents via RRF search then generate a grounded answer."""
 
-from cli.api.gemini_agent import augment_query
+from typing import override
+
+from cli.api.gemini_agent import augment_result
 from cli.commands.base import BaseSearchCommand
 from cli.constants import DEFAULT_K
 from cli.core.hybrid_search import HybridSearch
-from cli.schemas.requests import SearchRequest
+from cli.schemas import Request, SearchPayload
 from cli.utils import load_movies
 
 
-class RagCommand(BaseSearchCommand):
-    """Retrieves top results via RRF search then generates a grounded answer."""
+class BaseAugmentedCommand(BaseSearchCommand):
+    """Base class for augmented-generation commands."""
 
-    def run(self, request: SearchRequest) -> None:  # type: ignore[override]
+    _method: str
+    _label: str
+
+    @override
+    def run(self, request: Request[SearchPayload]) -> None:
         """Run RRF retrieval and print a Gemini-generated answer.
 
         Args:
-            request (SearchRequest): The parsed request containing query and limit.
+            request (Request[SearchPayload]): The parsed request containing
+                query and limit.
         """
         payload = request.payload
         query = payload.query
@@ -29,5 +36,19 @@ class RagCommand(BaseSearchCommand):
             print(f"- {result['title']}")
             formatted_results.append(f"- {result['title']} - {result['document']}")
 
-        rag_answer = augment_query(query, formatted_results)
-        print(f"RAG Response:\n{rag_answer or ''}")
+        answer = augment_result(query, formatted_results, method=self._method)
+        print(f"{self._label}\n{answer or ''}")
+
+
+class RagCommand(BaseAugmentedCommand):
+    """Retrieves top results via RRF search then generates a grounded answer."""
+
+    _method = "rag"
+    _label = "RAG Response:"
+
+
+class SummarizeCommand(BaseAugmentedCommand):
+    """Retrieves top results via RRF search then generates a synthesized summary."""
+
+    _method = "summarize"
+    _label = "LLM Summary:"

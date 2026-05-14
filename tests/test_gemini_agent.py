@@ -5,9 +5,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from cli.api.gemini_agent import (
-    augment_query,
+    augment_result,
     enhance_query,
-    evaluate_query,
+    evaluate_result,
     get_gemini_client,
     rerank_query,
 )
@@ -206,14 +206,14 @@ class TestReRankQuery:
 
 
 class TestEvaluateQuery:
-    """Tests for evaluate_query."""
+    """Tests for evaluate_result."""
 
     def test_returns_json_scores_from_model(self) -> None:
         """Should return the raw JSON score list from the model response."""
         mock_client = MagicMock()
         mock_client.models.generate_content.return_value = _make_response("[3, 1, 0]")
         with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
-            result = evaluate_query(
+            result = evaluate_result(
                 "bear movie", ["1. Ted\n   ...", "2. Revenant\n   ..."]
             )
 
@@ -224,7 +224,7 @@ class TestEvaluateQuery:
         mock_client = MagicMock()
         mock_client.models.generate_content.return_value = _make_response(None)
         with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
-            result = evaluate_query("bear movie", ["1. Ted\n   ..."])
+            result = evaluate_result("bear movie", ["1. Ted\n   ..."])
 
         assert result is None
 
@@ -236,7 +236,7 @@ class TestEvaluateQuery:
             patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client),
             caplog.at_level("INFO", logger="cli.api.gemini_agent"),
         ):
-            evaluate_query("action", ["1. Movie A\n   ..."])
+            evaluate_result("action", ["1. Movie A\n   ..."])
 
         messages = [r.message for r in caplog.records]
         assert any("10" in m for m in messages)
@@ -247,7 +247,7 @@ class TestEvaluateQuery:
         mock_client = MagicMock()
         mock_client.models.generate_content.return_value = _make_response("[1, 2]")
         with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
-            evaluate_query("action", ["result A", "result B"])
+            evaluate_result("action", ["result A", "result B"])
 
         call_kwargs = mock_client.models.generate_content.call_args
         prompt = call_kwargs[1]["contents"]
@@ -255,7 +255,7 @@ class TestEvaluateQuery:
 
 
 class TestAugmentQuery:
-    """Tests for augment_query."""
+    """Tests for augment_result."""
 
     def test_returns_generated_answer(self) -> None:
         """Should return the model response text as the generated answer."""
@@ -264,7 +264,9 @@ class TestAugmentQuery:
             "Paddington is a 2014 film about a bear."
         )
         with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
-            result = augment_query("bear movie london", ["1. Paddington\n   ..."])
+            result = augment_result(
+                "bear movie london", ["1. Paddington\n   ..."], method="rag"
+            )
 
         assert result == "Paddington is a 2014 film about a bear."
 
@@ -273,7 +275,7 @@ class TestAugmentQuery:
         mock_client = MagicMock()
         mock_client.models.generate_content.return_value = _make_response(None)
         with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
-            result = augment_query("bear movie", ["1. Ted\n   ..."])
+            result = augment_result("bear movie", ["1. Ted\n   ..."], method="rag")
 
         assert result is None
 
@@ -285,7 +287,7 @@ class TestAugmentQuery:
             patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client),
             caplog.at_level("INFO", logger="cli.api.gemini_agent"),
         ):
-            augment_query("action", ["1. Movie A\n   ..."])
+            augment_result("action", ["1. Movie A\n   ..."], method="rag")
 
         messages = [r.message for r in caplog.records]
         assert any("10" in m for m in messages)
@@ -296,8 +298,13 @@ class TestAugmentQuery:
         mock_client = MagicMock()
         mock_client.models.generate_content.return_value = _make_response("answer")
         with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
-            augment_query("action", ["result A", "result B"])
+            augment_result("action", ["result A", "result B"], method="summarize")
 
         call_kwargs = mock_client.models.generate_content.call_args
         prompt = call_kwargs[1]["contents"]
         assert "result A\nresult B" in prompt
+
+    def test_raises_for_invalid_method(self) -> None:
+        """Should raise ValueError for an unrecognised augmentation method."""
+        with pytest.raises(ValueError, match="Invalid augmented generation method"):
+            augment_result("query", ["result"], method="unknown")

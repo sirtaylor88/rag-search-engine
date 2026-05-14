@@ -10,7 +10,7 @@ from typing import Any, Generic, TypeVar, get_args, override
 import numpy.typing as npt
 from sentence_transformers import CrossEncoder
 
-from cli.api.gemini_agent import enhance_query, evaluate_query, rerank_query
+from cli.api.gemini_agent import enhance_query, evaluate_result, rerank_query
 from cli.commands.base import BaseSearchCommand
 from cli.constants import DEFAULT_ALPHA, DEFAULT_CROSS_ENCODER_MODEL, DEFAULT_K
 from cli.core.hybrid_search import HybridSearch
@@ -103,7 +103,7 @@ class BaseHybridSearchCommand(BaseSearchCommand, Generic[P]):
 
         Prints a re-ranking banner when ``payload.rerank_method`` is set,
         otherwise a plain results banner. When ``payload.evaluate`` is ``True``,
-        calls ``evaluate_query`` after printing and shows a 0–3 relevance score
+        calls ``evaluate_result`` after printing and shows a 0–3 relevance score
         per result.
 
         Args:
@@ -132,7 +132,7 @@ class BaseHybridSearchCommand(BaseSearchCommand, Generic[P]):
             formatted_results.append(fmt_result)
 
         if getattr(payload, "evaluate", False):
-            eval_result = evaluate_query(query, formatted_results)
+            eval_result = evaluate_result(query, formatted_results)
             if eval_result:
                 eval_scores: list[int] = json.loads(eval_result)
                 for idx, (r, score) in enumerate(zip(results, eval_scores), start=1):

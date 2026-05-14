@@ -16,7 +16,7 @@ load → search → print loop via three hooks:
   - `individual` — scores each document separately via {func}`~cli.api.gemini_agent.rerank_query` (one API call per result, with a 3 s sleep between calls) then sorts descending by score.
   - `batch` — sends all candidates in a single {func}`~cli.api.gemini_agent.rerank_query` call and asks Gemini to return a JSON-ordered list of IDs; falls back to original RRF order if the response is empty.
   - `cross_encoder` — scores all query–document pairs locally using a `CrossEncoder` model (`DEFAULT_CROSS_ENCODER_MODEL`) via `sentence-transformers`; no API key required.
-- `--evaluate` — after printing results, calls {func}`~cli.api.gemini_agent.evaluate_query` to score each result 0–3 for relevance and prints `{title}: {score}/3` per result. Requires `GEMINI_API_KEY`.
+- `--evaluate` — after printing results, calls {func}`~cli.api.gemini_agent.evaluate_result` to score each result 0–3 for relevance and prints `{title}: {score}/3` per result. Requires `GEMINI_API_KEY`.
 - `-v` / `--verbose` — enables `DEBUG`-level logging for each pipeline stage: original query, enhanced query (when `--enhance` is set), RRF candidates, and final results after re-ranking.
 
 ```{eval-rst}

@@ -1,7 +1,7 @@
 # Gemini Agent
 
 Thin wrapper around the [Google Gemini API](https://ai.google.dev/) for
-query enhancement and result re-ranking.
+query enhancement, result re-ranking, and augmented generation.
 
 ## Query enhancement
 
@@ -19,7 +19,7 @@ without any API call.
 
 ## Result re-ranking
 
-`rerank_query` selects a prompt from `ReRankPromptPattern` and asks Gemini
+`rerank_query` selects a prompt from `RankingPromptPattern` and asks Gemini
 to score or rank documents against the query. Two methods are available:
 
 - **`individual`** — rates each document independently on a 0–10 scale and
@@ -35,7 +35,7 @@ Passing `method=None` returns `None` immediately without any API call.
 
 ## Result evaluation
 
-`evaluate_query` uses `ReRankPromptPattern.EVALUATE` to ask Gemini to rate
+`evaluate_result` uses `RankingPromptPattern.EVALUATE` to ask Gemini to rate
 each retrieved result on a 0–3 relevance scale. It joins the formatted result
 strings with newlines, sends them alongside the query, and returns a JSON list
 of integer scores — one per result, in the same order — or `None` if the model
@@ -50,14 +50,18 @@ The three scale points:
 
 ## Augmented generation
 
-`augment_query` uses `AugmentedGenerationPromptPattern.RAG` to generate a
-grounded natural-language answer from retrieved documents. It joins the
-formatted result strings with newlines as the `doc_input` context, sends them
-alongside the query, and returns the model's answer text — or `None` if the
-model returns nothing.
+`augment_result` selects a prompt from `AugmentedGenerationPromptPattern` based
+on the `method` argument, joins the formatted result strings with newlines as
+the `doc_input` context, sends them alongside the query, and returns the model's
+answer text — or `None` if the model returns nothing. Two methods are available:
 
-All four public functions (`enhance_query`, `rerank_query`, `evaluate_query`,
-`augment_query`) delegate token-count logging to the private
+- **`rag`** — grounded natural-language answer that directly addresses the
+  query using only the retrieved documents.
+- **`summarize`** — information-dense multi-document synthesis covering genre,
+  plot, and other key details to help users choose between options.
+
+All four public functions (`enhance_query`, `rerank_query`, `evaluate_result`,
+`augment_result`) delegate token-count logging to the private
 `_display_token_usage` helper, which logs prompt and response token counts at
 `INFO` level via `logging.getLogger(__name__)`.
 
@@ -74,7 +78,9 @@ All four public functions (`enhance_query`, `rerank_query`, `evaluate_query`,
 
 .. seealso::
 
-   :doc:`/api/augmented_generation_cli` — ``augmented_generation_cli`` that calls ``augment_query``
+   :doc:`/api/augmented_generation_cli` — CLI that dispatches to ``augment_result``
+
+   :doc:`/api/commands/search/augmented_generation_commands` — ``BaseAugmentedCommand`` that calls ``augment_result``
 
    :doc:`/api/commands/search/hybrid_search_command` — ``RRFSearchCommand`` that calls ``enhance_query`` and ``rerank_query``
 

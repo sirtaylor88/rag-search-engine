@@ -14,7 +14,10 @@ from cli.commands.embed_commands import (
     EmbedQueryCommand,
     EmbedTextCommand,
 )
-from cli.commands.search.augmented_generation_commands import RagCommand
+from cli.commands.search.augmented_generation_commands import (
+    RagCommand,
+    SummarizeCommand,
+)
 from cli.commands.search.hybrid_search_commands import (
     RRFSearchCommand,
     WeightedSearchCommand,
@@ -45,6 +48,7 @@ __all__ = [
     "SearchCommand",
     "SemanticChunkCommand",
     "SemanticSearchCommand",
+    "SummarizeCommand",
     "VerifyCommand",
     "VerifyEmbeddingsCommand",
     "WeightedSearchCommand",

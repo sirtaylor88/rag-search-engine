@@ -2,7 +2,10 @@
 
 import argparse
 
-from cli.commands.search.augmented_generation_commands import RagCommand
+from cli.commands.search.augmented_generation_commands import (
+    RagCommand,
+    SummarizeCommand,
+)
 from cli.schemas.payloads import SearchPayload
 from cli.schemas.requests import SearchRequest
 
@@ -15,12 +18,19 @@ def main() -> None:
     rag_cmd = RagCommand(
         subparsers.add_parser("rag", help="Perform RAG (search + generate answer)")
     )
+    summarize_cmd = SummarizeCommand(
+        subparsers.add_parser("summarize", help="Summarize results using LLM model")
+    )
 
     args = parser.parse_args()
 
     match args.command:
         case "rag":
             rag_cmd.run(
+                SearchRequest(payload=SearchPayload(query=args.query, limit=args.limit))
+            )
+        case "summarize":
+            summarize_cmd.run(
                 SearchRequest(payload=SearchPayload(query=args.query, limit=args.limit))
             )
         case _:
