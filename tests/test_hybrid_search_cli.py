@@ -249,13 +249,24 @@ class TestRRFSearchCommand:
         call_args, _ = mock_rrf.call_args
         assert call_args[1] == 30
 
+    @pytest.mark.parametrize(
+        ("query", "method", "enhanced"),
+        [
+            ("acton", "spell", "action"),
+            ("bear moovie", "rewrite", "bear movie"),
+        ],
+    )
     def test_enhance_flag_calls_enhance_query(
-        self, capsys: CaptureFixture[str]
+        self,
+        capsys: CaptureFixture[str],
+        query: str,
+        method: str,
+        enhanced: str,
     ) -> None:
-        """rrf-search --enhance spell should call enhance_query before searching."""
+        """rrf-search --enhance should call enhance_query with the given method."""
         mock_model = MagicMock()
         with (
-            patch("sys.argv", ["cli", "rrf-search", "acton", "--enhance", "spell"]),
+            patch("sys.argv", ["cli", "rrf-search", query, "--enhance", method]),
             patch(
                 "cli.commands.search.hybrid_search_commands.load_movies",
                 return_value=self._mock_docs,
@@ -264,54 +275,17 @@ class TestRRFSearchCommand:
                 "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
             ),
             patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
-            patch.object(
-                InvertedIndex,
-                "index_path",
-                MagicMock(exists=lambda: True),
-            ),
+            patch.object(InvertedIndex, "index_path", MagicMock(exists=lambda: True)),
             patch.object(HybridSearch, "rrf_search", return_value=self._mock_results),
             patch(
                 "cli.commands.search.hybrid_search_commands.enhance_query",
-                return_value="action",
+                return_value=enhanced,
             ) as mock_enhance,
         ):
             main()
 
-        mock_enhance.assert_called_once_with("acton", method="spell")
-        assert 'Results for: "action"' in capsys.readouterr().out
-
-    def test_enhance_rewrite_flag_calls_enhance_query(
-        self, capsys: CaptureFixture[str]
-    ) -> None:
-        """--enhance rewrite should call enhance_query with method='rewrite'."""
-        mock_model = MagicMock()
-        with (
-            patch(
-                "sys.argv", ["cli", "rrf-search", "bear moovie", "--enhance", "rewrite"]
-            ),
-            patch(
-                "cli.commands.search.hybrid_search_commands.load_movies",
-                return_value=self._mock_docs,
-            ),
-            patch(
-                "cli.core.semantic_search.SentenceTransformer", return_value=mock_model
-            ),
-            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
-            patch.object(
-                InvertedIndex,
-                "index_path",
-                MagicMock(exists=lambda: True),
-            ),
-            patch.object(HybridSearch, "rrf_search", return_value=self._mock_results),
-            patch(
-                "cli.commands.search.hybrid_search_commands.enhance_query",
-                return_value="bear movie",
-            ) as mock_enhance,
-        ):
-            main()
-
-        mock_enhance.assert_called_once_with("bear moovie", method="rewrite")
-        assert 'Results for: "bear movie"' in capsys.readouterr().out
+        mock_enhance.assert_called_once_with(query, method=method)
+        assert f'Results for: "{enhanced}"' in capsys.readouterr().out
 
     def test_rerank_method_calls_rerank_query_and_prints_score(
         self, capsys: CaptureFixture[str]

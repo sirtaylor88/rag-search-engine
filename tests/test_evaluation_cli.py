@@ -33,10 +33,16 @@ _MOCK_RESULTS = [
 ]
 
 
-def _run_main(argv: list[str] | None = None) -> MagicMock:
+def _run_main(
+    argv: list[str] | None = None,
+    rrf_return: list | None = None,
+    golden_data: dict | None = None,
+) -> MagicMock:
     """Run main() with all heavy I/O mocked; return the rrf_search mock."""
-    golden_json = json.dumps(_GOLDEN_DATA)
-    mock_rrf = MagicMock(return_value=_MOCK_RESULTS)
+    golden_json = json.dumps(golden_data if golden_data is not None else _GOLDEN_DATA)
+    mock_rrf = MagicMock(
+        return_value=rrf_return if rrf_return is not None else _MOCK_RESULTS
+    )
     with (
         patch("sys.argv", argv or ["eval"]),
         patch("cli.evaluation_cli.load_movies", return_value=_MOCK_DOCS),
@@ -76,22 +82,7 @@ class TestEvaluationCLI:
         self, capsys: CaptureFixture[str]
     ) -> None:
         """rrf_search returning [] should print zeros for all metrics, not crash."""
-        with (
-            patch("sys.argv", ["eval"]),
-            patch("cli.evaluation_cli.load_movies", return_value=_MOCK_DOCS),
-            patch(
-                "cli.core.semantic_search.SentenceTransformer",
-                return_value=MagicMock(),
-            ),
-            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
-            patch.object(InvertedIndex, "index_path", MagicMock(exists=lambda: True)),
-            patch.object(HybridSearch, "rrf_search", return_value=[]),
-            patch(
-                "builtins.open",
-                mock_open(read_data=json.dumps(_GOLDEN_DATA)),
-            ),
-        ):
-            main()
+        _run_main(rrf_return=[])
         out = capsys.readouterr().out
         assert "Precision@5: 0.0000" in out
         assert "Recall@5: 0.0000" in out
@@ -101,9 +92,6 @@ class TestEvaluationCLI:
         self, capsys: CaptureFixture[str]
     ) -> None:
         """A query with no relevant hits should print F1 0.0000, not crash."""
-        golden_json = json.dumps(
-            {"test_cases": [{"query": "no hits", "relevant_docs": ["Missing"]}]}
-        )
         no_hit_results = [
             {
                 "id": 99,
@@ -113,18 +101,11 @@ class TestEvaluationCLI:
                 "semantic_rank": 1,
             }
         ]
-        with (
-            patch("sys.argv", ["eval"]),
-            patch("cli.evaluation_cli.load_movies", return_value=_MOCK_DOCS),
-            patch(
-                "cli.core.semantic_search.SentenceTransformer",
-                return_value=MagicMock(),
-            ),
-            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
-            patch.object(InvertedIndex, "index_path", MagicMock(exists=lambda: True)),
-            patch.object(HybridSearch, "rrf_search", return_value=no_hit_results),
-            patch("builtins.open", mock_open(read_data=golden_json)),
-        ):
-            main()
+        _run_main(
+            rrf_return=no_hit_results,
+            golden_data={
+                "test_cases": [{"query": "no hits", "relevant_docs": ["Missing"]}]
+            },
+        )
         out = capsys.readouterr().out
         assert "F1 Score: 0.0000" in out

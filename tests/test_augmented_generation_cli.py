@@ -32,7 +32,10 @@ _MOCK_RESULTS = [
 ]
 
 
-def _run_main(argv: list[str] | None = None) -> None:
+def _run_main(
+    argv: list[str] | None = None,
+    augment_return: str | None = "Paddington is a movie about a bear.",
+) -> None:
     """Run main() with all heavy I/O mocked."""
     with (
         patch("sys.argv", argv or ["rag-cli", "rag", "bear london"]),
@@ -46,136 +49,45 @@ def _run_main(argv: list[str] | None = None) -> None:
         patch.object(HybridSearch, "rrf_search", return_value=_MOCK_RESULTS),
         patch(
             "cli.commands.search.augmented_generation_commands.augment_result",
-            return_value="Paddington is a movie about a bear.",
+            return_value=augment_return,
         ),
     ):
         main()
 
 
-class TestAugmentedGenerationCLI:
-    """Tests for the augmented generation CLI main function."""
+def test_no_command_prints_help(capsys: CaptureFixture[str]) -> None:
+    """Running without a subcommand should print the help message."""
+    with patch("sys.argv", ["rag-cli"]):
+        main()
+    assert capsys.readouterr().out != ""
 
-    def test_prints_search_results_and_rag_response(
-        self, capsys: CaptureFixture[str]
+
+@pytest.mark.parametrize(
+    ("subcommand", "label"),
+    [
+        ("rag", "RAG Response:"),
+        ("summarize", "LLM Summary:"),
+        ("citations", "LLM Answer:"),
+    ],
+)
+class TestAugmentedCommands:
+    """Tests for all augmented-generation subcommands."""
+
+    def test_prints_search_results_and_answer(
+        self, capsys: CaptureFixture[str], subcommand: str, label: str
     ) -> None:
-        """rag command should print retrieved titles and the generated answer."""
-        _run_main()
+        """Command should print retrieved titles and the generated answer."""
+        _run_main(argv=["rag-cli", subcommand, "bear london"])
         out = capsys.readouterr().out
         assert "Search results:" in out
         assert "Paddington" in out
-        assert "RAG Response:" in out
+        assert label in out
         assert "Paddington is a movie about a bear." in out
 
-    def test_no_command_prints_help(self, capsys: CaptureFixture[str]) -> None:
-        """Running without a subcommand should print the help message."""
-        with patch("sys.argv", ["rag-cli"]):
-            main()
-        assert capsys.readouterr().out != ""
-
-    def test_rag_answer_none_prints_empty_string(
-        self, capsys: CaptureFixture[str]
+    def test_answer_none_prints_empty_string(
+        self, capsys: CaptureFixture[str], subcommand: str, label: str
     ) -> None:
         """When augment_result returns None the response block should be empty."""
-        with (
-            patch("sys.argv", ["rag-cli", "rag", "bear london"]),
-            patch(
-                "cli.commands.search.augmented_generation_commands.load_movies",
-                return_value=_MOCK_DOCS,
-            ),
-            patch(
-                "cli.core.semantic_search.SentenceTransformer",
-                return_value=MagicMock(),
-            ),
-            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
-            patch.object(InvertedIndex, "index_path", MagicMock(exists=lambda: True)),
-            patch.object(HybridSearch, "rrf_search", return_value=_MOCK_RESULTS),
-            patch(
-                "cli.commands.search.augmented_generation_commands.augment_result",
-                return_value=None,
-            ),
-        ):
-            main()
+        _run_main(argv=["rag-cli", subcommand, "bear london"], augment_return=None)
         out = capsys.readouterr().out
-        assert "RAG Response:" in out
-
-
-class TestSummarizeCLI:
-    """Tests for the summarize subcommand."""
-
-    def test_prints_search_results_and_llm_summary(
-        self, capsys: CaptureFixture[str]
-    ) -> None:
-        """summarize command should print retrieved titles and the LLM summary."""
-        _run_main(argv=["rag-cli", "summarize", "bear london"])
-        out = capsys.readouterr().out
-        assert "Search results:" in out
-        assert "Paddington" in out
-        assert "LLM Summary:" in out
-        assert "Paddington is a movie about a bear." in out
-
-    def test_summarize_answer_none_prints_empty_string(
-        self, capsys: CaptureFixture[str]
-    ) -> None:
-        """When augment_result returns None the response block should be empty."""
-        with (
-            patch("sys.argv", ["rag-cli", "summarize", "bear london"]),
-            patch(
-                "cli.commands.search.augmented_generation_commands.load_movies",
-                return_value=_MOCK_DOCS,
-            ),
-            patch(
-                "cli.core.semantic_search.SentenceTransformer",
-                return_value=MagicMock(),
-            ),
-            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
-            patch.object(InvertedIndex, "index_path", MagicMock(exists=lambda: True)),
-            patch.object(HybridSearch, "rrf_search", return_value=_MOCK_RESULTS),
-            patch(
-                "cli.commands.search.augmented_generation_commands.augment_result",
-                return_value=None,
-            ),
-        ):
-            main()
-        out = capsys.readouterr().out
-        assert "LLM Summary:" in out
-
-
-class TestCitationsCLI:
-    """Tests for the citations subcommand."""
-
-    def test_prints_search_results_and_llm_answer(
-        self, capsys: CaptureFixture[str]
-    ) -> None:
-        """citations command should print retrieved titles and the cited answer."""
-        _run_main(argv=["rag-cli", "citations", "bear london"])
-        out = capsys.readouterr().out
-        assert "Search results:" in out
-        assert "Paddington" in out
-        assert "LLM Answer:" in out
-        assert "Paddington is a movie about a bear." in out
-
-    def test_citations_answer_none_prints_empty_string(
-        self, capsys: CaptureFixture[str]
-    ) -> None:
-        """When augment_result returns None the response block should be empty."""
-        with (
-            patch("sys.argv", ["rag-cli", "citations", "bear london"]),
-            patch(
-                "cli.commands.search.augmented_generation_commands.load_movies",
-                return_value=_MOCK_DOCS,
-            ),
-            patch(
-                "cli.core.semantic_search.SentenceTransformer",
-                return_value=MagicMock(),
-            ),
-            patch.object(ChunkedSemanticSearch, "load_or_create_chunk_embeddings"),
-            patch.object(InvertedIndex, "index_path", MagicMock(exists=lambda: True)),
-            patch.object(HybridSearch, "rrf_search", return_value=_MOCK_RESULTS),
-            patch(
-                "cli.commands.search.augmented_generation_commands.augment_result",
-                return_value=None,
-            ),
-        ):
-            main()
-        out = capsys.readouterr().out
-        assert "LLM Answer:" in out
+        assert label in out

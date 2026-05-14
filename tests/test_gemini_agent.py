@@ -82,16 +82,23 @@ class TestEnhanceQuery:
 
         assert result == "action movie"
 
-    def test_rewrite_method_returns_enhanced_text(self) -> None:
-        """Should call generate_content and return its text when method='rewrite'."""
+    @pytest.mark.parametrize(
+        ("query", "method", "enhanced"),
+        [
+            ("bear leo movie", "rewrite", "The Revenant bear attack"),
+            ("scary bear movie", "expand", "scary horror grizzly bear terrifying film"),
+        ],
+    )
+    def test_method_returns_enhanced_text(
+        self, query: str, method: str, enhanced: str
+    ) -> None:
+        """Should call generate_content and return its text for each method."""
         mock_client = MagicMock()
-        mock_client.models.generate_content.return_value = _make_response(
-            "The Revenant bear attack"
-        )
+        mock_client.models.generate_content.return_value = _make_response(enhanced)
         with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
-            result = enhance_query("bear leo movie", method="rewrite")
+            result = enhance_query(query, method=method)  # type: ignore[arg-type]
 
-        assert result == "The Revenant bear attack"
+        assert result == enhanced
 
     def test_raises_for_invalid_method(self) -> None:
         """Should raise ValueError for an unrecognised enhancement method."""
@@ -127,17 +134,6 @@ class TestEnhanceQuery:
 
         assert "spell" in capsys.readouterr().out
 
-    def test_expand_method_returns_enhanced_text(self) -> None:
-        """Should call generate_content and return its text when method='expand'."""
-        mock_client = MagicMock()
-        mock_client.models.generate_content.return_value = _make_response(
-            "scary horror grizzly bear terrifying film"
-        )
-        with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
-            result = enhance_query("scary bear movie", method="expand")
-
-        assert result == "scary horror grizzly bear terrifying film"
-
 
 class TestReRankQuery:
     """Tests for rerank_query."""
@@ -150,16 +146,23 @@ class TestReRankQuery:
         mock_get_client.assert_not_called()
         assert result is None
 
-    def test_returns_text_when_response_available(self) -> None:
-        """Should return raw response text when the model returns a score."""
+    @pytest.mark.parametrize(
+        ("method", "doc_input", "expected"),
+        [
+            ("individual", "Movie A - description", "7.5"),
+            ("batch", "1 - Movie A\n2 - Movie B", "[1, 2, 3]"),
+        ],
+    )
+    def test_returns_text_for_method(
+        self, method: str, doc_input: str, expected: str
+    ) -> None:
+        """Should return raw response text for individual and batch methods."""
         mock_client = MagicMock()
-        mock_client.models.generate_content.return_value = _make_response("7.5")
+        mock_client.models.generate_content.return_value = _make_response(expected)
         with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
-            result = rerank_query(
-                "action", "Movie A - description", method="individual"
-            )
+            result = rerank_query("action", doc_input, method=method)
 
-        assert result == "7.5"
+        assert result == expected
 
     def test_returns_none_when_no_response_text(self) -> None:
         """Should return None when the model returns no text."""
@@ -171,15 +174,6 @@ class TestReRankQuery:
             )
 
         assert result is None
-
-    def test_batch_method_returns_text(self) -> None:
-        """Should return raw response text when method='batch'."""
-        mock_client = MagicMock()
-        mock_client.models.generate_content.return_value = _make_response("[1, 2, 3]")
-        with patch("cli.api.gemini_agent.get_gemini_client", return_value=mock_client):
-            result = rerank_query("action", "1 - Movie A\n2 - Movie B", method="batch")
-
-        assert result == "[1, 2, 3]"
 
     def test_raises_for_invalid_method(self) -> None:
         """Should raise ValueError for an unrecognised re-rank method."""

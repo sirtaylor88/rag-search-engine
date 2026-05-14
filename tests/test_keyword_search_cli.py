@@ -28,13 +28,26 @@ def test_search_command_outputs_results(capsys: CaptureFixture[str]) -> None:
     assert "Batman" in out
 
 
-def test_search_missing_cache_prints_error_and_exits(
-    capsys: CaptureFixture[str],
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["cli", "search", "batman"],
+        ["cli", "bm25search", "batman"],
+        ["cli", "tf", "1", "batman"],
+        ["cli", "idf", "batman"],
+        ["cli", "tfidf", "1", "batman"],
+        ["cli", "bm25idf", "batman"],
+        ["cli", "bm25tf", "1", "batman"],
+    ],
+    ids=["search", "bm25search", "tf", "idf", "tfidf", "bm25idf", "bm25tf"],
+)
+def test_missing_cache_prints_error_and_exits(
+    argv: list[str], capsys: CaptureFixture[str]
 ) -> None:
     """A missing cache file should print an error message and exit with code 1."""
     with (
         patch("cli.core.keyword_search.InvertedIndex.load", side_effect=OSError),
-        patch("sys.argv", ["cli", "search", "batman"]),
+        patch("sys.argv", argv),
         pytest.raises(SystemExit) as exc_info,
     ):
         main()
@@ -60,24 +73,6 @@ def test_bm25search_command_outputs_results(capsys: CaptureFixture[str]) -> None
     assert "Searching for: batman" in out
     assert "Batman" in out
     assert "2.50" in out
-
-
-def test_bm25search_missing_cache_prints_error_and_exits(
-    capsys: CaptureFixture[str],
-) -> None:
-    """A missing cache file should print an error message and exit with code 1."""
-    with (
-        patch("cli.core.keyword_search.InvertedIndex.load", side_effect=OSError),
-        patch("sys.argv", ["cli", "bm25search", "batman"]),
-        pytest.raises(SystemExit) as exc_info,
-    ):
-        main()
-
-    assert exc_info.value.code == 1
-    assert (
-        capsys.readouterr().out
-        == "Cannot load cache data. Please run build command first.\n"
-    )
 
 
 def test_build_command_builds_and_saves_index(capsys: CaptureFixture[str]) -> None:
@@ -121,24 +116,6 @@ def test_tf_command_outputs_result(capsys: CaptureFixture[str]) -> None:
     assert "batman" in capsys.readouterr().out
 
 
-def test_tf_missing_cache_prints_error_and_exits(
-    capsys: CaptureFixture[str],
-) -> None:
-    """A missing cache file should print an error message and exit with code 1."""
-    with (
-        patch("cli.core.keyword_search.InvertedIndex.load", side_effect=OSError),
-        patch("sys.argv", ["cli", "tf", "1", "batman"]),
-        pytest.raises(SystemExit) as exc_info,
-    ):
-        main()
-
-    assert exc_info.value.code == 1
-    assert (
-        capsys.readouterr().out
-        == "Cannot load cache data. Please run build command first.\n"
-    )
-
-
 def test_idf_command_outputs_result(capsys: CaptureFixture[str]) -> None:
     """The idf command should load the index and print the IDF value."""
     with (
@@ -147,24 +124,6 @@ def test_idf_command_outputs_result(capsys: CaptureFixture[str]) -> None:
     ):
         main()
     assert "batman" in capsys.readouterr().out
-
-
-def test_idf_missing_cache_prints_error_and_exits(
-    capsys: CaptureFixture[str],
-) -> None:
-    """A missing cache file should print an error message and exit with code 1."""
-    with (
-        patch("cli.core.keyword_search.InvertedIndex.load", side_effect=OSError),
-        patch("sys.argv", ["cli", "idf", "batman"]),
-        pytest.raises(SystemExit) as exc_info,
-    ):
-        main()
-
-    assert exc_info.value.code == 1
-    assert (
-        capsys.readouterr().out
-        == "Cannot load cache data. Please run build command first.\n"
-    )
 
 
 def test_tfidf_command_outputs_result(capsys: CaptureFixture[str]) -> None:
@@ -179,24 +138,6 @@ def test_tfidf_command_outputs_result(capsys: CaptureFixture[str]) -> None:
     assert "batman" in capsys.readouterr().out
 
 
-def test_tfidf_missing_cache_prints_error_and_exits(
-    capsys: CaptureFixture[str],
-) -> None:
-    """A missing cache file should print an error message and exit with code 1."""
-    with (
-        patch("cli.core.keyword_search.InvertedIndex.load", side_effect=OSError),
-        patch("sys.argv", ["cli", "tfidf", "1", "batman"]),
-        pytest.raises(SystemExit) as exc_info,
-    ):
-        main()
-
-    assert exc_info.value.code == 1
-    assert (
-        capsys.readouterr().out
-        == "Cannot load cache data. Please run build command first.\n"
-    )
-
-
 def test_bm25idf_command_outputs_result(capsys: CaptureFixture[str]) -> None:
     """The bm25idf command should load the index and print the BM25 IDF value."""
     with (
@@ -205,24 +146,6 @@ def test_bm25idf_command_outputs_result(capsys: CaptureFixture[str]) -> None:
     ):
         main()
     assert "batman" in capsys.readouterr().out
-
-
-def test_bm25idf_missing_cache_prints_error_and_exits(
-    capsys: CaptureFixture[str],
-) -> None:
-    """A missing cache file should print an error message and exit with code 1."""
-    with (
-        patch("cli.core.keyword_search.InvertedIndex.load", side_effect=OSError),
-        patch("sys.argv", ["cli", "bm25idf", "batman"]),
-        pytest.raises(SystemExit) as exc_info,
-    ):
-        main()
-
-    assert exc_info.value.code == 1
-    assert (
-        capsys.readouterr().out
-        == "Cannot load cache data. Please run build command first.\n"
-    )
 
 
 def test_bm25tf_command_outputs_result(capsys: CaptureFixture[str]) -> None:
@@ -234,21 +157,3 @@ def test_bm25tf_command_outputs_result(capsys: CaptureFixture[str]) -> None:
     ):
         main()
     assert "batman" in capsys.readouterr().out
-
-
-def test_bm25tf_missing_cache_prints_error_and_exits(
-    capsys: CaptureFixture[str],
-) -> None:
-    """A missing cache file should print an error message and exit with code 1."""
-    with (
-        patch("cli.core.keyword_search.InvertedIndex.load", side_effect=OSError),
-        patch("sys.argv", ["cli", "bm25tf", "1", "batman"]),
-        pytest.raises(SystemExit) as exc_info,
-    ):
-        main()
-
-    assert exc_info.value.code == 1
-    assert (
-        capsys.readouterr().out
-        == "Cannot load cache data. Please run build command first.\n"
-    )
