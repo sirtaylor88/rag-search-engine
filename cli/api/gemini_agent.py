@@ -424,7 +424,7 @@ def describe_image(
 
     response = client.models.generate_content(
         model=GEMINI_MODEL,
-        contents=[
+        contents=[  # type: ignore[arg-type]
             types.Part.from_text(text=DESCRIBE_IMAGE_PATTERN),
             types.Part.from_bytes(data=img, mime_type=mime),
             types.Part.from_text(text=query),

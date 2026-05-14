@@ -37,6 +37,7 @@ A search engine built with **Retrieval Augmented Generation (RAG)** over a movie
   - [Normalize scores](#normalize-scores)
   - [Weighted search](#weighted-search)
   - [RRF search](#rrf-search)
+- [Multimodal Search CLI](#multimodal-search-cli)
 - [Describe Image CLI](#describe-image-cli)
 - [RAG CLI](#rag-cli)
   - [RAG](#rag)
@@ -448,6 +449,21 @@ Reciprocal Rank Fusion Results for 'bear movie' (k=60)
    Cross Encoder Score: 8.23
    RRF Score: 0.028  BM25 Rank: 2  Semantic Rank: 1
    ...
+```
+
+---
+
+## Multimodal Search CLI
+
+Embed an image using a [CLIP](https://huggingface.co/sentence-transformers/clip-ViT-B-32) sentence-transformer model and print the resulting embedding size. Useful for verifying the multimodal model loads correctly before integrating image search.
+
+```bash
+uv run python cli/multimodal_search_cli.py verify_image_embedding <image_path>
+```
+
+```
+$ uv run python cli/multimodal_search_cli.py verify_image_embedding examples/paddington.jpeg
+Embedding shape: 512 dimensions
 ```
 
 ---

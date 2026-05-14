@@ -29,7 +29,11 @@ from cli.commands.search.semantic_search_command import (
     SearchChunkedCommand,
     SemanticSearchCommand,
 )
-from cli.commands.verify_commands import VerifyCommand, VerifyEmbeddingsCommand
+from cli.commands.verify_commands import (
+    VerifyCommand,
+    VerifyEmbeddingsCommand,
+    VerifyImageEmbeddingCommand,
+)
 
 __all__ = [
     "BM25SearchCommand",
@@ -55,5 +59,6 @@ __all__ = [
     "SummarizeCommand",
     "VerifyCommand",
     "VerifyEmbeddingsCommand",
+    "VerifyImageEmbeddingCommand",
     "WeightedSearchCommand",
 ]

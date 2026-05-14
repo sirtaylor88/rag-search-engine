@@ -15,6 +15,7 @@ dependencies = [
     "google-genai>=2.0.1",
     "nltk==3.9.1",
     "numpy==2.3.3",
+    "pillow>=12.2.0",
     "progressbar>=2.5",
     "pydantic>=2.13.4",
     "python-dotenv>=1.2.2",

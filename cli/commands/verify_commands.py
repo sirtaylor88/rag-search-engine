@@ -5,8 +5,10 @@ from argparse import ArgumentParser
 from typing import override
 
 from cli.commands.base import BaseCommand
+from cli.core.multimodal_search import verify_image_embedding
 from cli.core.semantic_search import verify_embeddings, verify_model
 from cli.schemas import EmptyPayload, Request
+from cli.schemas.payloads import TermPayload
 
 
 class BaseVerifyCommand(BaseCommand[EmptyPayload]):
@@ -47,3 +49,35 @@ class VerifyEmbeddingsCommand(BaseVerifyCommand):
     @override
     def _verify(self) -> None:
         verify_embeddings()
+
+
+class VerifyImageEmbeddingCommand(BaseVerifyCommand):
+    """Command that embeds an image and prints the resulting embedding size."""
+
+    @override
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        """Register the ``image_path`` positional argument.
+
+        Args:
+            parser (ArgumentParser): The verify subparser.
+        """
+        parser.add_argument(
+            "term",
+            type=str,
+            metavar="image_path",
+            help="Path to the image file.",
+        )
+
+    @override
+    def run(self, request: Request[TermPayload]) -> None:  # type: ignore[override]
+        """Embed the image at the given path and print its embedding size.
+
+        Args:
+            request (Request[TermPayload]): Payload containing the image path
+                as ``term``.
+        """
+        verify_image_embedding(request.payload.term)
+
+    @override
+    def _verify(self) -> None:  # pragma: no cover
+        pass
