@@ -38,6 +38,10 @@ A search engine built with **Retrieval Augmented Generation (RAG)** over a movie
   - [Weighted search](#weighted-search)
   - [RRF search](#rrf-search)
 - [RAG CLI](#rag-cli)
+  - [RAG](#rag)
+  - [Summarize](#summarize)
+  - [Citations](#citations)
+  - [Question](#question)
 - [Evaluation](#evaluation)
 - [Documentation](#documentation)
 - [Development](#development)
@@ -449,7 +453,11 @@ Reciprocal Rank Fusion Results for 'bear movie' (k=60)
 
 ## RAG CLI
 
-Retrieve the top results via [Reciprocal Rank Fusion](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf) search, then use Gemini to generate a grounded natural-language answer from those results. Requires `GEMINI_API_KEY` set in `.env`.
+Retrieve the top results via [Reciprocal Rank Fusion](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf) search, then use Gemini to generate a natural-language answer from those results. All four subcommands require `GEMINI_API_KEY` set in `.env`. The `--limit` parameter (default: `5`) controls how many results are retrieved and passed as context to the model.
+
+### RAG
+
+Generate a grounded answer based strictly on the retrieved documents:
 
 ```bash
 uv run python cli/augmented_generation_cli.py rag "<query>" [--limit N]
@@ -467,7 +475,65 @@ Paddington is a 2014 British comedy film about a young Peruvian bear who travels
 to London and is taken in by the Brown family...
 ```
 
-The `--limit` parameter (default: `5`) controls how many results are retrieved and passed as context to the model.
+### Summarize
+
+Generate an information-dense multi-document summary combining key details (genre, plot, cast) from all retrieved results:
+
+```bash
+uv run python cli/augmented_generation_cli.py summarize "<query>" [--limit N]
+```
+
+```
+$ uv run python cli/augmented_generation_cli.py summarize "bear movie"
+Search results:
+- The Revenant
+- Paddington
+- ...
+
+LLM Summary:
+Several films feature bears prominently. The Revenant (2015) is a survival thriller
+starring Leonardo DiCaprio as a frontiersman mauled by a grizzly bear...
+```
+
+### Citations
+
+Generate an answer with inline citations (`[1]`, `[2]`, …) referencing the retrieved documents:
+
+```bash
+uv run python cli/augmented_generation_cli.py citations "<query>" [--limit N]
+```
+
+```
+$ uv run python cli/augmented_generation_cli.py citations "animated bear movie"
+Search results:
+- Paddington
+- Brother Bear
+- ...
+
+LLM Answer:
+Paddington [1] is a beloved animated-style live-action film about a Peruvian bear
+in London. Brother Bear [2] is a 2003 Disney animated film...
+```
+
+### Question
+
+Answer a conversational question in a casual, chat-style tone:
+
+```bash
+uv run python cli/augmented_generation_cli.py question "<question>" [--limit N]
+```
+
+```
+$ uv run python cli/augmented_generation_cli.py question "what's a good bear movie?"
+Search results:
+- Paddington
+- The Revenant
+- ...
+
+Answer:
+If you want something fun and heartwarming, Paddington is great. If you're more
+into intense survival drama, The Revenant has that iconic bear attack scene.
+```
 
 ---
 

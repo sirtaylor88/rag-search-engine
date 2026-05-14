@@ -1,12 +1,13 @@
 # Augmented Generation CLI
 
-Entry point for `augmented_generation_cli.py`. Registers three subcommands:
+Entry point for `augmented_generation_cli.py`. Registers four subcommands:
 
 - **`rag`** via {class}`~cli.commands.search.augmented_generation_commands.RagCommand` — generates a grounded natural-language answer.
 - **`summarize`** via {class}`~cli.commands.search.augmented_generation_commands.SummarizeCommand` — generates an information-dense multi-document summary.
 - **`citations`** via {class}`~cli.commands.search.augmented_generation_commands.CitationsCommand` — generates a cited answer using `[1]`, `[2]` markers.
+- **`question`** via {class}`~cli.commands.search.augmented_generation_commands.QuestionCommand` — answers a conversational question in a casual, chat-style tone.
 
-Both subcommands accept:
+All subcommands accept:
 
 - **`query`** (positional) — the search query.
 - **`--limit`** (optional, default `SEARCH_LIMIT`) — number of results to
@@ -21,7 +22,7 @@ Each command's `run()` performs the same pipeline (implemented in
 3. Print each retrieved title under a `"Search results:"` banner.
 4. Pass the formatted results to
    {func}`~cli.api.gemini_agent.augment_result` and print the generated answer
-   under the command's response banner (`"RAG Response:"` or `"LLM Summary:"`).
+   under the command's response banner.
 
 ```{eval-rst}
 .. automodule:: cli.augmented_generation_cli

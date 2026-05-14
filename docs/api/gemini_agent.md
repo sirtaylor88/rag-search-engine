@@ -53,7 +53,7 @@ The three scale points:
 `augment_result` selects a prompt from `AugmentedGenerationPromptPattern` based
 on the `method` argument, joins the formatted result strings with newlines as
 the `doc_input` context, sends them alongside the query, and returns the model's
-answer text — or `None` if the model returns nothing. Two methods are available:
+answer text — or `None` if the model returns nothing. Four methods are available:
 
 - **`rag`** — grounded natural-language answer that directly addresses the
   query using only the retrieved documents.
@@ -61,6 +61,8 @@ answer text — or `None` if the model returns nothing. Two methods are availabl
   plot, and other key details to help users choose between options.
 - **`citations`** — cited answer using `[1]`, `[2]` markers; acknowledges gaps
   when the retrieved documents don't contain enough information.
+- **`question`** — casual, conversational Q&A answer in a direct chat-style
+  tone; instructs the model to avoid hype and talk like a normal person.
 
 All four public functions (`enhance_query`, `rerank_query`, `evaluate_result`,
 `augment_result`) delegate token-count logging to the private

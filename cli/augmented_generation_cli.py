@@ -2,7 +2,7 @@
 
 import argparse
 
-from cli.commands import CitationsCommand, RagCommand, SummarizeCommand
+from cli.commands import CitationsCommand, QuestionCommand, RagCommand, SummarizeCommand
 from cli.schemas.payloads import SearchPayload
 from cli.schemas.requests import SearchRequest
 
@@ -21,6 +21,9 @@ def main() -> None:
     citations_cmd = CitationsCommand(
         subparsers.add_parser("citations", help="Answer with citations using LLM model")
     )
+    question_cmd = QuestionCommand(
+        subparsers.add_parser("question", help="Answer to a question using LLM model")
+    )
 
     args = parser.parse_args()
 
@@ -35,6 +38,10 @@ def main() -> None:
             )
         case "citations":
             citations_cmd.run(
+                SearchRequest(payload=SearchPayload(query=args.query, limit=args.limit))
+            )
+        case "question":
+            question_cmd.run(
                 SearchRequest(payload=SearchPayload(query=args.query, limit=args.limit))
             )
         case _:

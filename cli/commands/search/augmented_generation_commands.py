@@ -59,3 +59,10 @@ class CitationsCommand(BaseAugmentedCommand):
 
     _method = "citations"
     _label = "LLM Answer:"
+
+
+class QuestionCommand(BaseAugmentedCommand):
+    """Retrieves top results via RRF search then answers a conversational question."""
+
+    _method = "question"
+    _label = "Answer:"

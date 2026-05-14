@@ -175,6 +175,23 @@ class AugmentedGenerationPromptPattern(StrEnum):
     Answer:
     """
 
+    QUESTION = """Answer the user's question based on the provided movies
+    that are available on Hoopla, a streaming service.
+
+    Question: {query}
+
+    Documents:
+    {doc_input}
+
+    Instructions:
+    - Answer questions directly and concisely
+    - Be casual and conversational
+    - Don't be cringe or hype-y
+    - Talk like a normal person would in a chat conversation
+
+    Answer:
+    """
+
 
 def _display_token_usage(response: types.GenerateContentResponse) -> None:
     if response.usage_metadata:
@@ -336,19 +353,24 @@ def augment_result(
     results: list[str],
     method: str,
 ) -> Optional[str]:
-    """Generate a grounded natural-language answer using retrieved documents.
+    """Generate a natural-language answer using retrieved documents and a Gemini model.
 
-    Sends the query and formatted result strings to Gemini using the
-    ``AugmentedGenerationPromptPattern.RAG`` prompt and returns the model's
-    answer text, or ``None`` if the model returns nothing.
+    Selects the prompt template from ``AugmentedGenerationPromptPattern`` by
+    ``method``, sends the query and formatted results to Gemini, and returns
+    the model's answer text, or ``None`` if the model returns nothing.
 
     Args:
         query (str): The original search query.
         results (list[str]): Formatted result strings (one per retrieved doc).
+        method (str): Augmented generation method — ``"rag"``, ``"summarize"``,
+            ``"citations"``, or ``"question"``.
 
     Returns:
         Optional[str]: The generated answer, or ``None`` if the model returns
             nothing.
+
+    Raises:
+        ValueError: If ``method`` does not match any known prompt pattern.
     """
     client = get_gemini_client()
 

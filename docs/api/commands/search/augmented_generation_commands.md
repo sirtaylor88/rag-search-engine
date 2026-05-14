@@ -17,7 +17,7 @@ Subclasses configure the pipeline via two class attributes:
 - **`_method`** — key into `AugmentedGenerationPromptPattern` (selects the Gemini prompt).
 - **`_label`** — response banner printed before the generated answer.
 
-Both concrete subclasses extend `BaseSearchCommand` and inherit the `query` positional
+All concrete subclasses extend `BaseSearchCommand` and inherit the `query` positional
 argument and `--limit` optional argument with no additional flags.
 
 | Command | `_method` | `_label` |
@@ -25,6 +25,7 @@ argument and `--limit` optional argument with no additional flags.
 | `RagCommand` | `"rag"` | `"RAG Response:"` |
 | `SummarizeCommand` | `"summarize"` | `"LLM Summary:"` |
 | `CitationsCommand` | `"citations"` | `"LLM Answer:"` |
+| `QuestionCommand` | `"question"` | `"Answer:"` |
 
 ```{eval-rst}
 .. automodule:: cli.commands.search.augmented_generation_commands

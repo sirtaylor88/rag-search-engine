@@ -16,6 +16,7 @@ from cli.commands.embed_commands import (
 )
 from cli.commands.search.augmented_generation_commands import (
     CitationsCommand,
+    QuestionCommand,
     RagCommand,
     SummarizeCommand,
 )
@@ -44,6 +45,7 @@ __all__ = [
     "EmbedQueryCommand",
     "EmbedTextCommand",
     "NormalizeCommand",
+    "QuestionCommand",
     "RagCommand",
     "RRFSearchCommand",
     "SearchChunkedCommand",

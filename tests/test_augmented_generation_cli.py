@@ -68,6 +68,7 @@ def test_no_command_prints_help(capsys: CaptureFixture[str]) -> None:
         ("rag", "RAG Response:"),
         ("summarize", "LLM Summary:"),
         ("citations", "LLM Answer:"),
+        ("question", "Answer:"),
     ],
 )
 class TestAugmentedCommands:
