@@ -1,9 +1,10 @@
 # Augmented Generation CLI
 
-Entry point for `augmented_generation_cli.py`. Registers two subcommands:
+Entry point for `augmented_generation_cli.py`. Registers three subcommands:
 
 - **`rag`** via {class}`~cli.commands.search.augmented_generation_commands.RagCommand` — generates a grounded natural-language answer.
 - **`summarize`** via {class}`~cli.commands.search.augmented_generation_commands.SummarizeCommand` — generates an information-dense multi-document summary.
+- **`citations`** via {class}`~cli.commands.search.augmented_generation_commands.CitationsCommand` — generates a cited answer using `[1]`, `[2]` markers.
 
 Both subcommands accept:
 

@@ -52,3 +52,10 @@ class SummarizeCommand(BaseAugmentedCommand):
 
     _method = "summarize"
     _label = "LLM Summary:"
+
+
+class CitationsCommand(BaseAugmentedCommand):
+    """Retrieves top results via RRF search then generates a cited LLM answer."""
+
+    _method = "citations"
+    _label = "LLM Answer:"

@@ -15,6 +15,7 @@ from cli.commands.embed_commands import (
     EmbedTextCommand,
 )
 from cli.commands.search.augmented_generation_commands import (
+    CitationsCommand,
     RagCommand,
     SummarizeCommand,
 )
@@ -33,6 +34,7 @@ __all__ = [
     "BM25SearchCommand",
     "BuildCommand",
     "ChunkCommand",
+    "CitationsCommand",
     "ComputeBM25IDFCommand",
     "ComputeBM25TFCommand",
     "ComputeIDFCommand",

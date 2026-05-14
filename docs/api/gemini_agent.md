@@ -59,6 +59,8 @@ answer text — or `None` if the model returns nothing. Two methods are availabl
   query using only the retrieved documents.
 - **`summarize`** — information-dense multi-document synthesis covering genre,
   plot, and other key details to help users choose between options.
+- **`citations`** — cited answer using `[1]`, `[2]` markers; acknowledges gaps
+  when the retrieved documents don't contain enough information.
 
 All four public functions (`enhance_query`, `rerank_query`, `evaluate_result`,
 `augment_result`) delegate token-count logging to the private

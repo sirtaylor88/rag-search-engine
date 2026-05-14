@@ -24,6 +24,7 @@ argument and `--limit` optional argument with no additional flags.
 |---|---|---|
 | `RagCommand` | `"rag"` | `"RAG Response:"` |
 | `SummarizeCommand` | `"summarize"` | `"LLM Summary:"` |
+| `CitationsCommand` | `"citations"` | `"LLM Answer:"` |
 
 ```{eval-rst}
 .. automodule:: cli.commands.search.augmented_generation_commands
