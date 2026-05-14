@@ -13,6 +13,7 @@ schemas
 hybrid_search_cli
 evaluation_cli
 augmented_generation_cli
+describe_image_cli
 gemini_agent
 commands/index
 ```

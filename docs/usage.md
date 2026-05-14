@@ -179,17 +179,42 @@ and final results after re-ranking.
 See {doc}`/api/gemini_agent` for details on the Gemini-based prompts and
 {doc}`/api/commands/search/hybrid_search_command` for implementation details.
 
+## Describe Image CLI
+
+Rewrite a text search query using an image as additional context. Requires
+`GEMINI_API_KEY` set in `.env`.
+
+```bash
+uv run python cli/describe_image_cli.py --image <path> --query "<query>"
+```
+
+The MIME type is detected automatically; unsupported formats fall back to
+`image/jpeg`. Prints the rewritten query and, when available, the total token
+count.
+
+See {doc}`/api/describe_image_cli` for implementation details.
+
 ## RAG CLI
 
-Retrieve top results via RRF search, then use Gemini to generate a grounded answer from those results. Requires `GEMINI_API_KEY` set in `.env`.
+Retrieve top results via RRF search, then use Gemini to generate a
+natural-language answer. All subcommands require `GEMINI_API_KEY` set in
+`.env`. The `--limit` parameter (default: `5`) controls how many results are
+retrieved and passed as context to the model.
 
 ```bash
 uv run python cli/augmented_generation_cli.py rag "<query>" [--limit N]
+uv run python cli/augmented_generation_cli.py summarize "<query>" [--limit N]
+uv run python cli/augmented_generation_cli.py citations "<query>" [--limit N]
+uv run python cli/augmented_generation_cli.py question "<query>" [--limit N]
 ```
 
-The `--limit` parameter (default: `5`) controls how many results are retrieved and passed as context to the model.
+- **`rag`** — grounded answer based strictly on retrieved documents.
+- **`summarize`** — information-dense multi-document synthesis.
+- **`citations`** — cited answer using `[1]`, `[2]` markers.
+- **`question`** — casual, conversational Q&A answer.
 
-See {doc}`/api/commands/search/augmented_generation_commands` for implementation details.
+See {doc}`/api/commands/search/augmented_generation_commands` for
+implementation details.
 
 ## Evaluation
 

@@ -72,8 +72,8 @@ answer text — or `None` if the model returns nothing. Four methods are availab
 - **`question`** — casual, conversational Q&A answer in a direct chat-style
   tone; instructs the model to avoid hype and talk like a normal person.
 
-All four public functions (`enhance_query`, `rerank_query`, `evaluate_result`,
-`augment_result`) delegate token-count logging to the private
+All five public functions (`enhance_query`, `rerank_query`, `evaluate_result`,
+`augment_result`, `describe_image`) delegate token-count logging to the private
 `_display_token_usage` helper, which logs prompt and response token counts at
 `INFO` level via `logging.getLogger(__name__)`.
 
@@ -89,6 +89,8 @@ All four public functions (`enhance_query`, `rerank_query`, `evaluate_result`,
    :show-inheritance:
 
 .. seealso::
+
+   :doc:`/api/describe_image_cli` — CLI that calls ``describe_image``
 
    :doc:`/api/augmented_generation_cli` — CLI that dispatches to ``augment_result``
 

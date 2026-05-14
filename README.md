@@ -455,8 +455,8 @@ Reciprocal Rank Fusion Results for 'bear movie' (k=60)
 ## Describe Image CLI
 
 Rewrite a text search query using an image as additional context. Gemini
-synthesizes visual and textual information to produce a more specific query.
-Requires `GEMINI_API_KEY` set in `.env`.
+synthesizes visual and textual information — actors, scenes, style — to produce
+a more specific movie search query. Requires `GEMINI_API_KEY` set in `.env`.
 
 ```bash
 uv run python cli/describe_image_cli.py --image <path> --query "<query>"
@@ -467,6 +467,14 @@ $ uv run python cli/describe_image_cli.py --image poster.jpg --query "bear in Lo
 Rewritten query: Paddington bear London Brown family marmalade
 Total tokens:    312
 ```
+
+- **`--image`** — path to the image file (JPEG, PNG, WebP, etc.). The MIME
+  type is detected automatically; unrecognised formats fall back to
+  `image/jpeg`.
+- **`--query`** — the text query to enrich with image context.
+
+The rewritten query can then be passed directly to `rrf-search` or any other
+search command for improved retrieval.
 
 ---
 
